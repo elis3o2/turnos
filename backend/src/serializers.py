@@ -6,7 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from src.models import (Plantilla, EstadoMsj, EstadoTurno,
                 Turno, Mensaje, Efector, Servicio, Especialidad, Deriva, EfeSerEspPlantilla,
-                EstadoTurnoEspera, TurnoEspera, EfeSerEsp, EstudioRequerido, EstadoTurnoPaciente, Flow, TurnoFlow)
+                EstadoTurnoEspera, TurnoEspera, TurnoEsperaEstudio, EfeSerEsp, EstudioRequerido, EstadoTurnoPaciente, Flow, TurnoFlow)
 from src.utils.utils import fetch_paciente, fetch_profesional, update_msg_state
 import re
 from django.utils import timezone
@@ -223,11 +223,18 @@ class ProfesionalSerializer(serializers.Serializer):
     nombre = serializers.CharField(required=False, allow_null=True)
 
 
-
 class EstudioRequeridoSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstudioRequerido
         fields = '__all__'
+        
+
+class TurnoEsperaEstudioSerializer(serializers.ModelSerializer):
+    estudio_requerido = EstudioRequeridoSerializer(source='id_estudio_requerido', read_only=True)
+    class Meta:
+        model = TurnoEsperaEstudio
+        fields = '__all__'
+
 
 class TurnoEsperaSerializer(serializers.ModelSerializer):
     estado = EstadoTurnoEsperaSerializer(source='id_estado', read_only=True)
@@ -238,8 +245,8 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
     # campos adicionales para paciente y profesional
     paciente = serializers.SerializerMethodField()
     profesional_solicitante = serializers.SerializerMethodField()
-    estudio_requerido = EstudioRequeridoSerializer(many=True, read_only=True)
-   
+    estudio_requerido = TurnoEsperaEstudioSerializer(source='estudios_turno', many=True,read_only=True)
+    
     class Meta:
         model = TurnoEspera
         fields = ["id", "efector", "servicio","cupo","especialidad", "efector_solicitante",

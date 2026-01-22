@@ -1,8 +1,8 @@
 import  { useContext, useEffect, useMemo, useState } from "react";
 import type { Efector } from "../features/efe_ser_esp/types";
-import type { TurnoEspera } from "../features/turno/types";
+import type { EstudioRequerido, TurnoEspera } from "../features/turno/types";
 import { AuthContext } from "../common/contex";
-import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva } from "../features/turno/api";
+import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno } from "../features/turno/api";
 import { CloseTurnoEspera } from "../features/turno/api";
 import {getDerivaByEfector} from "../features/efe_ser_esp/api"
 // MUI
@@ -18,7 +18,7 @@ import {
   Stack,
   Button,
   GridLegacy as Grid,
-    Tooltip,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,7 +27,9 @@ import {
   Divider,
   Snackbar,
   Alert,
-  Chip, // <-- agregado
+  Checkbox,
+  FormControlLabel,
+  Chip, 
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -59,6 +61,9 @@ export default function ListaEspera(): React.ReactElement {
 
   // ids que están en proceso de eliminación
   const [removingIds, setRemovingIds] = useState<number[]>([]);
+  
+  const [selectedEstudios, setSelectedEstudios] = useState<number[]>([])
+
 
   // Estados de alerta solicitados
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
@@ -137,6 +142,20 @@ export default function ListaEspera(): React.ReactElement {
   useEffect(() => {
   if (!selectedEfector) return;
 
+
+  useEffect(() => {
+    if (activeTurno?.estudio_requerido) {
+      setSelectedEstudios(
+        activeTurno.estudio_requerido
+          .filter(e => e.estado) // solo abiertos
+          .map(e => e.id)
+      );
+    } else {
+      setSelectedEstudios([]);
+    }
+  }, [activeTurno]);
+
+
   // Si no hay derivación seleccionada → lista normal
   if (!selectedDerivacion) {
     let mounted = true;
@@ -194,6 +213,48 @@ export default function ListaEspera(): React.ReactElement {
 }, [selectedDerivacion]);
 
 
+    const handleGuardarEstudios = async () => {
+    if (!activeTurno) return;
+
+    try {
+      setLoading(true);
+
+      const res = await postMarcarEstudiosTurno(
+        activeTurno.id,
+        selectedEstudios
+      );
+
+      // actualizar estado local del turno
+      setTurnos(prev =>
+        prev.map(t =>
+          t.id === activeTurno.id
+            ? {
+                ...t,
+                estudio_requerido: t.estudio_requerido.map(e => ({
+                  ...e,
+                  estado: selectedEstudios.includes(e.id)
+                    ? true
+                    : e.estado,
+                })),
+              }
+            : t
+        )
+      )
+
+
+      setAlertMsg(`Se marcaron ${res.actualizados} estudio(s)`);
+      setAlertSeverity("success");
+      setAlertOpen(true);
+
+      handleCloseDialog();
+    } catch (e: any) {
+      setAlertMsg(e?.message ?? "Error al marcar estudios");
+      setAlertSeverity("error");
+      setAlertOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const priorityColor = (p: number) => {
@@ -249,6 +310,19 @@ export default function ListaEspera(): React.ReactElement {
     if (apellido || nombre) return `${apellido}${apellido && nombre ? ", " : ""}${nombre}`;
     return "No registrado";
   };
+
+
+  const handleToggleEstudio = (estudio: EstudioRequerido) => {
+    console.log(estudio)
+    if (estudio.estado) return; // 🔒 no tocar cerrados
+
+    setSelectedEstudios(prev =>
+      prev.includes(estudio.id)
+        ? prev.filter(id => id !== estudio.id)
+        : [...prev, estudio.id]
+      );
+  };
+
 
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
@@ -722,21 +796,63 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
                 <strong>Días en espera:</strong> {diasEnEsperaNumber(activeTurno)}
               </Typography>
 
-              {/* -- NUEVO: lista de estudios requeridos -- */}
+              {/* -- Lista de estudios requeridos -- */}
               {activeTurno.estudio_requerido && activeTurno.estudio_requerido.length > 0 && (
                 <>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
                     Estudios requeridos
                   </Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                    {activeTurno.estudio_requerido.map((s) => (
-                      <Chip key={s.id} label={s.nombre ?? `#${s.id}`} size="small" sx={{ mb: 0.5 }} />
-                    ))}
+
+                  <Stack spacing={0.5}>
+                    {activeTurno.estudio_requerido.map((e) => {
+                      const cerrado = e.estado;
+
+                      return (
+                        <Box
+                          key={e.id}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            opacity: cerrado ? 0.75 : 1,
+                          }}
+                        >
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={cerrado || selectedEstudios.includes(e.id)}
+                                disabled={cerrado}
+                                onChange={() => handleToggleEstudio(e)}
+                              />
+                            }
+                            label={
+                              <Stack spacing={0}>
+                                <Typography variant="body2">
+                                  {e.estudio_requerido.nombre ?? `#${e.id}`}
+                                </Typography>
+
+                                {cerrado && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {new Date(e.fecha_cierre).toLocaleDateString()}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            }
+                          />
+                        </Box>
+                      );
+                    })}
                   </Stack>
                 </>
               )}
-            </Box>
+
+              </Box>
+              
           ) : (
             <Typography>Sin datos</Typography>
           )}
@@ -753,7 +869,15 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
               </Button>}
 
           <Button onClick={handleCloseDialog}>Cerrar</Button>
-        </DialogActions>
+       
+        <Button
+          variant="contained"
+          onClick={handleGuardarEstudios}
+          disabled={!activeTurno || selectedEstudios.length === 0}
+        >
+          Guardar estudios
+        </Button>
+      </DialogActions>
       </Dialog>
 
       {/* Alerta global */}

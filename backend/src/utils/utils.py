@@ -1,12 +1,13 @@
 import requests
 import emoji
 from decouple import config
-from src.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow, Turno, Plantilla, TurnoEspera
+from src.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow, Turno, Plantilla, TurnoEspera, PlantillaFlow
 import re
 import logging
 logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
 from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
@@ -394,14 +395,14 @@ def create_flow(telefono: str, turno: Turno ) -> None:
     if status_code == 200 and isinstance(body, dict):
         flow_pk = body.get("id")
         plantilla_flow = PlantillaFlow.objects.get(pk=1)
-        sesion=body.get("id", None)
+        sesion=body.get("session", None)
         if flow_pk:
             f, created = Flow.objects.get_or_create(
                 pk=flow_pk,
                 defaults={
                     "id_plantilla_flow": plantilla_flow,
                     "numero": telefono,
-                    "sesion_id": sesion,
+                    "id_sesion_id": sesion,
                     "id_estado_id": 0,
                     "fecha_inicio": timezone.now()
                 },

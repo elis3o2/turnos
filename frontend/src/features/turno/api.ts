@@ -181,3 +181,7 @@ export const getTurnoEsperaById= (id: number) => {
 export const getEstudioRequeridoAll = () => {
   return http.get<EstudioRequerido[]>(`estudio_requerido/`).then(res => res.data)
 } 
+
+export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number }> => {
+  return http.post<{ ok: boolean; actualizados: number }>(`turno_espera/${idTurno}/marcar-estudios/`,{ estudios }).then(res => res.data);
+};

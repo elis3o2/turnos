@@ -13,7 +13,7 @@ from django.core.cache import cache
 from collections import OrderedDict
 from src.models import (Plantilla,  EstadoMsj, EstadoTurno, Turno, TurnoEspera, Deriva,
                         Mensaje, Efector,Servicio, Especialidad, EfeSerEspPlantilla,
-                        EfeSerEsp, EstudioRequerido, Flow, TurnoFlow)
+                        EfeSerEsp, EstudioRequerido, Flow, TurnoFlow, TurnoEsperaEstudio)
 from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurnoSerializer,
                 TurnoSerializer, TurnoEsperaSerializer, MensajeSerializer, DerivaSerializer,
                 EfectorSerializer, ServicioSerializer,EspecialidadSerializer, EfeSerEspPlantillaSerializer, EfeSerEspPlantillaDetailSerializer,
@@ -21,6 +21,7 @@ from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurn
                 PacienteSerializer, ProfesionalSerializer, EfeSerEspSerializer, EfeSerEspEfectorSerializer,
                 EfeSerEspCompletoSerializer, TurnoEsperaCreateSerializer, TurnoEsperaCloseSerializer,
                 EstudioRequeridoSerializer )
+from django.utils import timezone
 from typing import List
 from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
@@ -406,6 +407,49 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
+    @action(detail=True, methods=["post"], url_path="marcar-estudios")
+    def marcar_estudios(self, request, pk=None):
+        """
+        Marca estudios requeridos como hechos.
+
+        Body:
+        {
+          "estudios": [1, 2, 3]  # ids de EstudioRequerido
+        }
+        """
+        turno = self.get_object()
+        estudios_ids = request.data.get("estudios", [])
+
+        if not isinstance(estudios_ids, list) or not estudios_ids:
+            return Response(
+                {"error": "Debe enviar una lista de estudios"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        qs = TurnoEsperaEstudio.objects.filter(
+            id_turno_espera=turno,
+            id_estudio_requerido_id__in=estudios_ids,
+            estado=False
+        )
+
+        now = timezone.now()
+        user = request.user if request.user.is_authenticated else None
+
+        updated = qs.update(
+            estado=True,
+            fecha_cierre=now,
+            usuario_cierre=user
+        )
+
+        return Response(
+            {
+                "ok": True,
+                "actualizados": updated
+            },
+            status=status.HTTP_200_OK
+        )
+        
+
     def create(self, request, *args, **kwargs):
 
         # --- VALIDACIÓN MÍNIMA ANTES DE CREAR ---

@@ -68,7 +68,13 @@ export interface TurnoExtend {
     mensaje_asociado: any[] | undefined;
 }
 
+
 export interface EstudioRequerido {
     id: number,
-    nombre: string
+    estudio_requerido: {id: number, nombre: string},
+    nombre: string,
+    estado: boolean,
+    fecha_cierre: string,
+    usuario_cierre: number,
+    id_turno_espera: number
 }

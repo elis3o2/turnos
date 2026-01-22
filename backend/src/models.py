@@ -240,22 +240,28 @@ class EstudioRequerido(models.Model):
         db_table = 'estudio_requerido'
         
 
-class TurnoEsperaEstudio(models.Model):
-    id = models.AutoField(primary_key=True)
-    id_turno_espera  = models.ForeignKey(
-        TurnoEspera,  models.DO_NOTHING, db_column='id_turno_espera')
-    id_estudio_requerido  = models.ForeignKey(
-        EstudioRequerido, models.DO_NOTHING, db_column='id_estudio_requerido')
-    
-    class Meta:
-        db_table = 'turno_espera_estudio'
-
 class CustomUser(AbstractUser):
     efectores = models.ManyToManyField(Efector, related_name="usuarios", blank=True)
     dni  = models.CharField(max_length=15, unique=True, null=True)
 
     def __str__(self):
         return self.username
+
+
+class TurnoEsperaEstudio(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_turno_espera  = models.ForeignKey(
+        TurnoEspera,  models.DO_NOTHING, db_column='id_turno_espera', related_name='estudios_turno')
+    id_estudio_requerido  = models.ForeignKey(
+        EstudioRequerido, models.DO_NOTHING, db_column='id_estudio_requerido')
+    estado = models.BooleanField(db_column='estado', default=0)
+    fecha_cierre = models.DateTimeField(db_column='fecha_cierre', null=True, blank=True)
+    usuario_cierre = models.ForeignKey(
+        CustomUser, models.DO_NOTHING, db_column='id_usuario_cierre', null=True, blank=True)
+
+    class Meta:
+        db_table = 'turno_espera_estudio'
+
 
 
 
