@@ -139,15 +139,12 @@ export default function ListaEspera(): React.ReactElement {
     loadDerivaciones();
   }, [selectedEfector]);
 
-  useEffect(() => {
-  if (!selectedEfector) return;
-
 
   useEffect(() => {
     if (activeTurno?.estudio_requerido) {
       setSelectedEstudios(
         activeTurno.estudio_requerido
-          .filter(e => e.estado) // solo abiertos
+          .filter(e => e.estado)
           .map(e => e.id)
       );
     } else {
@@ -156,61 +153,43 @@ export default function ListaEspera(): React.ReactElement {
   }, [activeTurno]);
 
 
-  // Si no hay derivación seleccionada → lista normal
-  if (!selectedDerivacion) {
+  useEffect(() => {
+    if (!selectedEfector) {
+      setTurnos([]);
+      return;
+    }
+
     let mounted = true;
-    const fetchTurnos = async () => {
-      if (!selectedEfector) {
-        setTurnos([]);
-        return;
-      }
-      setLoading(true);
-      setError(null);
+
+    const load = async () => {
       try {
-        const data = await getTurnoEsperaAbierto(selectedEfector.id);
+        setLoading(true);
+
+        const data = selectedDerivacion
+          ? await getTurnoEsperaAbiertoDeriva(
+              selectedDerivacion.id,
+              selectedEfector.id
+            )
+          : await getTurnoEsperaAbierto(selectedEfector.id);
+
+        if (mounted) setTurnos(data);
+      } catch (e: any) {
         if (!mounted) return;
-        setTurnos(data);
-      } catch (e: unknown) {
-        // obtener mensaje sin introducir `any`
-        const msg = (e as { message?: string })?.message ?? "Error al obtener turnos";
-        if (!mounted) return;
-        setError(msg);
-        setTurnos([]);
-        // mostrar alerta
-        setAlertMsg(msg);
+        setAlertMsg(e?.message ?? "Error al obtener turnos");
         setAlertSeverity("error");
         setAlertOpen(true);
+        setTurnos([]);
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    fetchTurnos();
+    load();
+
     return () => {
       mounted = false;
     };
-  }
-
-  // Si hay derivación → lista de derivados
-   const loadDerivados = async () => {
-    try {
-      setLoading(true);
-      const data = await getTurnoEsperaAbiertoDeriva(
-        selectedDerivacion.id,
-        selectedEfector.id
-      );
-      setTurnos(data);
-    } catch (e: any) {
-      setAlertMsg(e?.message ?? "Error al obtener turnos derivados");
-      setAlertSeverity("error");
-      setAlertOpen(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadDerivados();
-}, [selectedDerivacion]);
+  }, [selectedEfector, selectedDerivacion]);
 
 
     const handleGuardarEstudios = async () => {
