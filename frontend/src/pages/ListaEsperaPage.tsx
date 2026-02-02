@@ -1,8 +1,8 @@
 import  { useContext, useEffect, useMemo, useState } from "react";
 import type { Efector } from "../features/efe_ser_esp/types";
-import type { TurnoEspera } from "../features/turno/types";
+import type { EstudioRequerido, TurnoEspera } from "../features/turno/types";
 import { AuthContext } from "../common/contex";
-import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva } from "../features/turno/api";
+import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno } from "../features/turno/api";
 import { CloseTurnoEspera } from "../features/turno/api";
 import {getDerivaByEfector} from "../features/efe_ser_esp/api"
 // MUI
@@ -18,7 +18,7 @@ import {
   Stack,
   Button,
   GridLegacy as Grid,
-    Tooltip,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -27,7 +27,9 @@ import {
   Divider,
   Snackbar,
   Alert,
-  Chip, // <-- agregado
+  Checkbox,
+  FormControlLabel,
+  Chip, 
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -59,6 +61,9 @@ export default function ListaEspera(): React.ReactElement {
 
   // ids que están en proceso de eliminación
   const [removingIds, setRemovingIds] = useState<number[]>([]);
+  
+  const [selectedEstudios, setSelectedEstudios] = useState<number[]>([])
+
 
   // Estados de alerta solicitados
   const [alertOpen, setAlertOpen] = useState<boolean>(false);
@@ -134,55 +139,69 @@ export default function ListaEspera(): React.ReactElement {
     loadDerivaciones();
   }, [selectedEfector]);
 
-  useEffect(() => {
-  if (!selectedEfector) return;
 
-  // Si no hay derivación seleccionada → lista normal
-  if (!selectedDerivacion) {
+  useEffect(() => {
+    if (activeTurno?.estudio_requerido) {
+      setSelectedEstudios(
+        activeTurno.estudio_requerido
+          .filter(e => e.estado)
+          .map(e => e.id)
+      );
+    } else {
+      setSelectedEstudios([]);
+    }
+  }, [activeTurno]);
+
+
+  useEffect(() => {
+    if (!selectedEfector) {
+      setTurnos([]);
+      return;
+    }
+
     let mounted = true;
-    const fetchTurnos = async () => {
-      if (!selectedEfector) {
-        setTurnos([]);
-        return;
-      }
-      setLoading(true);
-      setError(null);
+
+    const load = async () => {
       try {
-        const data = await getTurnoEsperaAbierto(selectedEfector.id);
+        setLoading(true);
+
+        const data = selectedDerivacion
+          ? await getTurnoEsperaAbiertoDeriva(
+              selectedDerivacion.id,
+              selectedEfector.id
+            )
+          : await getTurnoEsperaAbierto(selectedEfector.id);
+
+        if (mounted) setTurnos(data);
+      } catch (e: any) {
         if (!mounted) return;
-        setTurnos(data);
-      } catch (e: unknown) {
-        // obtener mensaje sin introducir `any`
-        const msg = (e as { message?: string })?.message ?? "Error al obtener turnos";
-        if (!mounted) return;
-        setError(msg);
-        setTurnos([]);
-        // mostrar alerta
-        setAlertMsg(msg);
+        setAlertMsg(e?.message ?? "Error al obtener turnos");
         setAlertSeverity("error");
         setAlertOpen(true);
+        setTurnos([]);
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    fetchTurnos();
+    load();
+
     return () => {
       mounted = false;
     };
-  }
+  }, [selectedEfector, selectedDerivacion]);
 
-  // Si hay derivación → lista de derivados
-   const loadDerivados = async () => {
+
+    const handleGuardarEstudios = async () => {
+    if (!activeTurno) return;
+
     try {
       setLoading(true);
-      const data = await getTurnoEsperaAbiertoDeriva(
-        selectedDerivacion.id,
-        selectedEfector.id
+
+      const res = await postMarcarEstudiosTurno(
+        activeTurno.id,
+        selectedEstudios
       );
-<<<<<<< HEAD
-      setTurnos(data);
-=======
 
       // actualizar estado local del turno
       setTurnos(prev =>
@@ -213,20 +232,14 @@ export default function ListaEspera(): React.ReactElement {
       setAlertOpen(true);
 
       handleCloseDialog();
->>>>>>> 9ea7d658 (historico - bd - checklist)
     } catch (e: any) {
-      setAlertMsg(e?.message ?? "Error al obtener turnos derivados");
+      setAlertMsg(e?.message ?? "Error al marcar estudios");
       setAlertSeverity("error");
       setAlertOpen(true);
     } finally {
       setLoading(false);
     }
   };
-
-  loadDerivados();
-}, [selectedDerivacion]);
-
-
 
 
   const priorityColor = (p: number) => {
@@ -283,8 +296,6 @@ export default function ListaEspera(): React.ReactElement {
     return "No registrado";
   };
 
-<<<<<<< HEAD
-=======
 
   const handleToggleEstudio = (estudio: EstudioRequerido) => {
     console.log(estudio)
@@ -298,7 +309,6 @@ export default function ListaEspera(): React.ReactElement {
   };
 
   console.log(turnos)
->>>>>>> 9ea7d658 (historico - bd - checklist)
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
     const map = new Map<number, string>();
@@ -771,21 +781,63 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
                 <strong>Días en espera:</strong> {diasEnEsperaNumber(activeTurno)}
               </Typography>
 
-              {/* -- NUEVO: lista de estudios requeridos -- */}
+              {/* -- Lista de estudios requeridos -- */}
               {activeTurno.estudio_requerido && activeTurno.estudio_requerido.length > 0 && (
                 <>
                   <Divider sx={{ my: 1 }} />
                   <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
                     Estudios requeridos
                   </Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                    {activeTurno.estudio_requerido.map((s) => (
-                      <Chip key={s.id} label={s.nombre ?? `#${s.id}`} size="small" sx={{ mb: 0.5 }} />
-                    ))}
+
+                  <Stack spacing={0.5}>
+                    {activeTurno.estudio_requerido.map((e) => {
+                      const cerrado = e.estado;
+
+                      return (
+                        <Box
+                          key={e.id}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            opacity: cerrado ? 0.75 : 1,
+                          }}
+                        >
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={cerrado || selectedEstudios.includes(e.id)}
+                                disabled={cerrado}
+                                onChange={() => handleToggleEstudio(e)}
+                              />
+                            }
+                            label={
+                              <Stack spacing={0}>
+                                <Typography variant="body2">
+                                  {e.estudio_requerido.nombre ?? `#${e.id}`}
+                                </Typography>
+
+                                {cerrado && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                  >
+                                    {new Date(e.fecha_cierre).toLocaleDateString()}
+                                  </Typography>
+                                )}
+                              </Stack>
+                            }
+                          />
+                        </Box>
+                      );
+                    })}
                   </Stack>
                 </>
               )}
-            </Box>
+
+              </Box>
+              
           ) : (
             <Typography>Sin datos</Typography>
           )}
@@ -802,9 +854,6 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
               </Button>}
 
           <Button onClick={handleCloseDialog}>Cerrar</Button>
-<<<<<<< HEAD
-        </DialogActions>
-=======
         {activeTurno?.estudio_requerido?.some(e => e.estado === false)   &&
         <Button
           variant="contained"
@@ -815,7 +864,6 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
         </Button>
       }
       </DialogActions>
->>>>>>> 9ea7d658 (historico - bd - checklist)
       </Dialog>
 
       {/* Alerta global */}
