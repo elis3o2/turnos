@@ -10,7 +10,6 @@ export interface Servicio{
 
 export interface Especialidad {
     id: number;
-    servicio: Servicio;
     nombre: string;
 }
 

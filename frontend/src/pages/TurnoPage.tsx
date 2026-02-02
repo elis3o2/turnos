@@ -346,43 +346,99 @@ console.log(turnos)
     return undefined;
   }
 
-  function downloadCSV() {
-    const headers = allColumns.filter(c => visibleColumns[c.key]).map(c => c.label);
-    const rows = turnos.map(t => {
-      const row: any[] = [];
-      for (const c of allColumns) {
-        if (!visibleColumns[c.key]) continue;
-        switch (c.key) {
-          case 'respuesta': row.push(t.estado_paciente?.nombre ?? ''); break;
-          case 'dni': row.push(t.paciente_dni ?? ''); break;
-          case 'nombre': row.push(t.paciente_nombre ?? ''); break;
-          case 'apellido': row.push(t.paciente_apellido ?? ''); break;
-          case 'efector': row.push(t.efe_ser_esp.efector?.nombre ?? String(t.efe_ser_esp.efector.id ?? '')); break;
-          case 'servicio': row.push(t.efe_ser_esp.servicio?.nombre ?? String(t.efe_ser_esp.servicio.id ?? '')); break;
-          case 'especialidad': row.push(t.efe_ser_esp.especialidad?.nombre ?? String(t.efe_ser_esp.especialidad.id ?? '')); break;
-          case 'prof_nombre': row.push(t.profesional_nombre ?? ''); break;
-          case 'prof_apellido': row.push(t.profesional_apellido ?? ''); break;
-          case 'estado': row.push(t.estado?.nombre ?? ''); break;
-          case 'recordatorio': {
-            const mensaje_reco = getMsjReco(t.mensaje_asociado);
-            row.push(mensaje_reco ? (mensaje_reco.estado?.significado ?? '') : ''); break;
-          }
-          case 'fecha': row.push(t.fecha ?? ''); break;
-          case 'hora': row.push(t.hora ?? ''); break;
-          default: row.push('');
-        }
-      }
-      return row;
-    });
+  async function downloadCSV() {
+    if (!appliedFilters.efectores || appliedFilters.efectores.length === 0) return;
 
-    const csv = [headers, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `turnos_${new Date().toISOString()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      setLoading(true);
+
+      let data;
+
+      // traer TODO sin paginar
+      if (alertMode) {
+        data = await getTurnosAlerta(
+          activeAlertCategory,
+          total,
+          0,
+          appliedFilters.efectores,
+          appliedFilters.servicios,
+          appliedFilters.fechaDesde,
+          appliedFilters.fechaHasta
+        );
+      } else if (errorMode) {
+        data = await getTurnosErrorMergedLimit(
+          total,
+          0,
+          appliedFilters.efectores,
+          appliedFilters.servicios,
+          appliedFilters.fechaDesde,
+          appliedFilters.fechaHasta
+        );
+      } else {
+        data = await getTurnosMergedLimit(
+          total,
+          0,
+          appliedFilters.efectores,
+          appliedFilters.servicios,
+          appliedFilters.fechaDesde,
+          appliedFilters.fechaHasta
+        );
+      }
+
+      const rowsData: TurnoExtend[] = data.response ?? [];
+
+      const headers = allColumns
+        .filter(c => visibleColumns[c.key])
+        .map(c => c.label);
+
+      const rows = rowsData.map(t => {
+        const row: any[] = [];
+
+        for (const c of allColumns) {
+          if (!visibleColumns[c.key]) continue;
+
+          switch (c.key) {
+            case 'respuesta': row.push(t.estado_paciente?.nombre ?? ''); break;
+            case 'dni': row.push(t.paciente_dni ?? ''); break;
+            case 'nombre': row.push(t.paciente_nombre ?? ''); break;
+            case 'apellido': row.push(t.paciente_apellido ?? ''); break;
+            case 'efector': row.push(t.efe_ser_esp.efector?.nombre ?? ''); break;
+            case 'servicio': row.push(t.efe_ser_esp.servicio?.nombre ?? ''); break;
+            case 'especialidad': row.push(t.efe_ser_esp.especialidad?.nombre ?? ''); break;
+            case 'prof_nombre': row.push(t.profesional_nombre ?? ''); break;
+            case 'prof_apellido': row.push(t.profesional_apellido ?? ''); break;
+            case 'estado': row.push(t.estado?.nombre ?? ''); break;
+            case 'recordatorio': {
+              const m = getMsjReco(t.mensaje_asociado);
+              row.push(m?.estado?.significado ?? '');
+              break;
+            }
+            case 'fecha': row.push(t.fecha ?? ''); break;
+            case 'hora': row.push(t.hora ?? ''); break;
+            default: row.push('');
+          }
+        }
+        return row;
+      });
+
+      const csv = [headers, ...rows]
+        .map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `turnos_${new Date().toISOString().slice(0, 19)}.csv`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error descargando CSV', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function estadoRespChipLabel(t: TurnoExtend) { return t.estado_paciente?.nombre ?? '—'; }

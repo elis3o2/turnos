@@ -209,16 +209,22 @@ export default function ListaEspera(): React.ReactElement {
           t.id === activeTurno.id
             ? {
                 ...t,
-                estudio_requerido: t.estudio_requerido.map(e => ({
-                  ...e,
-                  estado: selectedEstudios.includes(e.id)
-                    ? true
-                    : e.estado,
-                })),
+                estudio_requerido: t.estudio_requerido.map(e => {
+                  const seleccionado = selectedEstudios.includes(e.id) && !e.estado
+
+                  return {
+                    ...e,
+                    estado: seleccionado ? true : e.estado,
+                    fecha_cierre: seleccionado
+                      ? new Date().toISOString()
+                      : e.fecha_cierre
+                  }
+                }),
               }
             : t
         )
       )
+
 
 
       setAlertMsg(`Se marcaron ${res.actualizados} estudio(s)`);
@@ -237,9 +243,9 @@ export default function ListaEspera(): React.ReactElement {
 
 
   const priorityColor = (p: number) => {
-    if (p == 2) return "#0baf26ff"; // verde claro (ejemplo)
-    if (p == 0) return "#EF4444"; // rojo
-    if (p == 1) return "#F59E0B"; // amarillo
+    if (p == 2) return "#0baf26ff"; 
+    if (p == 0) return "#EF4444"; 
+    if (p == 1) return "#F59E0B"; 
   };
 
   const diasEnEsperaNumber = (t: TurnoEspera): number => {
@@ -302,7 +308,7 @@ export default function ListaEspera(): React.ReactElement {
       );
   };
 
-
+  console.log(turnos)
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
     const map = new Map<number, string>();
@@ -848,7 +854,7 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
               </Button>}
 
           <Button onClick={handleCloseDialog}>Cerrar</Button>
-       
+        {activeTurno?.estudio_requerido?.some(e => e.estado === false)   &&
         <Button
           variant="contained"
           onClick={handleGuardarEstudios}
@@ -856,6 +862,7 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
         >
           Guardar estudios
         </Button>
+      }
       </DialogActions>
       </Dialog>
 

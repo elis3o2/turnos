@@ -74,11 +74,14 @@ class ServicioSerializer(serializers.ModelSerializer):
 class EspecialidadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Especialidad
-        fields = '__all__'
+        fields = ["id", "nombre"]
 
 
 
-class EfeSerEspSerializer(serializers.ModelSerializer):
+class EfeSerEspSerializer(serializers.ModelSerializer):    
+    id_servicio = serializers.IntegerField(source='id_ser_esp.id_servicio.id',read_only=True)
+    id_especialidad = serializers.IntegerField(source='id_ser_esp.id_especialidad.id',read_only=True)
+
     class Meta:
         model = EfeSerEsp
         fields = ['id', 'id_efector', 'id_servicio', 'id_especialidad']
@@ -87,8 +90,8 @@ class EfeSerEspSerializer(serializers.ModelSerializer):
 class DerivaSerializer(serializers.ModelSerializer):
     efector = EfectorSerializer(source='id_efector', read_only=True)
     efector_deriva = EfectorSerializer(source='id_efe_ser_esp_deriva.id_efector', read_only=True)
-    servicio_deriva = ServicioSerializer(source='id_efe_ser_esp_deriva.id_servicio', read_only=True)
-    especialidad_deriva = EspecialidadSerializer(source='id_efe_ser_esp_deriva.id_especialidad', read_only=True)
+    servicio_deriva = ServicioSerializer(source='id_efe_ser_esp_deriva.id_ser_esp.id_servicio', read_only=True)
+    especialidad_deriva = EspecialidadSerializer(source='id_efe_ser_esp_deriva.id_ser_esp.id_especialidad', read_only=True)
 
     class Meta:
         model = Deriva
@@ -106,8 +109,8 @@ class EfeSerEspEfectorSerializer(serializers.ModelSerializer):
 class EfeSerEspCompletoSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
     efector = EfectorSerializer(source='id_efector', read_only=True)
-    servicio = ServicioSerializer(source='id_servicio', read_only=True)
-    especialidad = EspecialidadSerializer(source='id_especialidad', read_only=True)
+    servicio = ServicioSerializer(source='id_ser_esp.id_servicio', read_only=True)
+    especialidad = EspecialidadSerializer(source='id_ser_esp.id_especialidad', read_only=True)
 
     class Meta:
         model = EfeSerEsp
@@ -131,7 +134,7 @@ class EfeSerEspPlantillaSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
-    especialidad = EspecialidadSerializer(source="id_efe_ser_esp.id_especialidad", read_only=True)
+    especialidad = EspecialidadSerializer(source="id_efe_ser_esp.id_ser_esp.id_especialidad", read_only=True)
     id_efector = serializers.SerializerMethodField()
     id_servicio = serializers.SerializerMethodField()
 
@@ -168,7 +171,7 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
         return obj.id_efe_ser_esp.id_efector_id if obj.id_efe_ser_esp else None
 
     def get_id_servicio(self, obj):
-        return obj.id_efe_ser_esp.id_servicio_id if obj.id_efe_ser_esp else None
+        return obj.id_efe_ser_esp.id_ser_esp.id_servicio_id if obj.id_efe_ser_esp else None
 
     def to_representation(self, instance):
         """
@@ -239,8 +242,8 @@ class TurnoEsperaEstudioSerializer(serializers.ModelSerializer):
 class TurnoEsperaSerializer(serializers.ModelSerializer):
     estado = EstadoTurnoEsperaSerializer(source='id_estado', read_only=True)
     efector =  EfectorSerializer(source='id_efe_ser_esp.id_efector', read_only=True)
-    servicio = ServicioSerializer(source='id_efe_ser_esp.id_servicio', read_only=True)
-    especialidad = EspecialidadSerializer(source='id_efe_ser_esp.id_especialidad', read_only=True)
+    servicio = ServicioSerializer(source='id_efe_ser_esp.id_ser_esp.id_servicio', read_only=True)
+    especialidad = EspecialidadSerializer(source='id_efe_ser_esp.id_ser_esp.id_especialidad', read_only=True)
     efector_solicitante = EfectorSerializer(source='id_efector_solicitante', read_only=True)
     # campos adicionales para paciente y profesional
     paciente = serializers.SerializerMethodField()

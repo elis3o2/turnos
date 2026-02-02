@@ -70,23 +70,31 @@ class Servicio(models.Model):
 class Especialidad(models.Model):
     id = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=64)
-    id_servicio = models.ForeignKey(
-        Servicio, models.DO_NOTHING, db_column='id_servicio')
+
 
     class Meta:
         managed = False
         db_table = 'especialidad'
         ordering = ['nombre']
 
+class SerEsp(models.Model):
+    id = models.IntegerField(primary_key=True)
+    id_servicio = models.ForeignKey(
+        Servicio, models.DO_NOTHING, db_column='id_servicio')
+    id_especialidad = models.ForeignKey(
+        Especialidad, models.DO_NOTHING, db_column='id_especialidad')
+    
+    class Meta:
+        managed = False
+        db_table = 'ser_esp'
+
 
 class EfeSerEsp(models.Model):
     id  = models.IntegerField(primary_key=True)
     id_efector  = models.ForeignKey(
         Efector, models.DO_NOTHING, db_column='id_efector')
-    id_servicio  = models.ForeignKey(
-        Servicio, models.DO_NOTHING, db_column='id_servicio')
-    id_especialidad  = models.ForeignKey(
-        Especialidad, models.DO_NOTHING, db_column='id_especialidad')
+    id_ser_esp = models.ForeignKey(
+        SerEsp, models.DO_NOTHING, db_column='id_ser_esp')
     
     class Meta:
         managed = False
