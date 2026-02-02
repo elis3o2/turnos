@@ -84,9 +84,9 @@ class TurnoViewSet(viewsets.ModelViewSet):
         qs = super().get_queryset()
         rp = self.request.query_params
 
-        servicios = self._parse_csv_param('id_servicio')
-        especialidades = self._parse_csv_param('id_especialidad')
-        efectores = self._parse_csv_param('efectores') or self._parse_csv_param('id_efector')
+        servicios = self._parse_csv_param('id_ser_esp__id_servicio')
+        especialidades = self._parse_csv_param('id_ser_esp__id_especialidad')
+        efectores = self._parse_csv_param('id_efector')
 
         id_estado = rp.get('id_estado')
         if id_estado not in (None, ''):
@@ -96,9 +96,9 @@ class TurnoViewSet(viewsets.ModelViewSet):
                 pass
 
         if servicios:
-            qs = qs.filter(id_efe_ser_esp__id_servicio__in=servicios)
+            qs = qs.filter(id_efe_ser_esp__id_ser_esp__id_servicio__in=servicios)
         if especialidades:
-            qs = qs.filter(id_efe_ser_esp__id_especialidad__in=especialidades)
+            qs = qs.filter(id_efe_ser_esp__id_ser_esp__id_especialidad__in=especialidades)
         if efectores:
             qs = qs.filter(id_efe_ser_esp__id_efector__in=efectores)
 
@@ -194,11 +194,11 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 
         # Obtenemos servicios únicos, ordenados por nombre
         servicios = [
-            {"id": item["id_servicio"], "nombre": item["id_servicio__nombre"]}
+            {"id": item["id_ser_esp__id_servicio"], "nombre": item["id_ser_esp__id_servicio__nombre"]}
             for item in (
                 queryset
-                .values("id_servicio", "id_servicio__nombre")
-                .order_by("id_servicio__nombre")  # <-- orden alfabético por nombre
+                .values("id_ser_esp__id_servicio", "id_ser_esp__id_servicio__nombre")
+                .order_by("id_ser_esp__id_servicio__nombre")  # <-- orden alfabético por nombre
                 .distinct()
             )
         ]
@@ -222,23 +222,23 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
             .filter(id_efector=id_efector)
             .values(
                 "id",
-                "id_servicio",
-                "id_servicio__nombre",
-                "id_especialidad",
-                "id_especialidad__nombre",
+                "id_ser_esp__id_servicio",
+                "id_ser_esp__id_servicio__nombre",
+                "id_ser_esp__id_especialidad",
+                "id_ser_esp__id_especialidad__nombre",
             )
             .distinct()
-            .order_by("id_servicio__nombre", "id_especialidad__nombre")
+            .order_by("id_ser_esp__id_servicio__nombre", "id_ser_esp__id_especialidad__nombre")
         )
 
         # Agrupamos por servicio en memoria (una pasada)
         servicios_map = OrderedDict()
         for row in qs:
             id = row["id"]
-            sid = row["id_servicio"]
-            sname = row["id_servicio__nombre"]
-            eid = row.get("id_especialidad")
-            ename = row.get("id_especialidad__nombre")
+            sid = row["id_ser_esp__id_servicio"]
+            sname = row["id_ser_esp__id_servicio__nombre"]
+            eid = row.get("id_ser_esp__id_especialidad")
+            ename = row.get("id_ser_esp__id_especialidad__nombre")
 
             if sid not in servicios_map:
                 servicios_map[sid] = {
@@ -298,8 +298,8 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
         try:
             queryset = queryset.get(
                 id_efector=int(id_efector),
-                id_servicio=int(id_servicio),
-                id_especialidad=int(id_especialidad),
+                id_ser_esp__id_servicio=int(id_servicio),
+                id_ser_esp__id_especialidad=int(id_especialidad),
             )
         except ValueError:
             return Response(
@@ -342,7 +342,7 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
         if id_efector:
             queryset = queryset.filter(id_efe_ser_esp__id_efector=id_efector)
         if id_servicio:
-            queryset = queryset.filter(id_efe_ser_esp__id_servicio=id_servicio)
+            queryset = queryset.filter(id_efe_ser_esp__id_ser_esp__id_servicio=id_servicio)
 
         # Optimización de consultas y ordenamiento
         queryset = (
@@ -354,7 +354,7 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
                 "plantilla_reco",
             )
             .order_by(
-                "id_efe_ser_esp__id_especialidad__nombre",
+                "id_efe_ser_esp__id_ser_esp__id_especialidad__nombre",
             )
         )
 
@@ -414,6 +414,52 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
+<<<<<<< HEAD
+=======
+    @action(detail=True, methods=["post"], url_path="marcar-estudios")
+    def marcar_estudios(self, request, pk=None):
+        """
+        Marca estudios requeridos como hechos.
+
+        Body:
+        {
+          "estudios": [1, 2, 3]  # ids de EstudioRequerido
+        }
+        """
+        turno = self.get_object()
+        estudios_ids = request.data.get("estudios", [])
+
+        if not isinstance(estudios_ids, list) or not estudios_ids:
+            return Response(
+                {"error": "Debe enviar una lista de estudios"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        qs = TurnoEsperaEstudio.objects.filter(
+            id_turno_espera=turno,
+            id__in=estudios_ids,
+            estado=False
+        )
+
+        now = timezone.now()
+        user = request.user if request.user.is_authenticated else None
+
+        updated = qs.update(
+            estado=True,
+            fecha_cierre=now,
+            usuario_cierre=user
+        )
+
+        return Response(
+            {
+                "ok": True,
+                "actualizados": updated
+            },
+            status=status.HTTP_200_OK
+        )
+        
+
+>>>>>>> 9ea7d658 (historico - bd - checklist)
     def create(self, request, *args, **kwargs):
 
         # --- VALIDACIÓN MÍNIMA ANTES DE CREAR ---
@@ -459,6 +505,10 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             TurnoEsperaSerializer(turno, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9ea7d658 (historico - bd - checklist)
         
 
 class EstudioRequeridoViewSet(viewsets.ModelViewSet):
@@ -570,14 +620,14 @@ class GetProfesionalAPIView(APIView):
 
 class HistoricoPaciente(APIView):
     def get(self, request) -> Response:
-        dni = request.query_params.get('dni')
-        if not dni:
-            return Response({"detail": "Parámetro 'dni' requerido."}, status=status.HTTP_400_BAD_REQUEST)
+        id = request.query_params.get('id')
+        if not id:
+            return Response({"detail": "Parámetro 'id' requerido."}, status=status.HTTP_400_BAD_REQUEST)
 
 
         try:
             with connections['informix'].cursor() as cur:
-                cur.execute(query_turno_historico_paciente(), (dni, dni))
+                cur.execute(query_turno_historico_paciente(), (id, id))
                 rows = cur.fetchall()
 
                 # Si no hay filas, devolvemos array vacío (evitamos operar sobre cur.description None)
@@ -637,7 +687,7 @@ class GetIncorrectoAPIView(APIView):
 
         filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
         if len(id_servicios) > 0:
-            filters['id_efe_ser_esp__id_servicio__in'] = id_servicios
+            filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
         if fecha_desde:
             filters['fecha__gte'] = fecha_desde
         if fecha_hasta:
@@ -775,7 +825,7 @@ class TurnosMergedAllAPIView(APIView):
 
         filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
         if len(id_servicios)>0:
-            filters['id_efe_ser_esp__id_servicio__in'] = id_servicios
+            filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
         if fecha_desde:
             filters['fecha__gte'] = fecha_desde
         if fecha_hasta:
@@ -784,10 +834,16 @@ class TurnosMergedAllAPIView(APIView):
         try:
             qs = (
                 Turno.objects
-                .select_related("id_efe_ser_esp")
+                .select_related(
+                    "id_efe_ser_esp",
+                    "id_efe_ser_esp__id_ser_esp",
+                    "id_efe_ser_esp__id_ser_esp__id_servicio",
+                    "id_efe_ser_esp__id_ser_esp__id_especialidad",
+                )
                 .filter(**filters)
                 .order_by('-fecha', '-hora', '-id')
             )
+            print(qs.query)
 
             # calcular total antes del slicing (útil para paginación)
             total = qs.count()
@@ -901,7 +957,7 @@ class TurnosAlertasAPIView(APIView):
 
             filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
             if len(id_servicios) > 0:
-                filters['id_efe_ser_esp__id_servicio__in'] = id_servicios
+                filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
             if fecha_desde:
                 filters['fecha__gte'] = fecha_desde
             if fecha_hasta:

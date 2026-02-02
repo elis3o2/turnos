@@ -44,10 +44,10 @@ export const getTurnosCount = (
     if (csv !== undefined) params.push(`${key}=${encodeURIComponent(csv)}`);
   };
 
-  pushParam("id_servicio", id_servicio);
-  pushParam("id_especialidad", id_especialidad);
+  pushParam("id_ser_esp__id_servicio", id_servicio);
+  pushParam("id_ser_esp__id_especialidad", id_especialidad);
   if (id_estado !== undefined) params.push(`id_estado=${encodeURIComponent(String(id_estado))}`);
-  pushParam("efectores", efectores);
+  pushParam("id_efector", efectores);
 
   if (params.length > 0) {
     url += `?${params.join("&")}`;
@@ -149,8 +149,8 @@ export const getSignificado = async (id: number): Promise<EstadoMsj> => {
 };
 
 
-export const getHistoricoTurno = (dni:number) => {
-  return http.get(`get_historico/?dni=${dni}`).then(res => res.data);
+export const getHistoricoTurno = (id:number) => {
+  return http.get(`get_historico/?id=${id}`).then(res => res.data);
 }
 
 

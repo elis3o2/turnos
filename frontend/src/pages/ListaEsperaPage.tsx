@@ -180,7 +180,40 @@ export default function ListaEspera(): React.ReactElement {
         selectedDerivacion.id,
         selectedEfector.id
       );
+<<<<<<< HEAD
       setTurnos(data);
+=======
+
+      // actualizar estado local del turno
+      setTurnos(prev =>
+        prev.map(t =>
+          t.id === activeTurno.id
+            ? {
+                ...t,
+                estudio_requerido: t.estudio_requerido.map(e => {
+                  const seleccionado = selectedEstudios.includes(e.id) && !e.estado
+
+                  return {
+                    ...e,
+                    estado: seleccionado ? true : e.estado,
+                    fecha_cierre: seleccionado
+                      ? new Date().toISOString()
+                      : e.fecha_cierre
+                  }
+                }),
+              }
+            : t
+        )
+      )
+
+
+
+      setAlertMsg(`Se marcaron ${res.actualizados} estudio(s)`);
+      setAlertSeverity("success");
+      setAlertOpen(true);
+
+      handleCloseDialog();
+>>>>>>> 9ea7d658 (historico - bd - checklist)
     } catch (e: any) {
       setAlertMsg(e?.message ?? "Error al obtener turnos derivados");
       setAlertSeverity("error");
@@ -197,9 +230,9 @@ export default function ListaEspera(): React.ReactElement {
 
 
   const priorityColor = (p: number) => {
-    if (p == 2) return "#0baf26ff"; // verde claro (ejemplo)
-    if (p == 0) return "#EF4444"; // rojo
-    if (p == 1) return "#F59E0B"; // amarillo
+    if (p == 2) return "#0baf26ff"; 
+    if (p == 0) return "#EF4444"; 
+    if (p == 1) return "#F59E0B"; 
   };
 
   const diasEnEsperaNumber = (t: TurnoEspera): number => {
@@ -250,6 +283,22 @@ export default function ListaEspera(): React.ReactElement {
     return "No registrado";
   };
 
+<<<<<<< HEAD
+=======
+
+  const handleToggleEstudio = (estudio: EstudioRequerido) => {
+    console.log(estudio)
+    if (estudio.estado) return; // 🔒 no tocar cerrados
+
+    setSelectedEstudios(prev =>
+      prev.includes(estudio.id)
+        ? prev.filter(id => id !== estudio.id)
+        : [...prev, estudio.id]
+      );
+  };
+
+  console.log(turnos)
+>>>>>>> 9ea7d658 (historico - bd - checklist)
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
     const map = new Map<number, string>();
@@ -753,7 +802,20 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
               </Button>}
 
           <Button onClick={handleCloseDialog}>Cerrar</Button>
+<<<<<<< HEAD
         </DialogActions>
+=======
+        {activeTurno?.estudio_requerido?.some(e => e.estado === false)   &&
+        <Button
+          variant="contained"
+          onClick={handleGuardarEstudios}
+          disabled={!activeTurno || selectedEstudios.length === 0}
+        >
+          Guardar estudios
+        </Button>
+      }
+      </DialogActions>
+>>>>>>> 9ea7d658 (historico - bd - checklist)
       </Dialog>
 
       {/* Alerta global */}

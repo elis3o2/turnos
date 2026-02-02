@@ -113,7 +113,7 @@ def query_turno_historico_paciente() -> str:
         JOIN servicios s ON s.idservicio = se.idservicio
         JOIN especialidades esp ON esp.idespecialidad = se.idespecialidad
         JOIN v_personas per ON per.id_persona = th.idpaciente
-        WHERE per.nro_doc = ?
+        WHERE th.idpaciente = ?
     )
     UNION ALL
     (
@@ -140,7 +140,7 @@ def query_turno_historico_paciente() -> str:
         JOIN servicios s ON s.idservicio = se.idservicio
         JOIN especialidades esp ON esp.idespecialidad = se.idespecialidad
         JOIN v_personas per ON per.id_persona = te.idpaciente
-        WHERE per.nro_doc = ?
+        WHERE te.idpaciente = ?
     )
     ORDER BY fecha_hora_mdf DESC
     """

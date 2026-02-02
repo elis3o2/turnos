@@ -133,20 +133,27 @@ def verificar_turnos() -> None:
                             # --- cambio mínimo: obtener id_efe_ser_esp desde Turno si no lo tenemos
                             id_efe_ser_esp = getattr(t, "id_efe_ser_esp_id", id_efe_ser_esp)
 
-                            # obtener EfeSerEsp para sacar efector/servicio/especialidad (asumimos que existe)
-                            ese_obj = EfeSerEsp.objects.select_related(
-                                "id_efector", "id_servicio", "id_especialidad"
-                            ).get(pk=id_efe_ser_esp)
+                            # obtener EfeSerEsp para sacar efector / servicio / especialidad
+                            ese_obj = (
+                                EfeSerEsp.objects
+                                .select_related(
+                                    "id_efector",
+                                    "id_ser_esp__id_servicio",
+                                    "id_ser_esp__id_especialidad",
+                                )
+                                .get(pk=id_efe_ser_esp)
+                            )
 
                             # IDs reales
                             id_efector = ese_obj.id_efector_id
-                            id_servicio = ese_obj.id_servicio_id
-                            id_especialidad = ese_obj.id_especialidad_id
+                            id_servicio = ese_obj.id_ser_esp.id_servicio_id
+                            id_especialidad = ese_obj.id_ser_esp.id_especialidad_id
 
                             # Valores reales (nombre)
                             nombre_efector = ese_obj.id_efector.nombre
-                            nombre_servicio = ese_obj.id_servicio.nombre
-                            nombre_especialidad = ese_obj.id_especialidad.nombre
+                            nombre_servicio = ese_obj.id_ser_esp.id_servicio.nombre
+                            nombre_especialidad = ese_obj.id_ser_esp.id_especialidad.nombre
+
                             # datos del efector vía cursor Informix
                             nombre_efector = calle = altura = letra = coordx = coordy = tel_efe = calle_nom = None
                             
