@@ -302,6 +302,7 @@ def update_estado_Turno(id_sisr: int, id_pac: int, id_est: int) -> Turno | None:
         print(f"[ERROR] al actualizar Turno id={id_sisr}: {ex}")
         return None
 
+
 def create_Turno(id_sisr: int, id_pac: int, id_est: int, 
                  id_ess: int, fecha: date, hora: time) -> Turno:
     t = Turno.objects.create(
