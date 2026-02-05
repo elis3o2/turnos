@@ -244,6 +244,15 @@ class EstudioRequerido(models.Model):
         db_table = 'estudio_requerido'
         
 
+class CustomUser(AbstractUser):
+    efectores = models.ManyToManyField(Efector, related_name="usuarios", blank=True)
+    dni  = models.CharField(max_length=15, unique=True, null=True)
+
+    def __str__(self):
+        return self.username
+
+
+
 class TurnoEsperaEstudio(models.Model):
     id = models.AutoField(primary_key=True)
     id_turno_espera  = models.ForeignKey(
@@ -259,12 +268,6 @@ class TurnoEsperaEstudio(models.Model):
         db_table = 'turno_espera_estudio'
 
 
-class CustomUser(AbstractUser):
-    efectores = models.ManyToManyField(Efector, related_name="usuarios", blank=True)
-    dni  = models.CharField(max_length=15, unique=True, null=True)
-
-    def __str__(self):
-        return self.username
 
 
 class RegistroBanderas(models.Model):
