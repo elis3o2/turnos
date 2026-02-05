@@ -33,7 +33,7 @@ from django.shortcuts import render
 def frontend(request):
     return render(request, "index.html")
 
-    
+
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
     serializer_class = PlantillaSerializer
@@ -510,6 +510,7 @@ class EstudioRequeridoViewSet(viewsets.ModelViewSet):
     
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
