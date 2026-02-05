@@ -298,7 +298,6 @@ export default function ListaEspera(): React.ReactElement {
 
 
   const handleToggleEstudio = (estudio: EstudioRequerido) => {
-    console.log(estudio)
     if (estudio.estado) return; // 🔒 no tocar cerrados
 
     setSelectedEstudios(prev =>
@@ -307,8 +306,6 @@ export default function ListaEspera(): React.ReactElement {
         : [...prev, estudio.id]
       );
   };
-
-  console.log(turnos)
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
     const map = new Map<number, string>();
