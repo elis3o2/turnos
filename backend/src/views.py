@@ -10,12 +10,10 @@ from django.db.models.functions import Coalesce
 from django.conf import settings
 from django.db import connections, DatabaseError
 from django.core.cache import cache
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from collections import OrderedDict
 from src.models import (Plantilla,  EstadoMsj, EstadoTurno, Turno, TurnoEspera, Deriva,
                         Mensaje, Efector,Servicio, Especialidad, EfeSerEspPlantilla,
-                        EfeSerEsp, EstudioRequerido, Flow, TurnoFlow)
+                        EfeSerEsp, EstudioRequerido, Flow, TurnoFlow, TurnoEsperaEstudio)
 from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurnoSerializer,
                 TurnoSerializer, TurnoEsperaSerializer, MensajeSerializer, DerivaSerializer,
                 EfectorSerializer, ServicioSerializer,EspecialidadSerializer, EfeSerEspPlantillaSerializer, EfeSerEspPlantillaDetailSerializer,
@@ -23,17 +21,12 @@ from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurn
                 PacienteSerializer, ProfesionalSerializer, EfeSerEspSerializer, EfeSerEspEfectorSerializer,
                 EfeSerEspCompletoSerializer, TurnoEsperaCreateSerializer, TurnoEsperaCloseSerializer,
                 EstudioRequeridoSerializer )
+from django.utils import timezone
 from typing import List
 from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
 import logging
 logger = logging.getLogger(__name__)
-from django.shortcuts import render
-
-
-def frontend(request):
-    return render(request, "index.html")
-
 
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
@@ -414,8 +407,6 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
-<<<<<<< HEAD
-=======
     @action(detail=True, methods=["post"], url_path="marcar-estudios")
     def marcar_estudios(self, request, pk=None):
         """
@@ -459,7 +450,6 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         )
         
 
->>>>>>> 9ea7d658 (historico - bd - checklist)
     def create(self, request, *args, **kwargs):
 
         # --- VALIDACIÓN MÍNIMA ANTES DE CREAR ---
@@ -505,10 +495,7 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             TurnoEsperaSerializer(turno, context={"request": request}).data,
             status=status.HTTP_200_OK
         )
-<<<<<<< HEAD
-=======
 
->>>>>>> 9ea7d658 (historico - bd - checklist)
         
 
 class EstudioRequeridoViewSet(viewsets.ModelViewSet):
@@ -517,7 +504,6 @@ class EstudioRequeridoViewSet(viewsets.ModelViewSet):
     
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -904,6 +890,7 @@ class TurnosMergedAllAPIView(APIView):
         # 4) Inyectar los campos de Informix como atributos dinámicos sobre cada instancia Turno
         for turno in local_list:
             ext_asig = ext_map_asig.get(str(turno.id_sisr), {})
+            # si no existe la key, devolvemos None (coherente con tus campos allow_null)
             if (turno.id_paciente ==  ext_asig.get('paciente_id')):
                 setattr(turno, 'paciente_nombre', ext_asig.get('paciente_nombre'))
                 setattr(turno, 'paciente_apellido', ext_asig.get('paciente_apellido'))
@@ -928,7 +915,6 @@ class TurnosMergedAllAPIView(APIView):
                 setattr(turno, 'paciente_dni', ext_elim.get('paciente_dni'))
                 setattr(turno, 'profesional_nombre', ext_elim.get('profesional_nombre'))
                 setattr(turno, 'profesional_apellido', ext_elim.get('profesional_apellido'))
-
         # 5) Serializar y devolver. Como le pasamos instancias Turno, los campos nested funcionarán.
         serializer = TurnoMergedSerializer(local_list, many=True)
         return Response({"response": serializer.data, "count": total})
