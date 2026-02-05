@@ -10,6 +10,8 @@ from django.db.models.functions import Coalesce
 from django.conf import settings
 from django.db import connections, DatabaseError
 from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from collections import OrderedDict
 from src.models import (Plantilla,  EstadoMsj, EstadoTurno, Turno, TurnoEspera, Deriva,
                         Mensaje, Efector,Servicio, Especialidad, EfeSerEspPlantilla,
