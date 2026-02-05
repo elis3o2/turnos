@@ -27,7 +27,13 @@ from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
 import logging
 logger = logging.getLogger(__name__)
+from django.shortcuts import render
 
+
+def frontend(request):
+    return render(request, "index.html")
+
+    
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
     serializer_class = PlantillaSerializer
