@@ -555,15 +555,14 @@ def send_reminder_task(
                                 
                             else:
                                 ack = -1
-                            create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+                            create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
                         else:
                             ack = -4
-                            create_Mensaje(id=None,turno=t, numero=telefono,plantilla=plantilla, estado=ack, fecha=timezone.now(), sesion=None)
+                            create_Mensaje(id=None,turno=turno, numero=telefono,plantilla=plantilla, estado=ack, fecha=timezone.now(), sesion=None)
                                                                 
                     
                     except Exception as ex:
                         print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
-                        continue
 
 
             else:
