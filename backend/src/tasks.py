@@ -15,7 +15,7 @@ from src.utils.utils import enviar_whatsapp, check_turno, format_plantilla, star
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
 from src.utils.parse import parse_date, parse_time
-from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res, sacar_Turno_Espera, create_flow
+from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res, sacar_Turno_Espera, create_flow, get_session
 from rest_framework.response import Response
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -269,9 +269,9 @@ def verificar_turnos() -> None:
 
 
 
-SEND_TIME = time(10, 30)
-BATCH_SIZE = 8
-BATCH_WINDOW_SECONDS = 300
+SEND_TIME = time(12, 40)
+BATCH_SIZE = 5
+BATCH_WINDOW_SECONDS = 720
 
 
 @shared_task
@@ -509,62 +509,79 @@ def send_reminder_task(self, detalles) -> None:
 
             telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
 
+            if len(telefono) == 13:
+
             # Si existe algun TurnoFlow con Flow en estado 0, marcamos reintento
-            if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
-                print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
-                need_retry = True
-            else:
-                d_fecha = parse_date(fecha_turno)
-                d_hora = parse_time(hora_turno)
-                d_fecha_str = d_fecha.strftime("%d-%m-%Y")
-                d_hora_str = d_hora.strftime("%H:%M")
+                if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
+                    print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
+                    need_retry = True
+                else:
+                    d_fecha = parse_date(fecha_turno)
+                    d_hora = parse_time(hora_turno)
+                    d_fecha_str = d_fecha.strftime("%d-%m-%Y")
+                    d_hora_str = d_hora.strftime("%H:%M")
 
-                datos_plantilla = {
-                    "nompac": nom_pac or "",
-                    "apepac": ape_pac or "",
-                    "fecha": d_fecha_str,
-                    "horaturno": d_hora_str,
-                    "nomprof": nom_prof or "",
-                    "apeprof": ape_prof or "",
-                    "especialidad": nombre_especialidad or "",
-                    "efector": nombre_efector or "",
-                    "nombre_servicio": nombre_servicio or "",
-                    "calle": calle or "",
-                    "altura": altura or "",
-                    "letra": letra or "",
-                    "coordx": coordx or "",
-                    "coordy": coordy or "",
-                    "tel_efe": tel_efe or "",
-                    "calle_nom": calle_nom or "",
-                }
+                    datos_plantilla = {
+                        "nompac": nom_pac or "",
+                        "apepac": ape_pac or "",
+                        "fecha": d_fecha_str,
+                        "horaturno": d_hora_str,
+                        "nomprof": nom_prof or "",
+                        "apeprof": ape_prof or "",
+                        "especialidad": nombre_especialidad or "",
+                        "efector": nombre_efector or "",
+                        "nombre_servicio": nombre_servicio or "",
+                        "calle": calle or "",
+                        "altura": altura or "",
+                        "letra": letra or "",
+                        "coordx": coordx or "",
+                        "coordy": coordy or "",
+                        "tel_efe": tel_efe or "",
+                        "calle_nom": calle_nom or "",
+                    }
 
-                mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-
-                # enviar_whatsapp puede devolver distintos tipos; proteger acceso
-                try:
+                    mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
                     res = enviar_whatsapp(telefono, mensaje)
-                except Exception as ex:
-                    print(f"[ERROR] enviar_whatsapp falló para turno {id_turno}: {ex}")
-                    # si querés reintentar por fallo transitorio, podés usar self.retry(exc=ex)
-                    raise
+                    response_data = getattr(res, "data", {}) 
+                    envio = response_data.get("envio", {})
+                    ins = None
 
-                
+                    try:
+                        if envio:
+                            envio_id = envio.get("id")
+                            est = envio.get("estado")
+                            ts = envio.get("timestamp")
 
-                ack = decode_res(res) 
-                response_data = getattr(res, "data", {})
+                            fecha = datetime.fromtimestamp(ts, ZoneInfo("America/Argentina/Buenos_Aires")).replace(tzinfo=None)
+                            if est == "COMPLETADO":
+                                ins = get_session(envio_id)
+                                ins = str(ins) if ins is not None else ins
+                                ack = 1
+                                
+                            else:
+                                ack = -1
+                            create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+                        else:
+                            ack = -4
+                            create_Mensaje(id=None,turno=t, numero=telefono,plantilla=plantilla, estado=ack, fecha=timezone.now(), sesion=None)
+                                                                
+                    
+                    except Exception as ex:
+                        print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
+                        continue
+
+
+            else:
+                ack =-2
                 try:
-                    id_mensaje=response_data.get("id", None)
-                    fecha_res =response_data.get("time", None)
-                    ses = response_data.get("session", None)
-                    create_Mensaje(id_mensaje, turno, telefono, plantilla, ack, fecha_res, ses)
+                    create_Mensaje(turno=t, plantilla=plantilla, estado=-2)
 
                 except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
-                    return
+                    print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
 
-                if ack >= 0:
-                    turno.msj_recordatorio = 1
-                    turno.save(update_fields=["msj_recordatorio"])
+            if ack >= 0:
+                turno.msj_recordatorio = 1
+                turno.save(update_fields=["msj_recordatorio"])
 
         # if ack >= 0 and not need_retry:
             # create_flow(telefono, turno)
