@@ -21,8 +21,6 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
     """
     api_url = config("API_ESTADO_WHATSAPP")
     params = {
-        "session": mensaje.id_sesion_id,
-        "numero": mensaje.numero,
         "id": mensaje.id_mensaje
     }
 
@@ -34,7 +32,9 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
             api_url,
             params=params,
             headers={
-                "Accept": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": "Bearer " + config('TOKEN_WHATSAPP')
             },
             timeout=5
         )
@@ -69,18 +69,21 @@ def enviar_whatsapp(numero: str, mensaje: str) -> Response:
     api_url = config('API_WHATSAPP')
 
     session = requests.Session()
-    session.trust_env = False  # ← clave
+    #session.trust_env = False  # ← clave
 
     try:
         response = session.post(
             api_url,
             json={
-                "numero": numero,
-                "texto": mensaje
+                "destinatario": numero,
+                "texto": mensaje,
+                "linkPreview": False,
+                "modo": "SYNC"
             },
             headers={
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Accept": "application/json",
+                "Authorization": "Bearer " + config('TOKEN_WHATSAPP')
             },
             timeout=15
         )
@@ -284,6 +287,49 @@ def update_estado_Turno(id_sisr: int, id_pac: int, id_est: int) -> Turno | None:
         print(f"[ERROR] al actualizar Turno id={id_sisr}: {ex}")
         return None
 
+
+import requests
+from decouple import config
+
+def get_session(id: int) -> int | None:
+    api_url = f"{config('API_ESTADO_WHATSAPP')}{id}"
+    session = requests.Session()
+    session.trust_env = True
+
+    try:
+        resp = session.get(
+            api_url,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": "Bearer " + config("TOKEN_WHATSAPP"),
+            },
+            timeout=5,
+        )
+
+
+        # Verificar que sea JSON
+        if "application/json" not in resp.headers.get("Content-Type", ""):
+            return None
+
+        data = resp.json()
+
+
+        envio = data.get("envio")
+        if not envio:
+            return None
+
+        ins = envio.get("idInstancia")
+
+        # Asegurar que sea int
+        return ins 
+
+    except (requests.exceptions.RequestException, ValueError, TypeError) as e:
+        return None
+
+
+
+
 def create_Turno(id_sisr: int, id_pac: int, id_est: int, 
                  id_ess: int, fecha: date, hora: time) -> Turno:
     t = Turno.objects.create(
@@ -302,12 +348,19 @@ def create_Turno(id_sisr: int, id_pac: int, id_est: int,
     return t
 
 
-def create_Mensaje(id: str | None, turno: Turno, numero: str | None,
-                plantilla: Plantilla, estado: int, fecha: datetime| None, sesion: str | None) -> None:
+def create_Mensaje(
+    id: str | None = None,
+    turno: Turno | None = None,
+    numero: str | None = None,
+    plantilla: Plantilla | None = None,
+    estado: int | None = None,
+    fecha: datetime | None = None,
+    sesion: str | None = None,
+) -> None:
     if fecha == None:
         fecha = datetime.now()
 
-    Mensaje.objects.create(
+    m = Mensaje.objects.create(
         id_mensaje=id,
         id_turno=turno,
         numero=numero,

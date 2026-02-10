@@ -838,7 +838,6 @@ class TurnosMergedAllAPIView(APIView):
                 .filter(**filters)
                 .order_by('-fecha', '-hora', '-id')
             )
-            print(qs.query)
 
             # calcular total antes del slicing (útil para paginación)
             total = qs.count()
