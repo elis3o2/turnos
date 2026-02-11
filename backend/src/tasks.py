@@ -494,10 +494,10 @@ def send_reminder_task(
                 return
 
             # validar teléfono
-            if not carac_tel or not tel:
+            if carac_tel == None or tel == None:
                 print(f"[DEBUG] No hay teléfono válido para id_turno={id_turno} (carac={carac_tel}, tel={tel})")
                 try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-3)
+                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-4)
                 except Exception as ex:
                     print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
                 return
@@ -566,9 +566,9 @@ def send_reminder_task(
 
 
             else:
-                ack =-2
+                ack =-3
                 try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-2)
+                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-3)
 
                 except Exception as ex:
                     print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
