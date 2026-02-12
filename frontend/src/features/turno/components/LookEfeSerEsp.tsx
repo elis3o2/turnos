@@ -132,37 +132,59 @@ export default function LookEfeSerEsp({
     }
 
     setError(null);
+
     const serespEntry = serEsp.find((s) => s.id_ser === selectedServicio.id);
 
+    // derivaciones del servicio actual (si las hay)
+    const derivsForSrv = derivaciones.filter(
+      (d) => d.servicio_deriva?.id === selectedServicio.id
+    );
+
     if (serespEntry) {
-      // Servicio proviene de SerEsp
-      const eps = (serespEntry.especialidades ?? []).map((e) =>
+      // Especialidades desde SerEsp
+      const epsFromSerEsp = (serespEntry.especialidades ?? []).map((e) =>
         mapSerEspEspecialidadToEspecialidad({
           id_esp: e.id_esp,
           esp_nombre: e.esp_nombre,
         })
       );
-      const uniqueEps = Array.from(
-        new Map(eps.map((x) => [x.id, x])).values()
-      ).sort((a, b) =>
+
+      // Especialidades desde las derivaciones para este servicio
+      const epsFromDer = derivsForSrv
+        .map((d) => d.especialidad_deriva)
+        .filter(Boolean) as Especialidad[];
+
+      // Unir y deduplicar por id
+      const allEpsMap = new Map<number, Especialidad>();
+      [...epsFromSerEsp, ...epsFromDer].forEach((ep) => {
+        if (ep && !allEpsMap.has(ep.id)) allEpsMap.set(ep.id, ep);
+      });
+
+      const uniqueEps = Array.from(allEpsMap.values()).sort((a, b) =>
         a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" })
       );
 
       setEspecialidades(uniqueEps);
-
       setSelectedEspecialidad(null);
 
-      setEfectores([efector]);
+      // Efectores: incluir el efector propio y los efectores de las derivaciones (deduplicados)
+      const efectoresMap = new Map<number, Efector>();
+      efectoresMap.set(efector.id, efector);
+      derivsForSrv.forEach((d) => {
+        const ef = d.efector_deriva;
+        if (ef && !efectoresMap.has(ef.id)) efectoresMap.set(ef.id, ef);
+      });
+
+      const efectoresList = Array.from(efectoresMap.values());
+      setEfectores(efectoresList);
+
+      // mantener seleccionado por defecto el efector propio (puedes ajustar si prefieres otro)
       setSelectedEfector(efector);
 
       // si proviene de SerEsp, cupo = false (se decide sólo por derivaciones exactas)
       setCupo(false);
     } else {
-      // Servicio viene de derivaciones
-      const derivsForSrv = derivaciones.filter(
-        (d) => d.servicio_deriva?.id === selectedServicio.id
-      );
-
+      // Servicio viene de derivaciones (no está en SerEsp)
       const epsFromDer = derivsForSrv
         .map((d) => d.especialidad_deriva)
         .filter(Boolean) as Especialidad[];
@@ -174,7 +196,6 @@ export default function LookEfeSerEsp({
       );
 
       setEspecialidades(uniqueEps);
-
       setSelectedEspecialidad(null);
 
       if (derivsForSrv.length > 0) {
@@ -186,10 +207,10 @@ export default function LookEfeSerEsp({
         setSelectedEfector(null);
       }
 
-      // No setear cupo aquí: lo decidimos cuando se elige la especialidad exacta
       setCupo(false);
     }
   }, [selectedServicio, serEsp, derivaciones, efector, setCupo]);
+
 
   // -----------------------
   // Cuando cambia especialidad: buscamos la derivación exacta (servicio+especialidad)
@@ -198,42 +219,55 @@ export default function LookEfeSerEsp({
   useEffect(() => {
     if (!selectedServicio || !selectedEspecialidad) return;
 
-    // si efectores ya tiene uno seleccionado, mantenerlo
-    // pero igualmente evaluamos cupo basado en la derivación exacta
-    const derivMatch = derivaciones.find(
+    // derivaciones que coinciden EXACTAMENTE
+    const derivsExact = derivaciones.filter(
       (d) =>
         d.servicio_deriva?.id === selectedServicio.id &&
         d.especialidad_deriva?.id === selectedEspecialidad.id
     );
 
-    if (derivMatch) {
-      // agregar efector_deriva a efectores si hace falta y setearlo
-      setEfectores((prev) =>
-        prev.some((x) => x.id === derivMatch.efector_deriva.id)
-          ? prev
-          : [...prev, derivMatch.efector_deriva]
-      );
-      setSelectedEfector(derivMatch.efector_deriva);
+    if (derivsExact.length > 0) {
+      // reconstruimos la lista de efectores desde cero
+      const efectoresMap = new Map<number, Efector>();
 
-      // ** NUEVA LÓGICA SOLICITADA **
-      // cupo = true sólo si la derivación exacta tiene cupo === 1
-      setCupo(Number(derivMatch.cupo) === 1);
+      derivsExact.forEach((d) => {
+        const ef = d.efector_deriva;
+        if (ef && !efectoresMap.has(ef.id)) {
+          efectoresMap.set(ef.id, ef);
+        }
+      });
+
+      const nuevosEfectores = Array.from(efectoresMap.values());
+
+      setEfectores(nuevosEfectores);
+
+      // seleccionar automáticamente el primero
+      setSelectedEfector(nuevosEfectores[0] ?? null);
+
+      // cupo depende de la derivación exacta
+      setCupo(Number(derivsExact[0].cupo) === 1);
     } else {
-      // no hay derivación exacta
-      // si servicio proviene de SerEsp => cupo false
-      const serespEntry = serEsp.find((s) => s.id_ser === selectedServicio.id);
+      // no hay derivación exacta → usar efector propio
+      const serespEntry = serEsp.find(
+        (s) => s.id_ser === selectedServicio.id
+      );
+
       if (serespEntry) {
-        setCupo(false);
+        setEfectores([efector]);
+        setSelectedEfector(efector);
       } else {
-        // servicio viene de derivaciones pero no hay deriv match (posible inconsistencia)
-        setCupo(false);
+        setEfectores([]);
+        setSelectedEfector(null);
       }
+
+      setCupo(false);
     }
   }, [
     selectedServicio,
     selectedEspecialidad,
     derivaciones,
     serEsp,
+    efector,
     setCupo,
   ]);
 
