@@ -568,7 +568,7 @@ def send_reminder_task(
             else:
                 ack =-3
                 try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-3)
+                    create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=-3)
 
                 except Exception as ex:
                     print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
