@@ -267,7 +267,7 @@ def verificar_turnos() -> None:
 
 
 
-SEND_TIME = time(12, 40)
+SEND_TIME = time(10, 30)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
 
@@ -490,7 +490,7 @@ def send_reminder_task(
                 return
 
             if Mensaje.objects.filter(id_turno=id, id_plantilla__id_tipo__id=4).exists():
-                print(f"[DEBUG] ya se intento enviar el mensaje y falló, abortando")
+                print(f"[DEBUG] ya se intento enviar el mensaje, abortando")
                 return
 
             # validar teléfono
@@ -557,7 +557,7 @@ def send_reminder_task(
                                 ack = -1
                             create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
                         else:
-                            ack = -4
+                            ack = -5
                             create_Mensaje(id=None,turno=turno, numero=telefono,plantilla=plantilla, estado=ack, fecha=timezone.now(), sesion=None)
                                                                 
                     
