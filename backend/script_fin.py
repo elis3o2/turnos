@@ -1,40 +1,94 @@
-from collections import defaultdict
-from django.db import connections
-from src.models import Mensaje, Turno
-from django.db.models import Count
+from django.db import connections, DatabaseError, IntegrityError
+from src.models import Turno
 
 
-def verificar_estado():
-    turnos = Turno.objects.all()
+def chunked(lst, size=300):
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
 
-    id_sisr_list = list(
-        turnos.values_list('id_sisr', flat=True)
+
+def update_state():
+
+    ids = list(
+        Turno.objects
+        .filter(id_estado__id=1, id_sisr__isnull=False)
+        .values_list("id_sisr", flat=True)
+        .distinct()
     )
 
+    if not ids:
+        print("No hay turnos para procesar")
+        return
 
-    placeholders = ','.join(['?'] * len(id_sisr_list))
+    fin = rep = sus = errores = 0
 
-    sql = f"""
-        SELECT idestadoturno, COUNT(*) AS cantidad
-        FROM turnoshistorico
-        WHERE idturno IN ({placeholders})
-        GROUP BY idestadoturno
-    """
+    try:
+        with connections["informix"].cursor() as cur:
 
-    resultados = defaultdict(int)
+            for ids_chunk in chunked(ids, 300):
 
-    with connections['informix'].cursor() as cur:
-        cur.execute(sql, id_sisr_list)
-        for id_estado, cantidad in cur.fetchall():
-            resultados[id_estado] += cantidad
+                placeholders = ",".join(["?"] * len(ids_chunk))
 
-    print("RESEULTADO SISR ", resultados)
+                query = f"""
+                    SELECT idturno, idestadoturno
+                    FROM turnos
+                    WHERE idturno IN ({placeholders})
+                    AND idestadoturno != 3
+                """
 
+                cur.execute(query, [str(i) for i in ids_chunk])
 
-    resumen = (
-        turnos
-        .values('id_estado')
-        .annotate(cantidad=Count('id_estado'))
-    )
+                for sisr_id, est in cur.fetchall():
 
-    print("RESULTADO DJANGO:", list(resumen))
+                    sisr_id = str(sisr_id)
+                    est = str(est)
+
+                    if est in ("4", "5", "6"):
+                        nuevo_estado = 4
+                    elif est == "8":
+                        nuevo_estado = 3
+                    elif est in ("7", "2"):
+                        nuevo_estado = 2
+                    else:
+                        continue
+
+                    turnos = Turno.objects.filter(
+                        id_sisr=sisr_id,
+                        id_estado__id=1
+                    )
+
+                    for turno in turnos:
+                        try:
+                            turno.id_estado_id = nuevo_estado
+                            turno.save(update_fields=["id_estado"])
+
+                            if nuevo_estado == 4:
+                                fin += 1
+                            elif nuevo_estado == 3:
+                                rep += 1
+                            elif nuevo_estado == 2:
+                                sus += 1
+
+                        except IntegrityError as e:
+                            errores += 1
+                            print(
+                                "[ERROR DUPLICADO]",
+                                f"id={turno.id}",
+                                f"id_sisr={turno.id_sisr}",
+                                f"paciente={turno.id_paciente}",
+                                f"estado_actual={turno.id_estado_id}",
+                                f"nuevo_estado={nuevo_estado}",
+                                "|",
+                                e
+                            )
+                            continue
+
+    except DatabaseError as e:
+        print("Error de base de datos Informix:", e)
+        return
+
+    print("FINALIZADOS:", fin)
+    print("REPROGRAMADOS:", rep)
+    print("SUSPENDIDOS:", sus)
+    print("ERRORES IGNORADOS:", errores)
+
