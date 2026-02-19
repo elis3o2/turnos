@@ -11,7 +11,8 @@ from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
 from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
-
+from zoneinfo import ZoneInfo
+TZ = ZoneInfo("America/Argentina/Buenos_Aires")
 
 
 def update_msg_state(mensaje: Mensaje) -> Mensaje:
@@ -64,38 +65,91 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
         return mensaje
 
 
-
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
+
+    ms = (
+        Mensaje.objects
+        .filter(numero=numero)
+        .exclude(id_sesion_id__isnull=True)
+        .order_by("-fecha_envio")
+        .values_list("id_sesion_id", flat=True)
+        .distinct()
+    )
+
+    list_sessions = list(ms)
+
+    return _enviar_whatsapp(numero, mensaje, list_sessions)
+
+
+
+def _enviar_whatsapp(numero: str, mensaje: str, sesions: list[str]) -> Response:
+    """
+    Envía el mensaje al número usando distintas sesiones.
+    Si todas fallan, reintenta sin idInstancia.
+    """
+
     api_url = config('API_WHATSAPP')
+    token = config('TOKEN_WHATSAPP')
 
-    session = requests.Session()
-    #session.trust_env = False  # ← clave
+    json_base = {
+        "destinatario": numero,
+        "texto": mensaje,
+        "linkPreview": False,
+        "modo": "SYNC"
+    }
 
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}"
+    }
+
+    # 1️⃣ Intentar con cada sesión
+    for sesion_id in sesions:
+        json_data = json_base.copy()
+        json_data["idInstancia"] = sesion_id
+
+        try:
+            response = requests.post(
+                api_url,
+                json=json_data,
+                headers=headers,
+                timeout=15
+            )
+
+            if 200 <= response.status_code < 300:
+                if "application/json" in response.headers.get("Content-Type", ""):
+                    return Response(response.json(), status=response.status_code)
+
+                return Response(
+                    {"detail": "Mensaje enviado pero respuesta no JSON"},
+                    status=response.status_code
+                )
+
+        except requests.exceptions.RequestException:
+            continue  # probar siguiente sesión
+
+    # 2️⃣ Si todas fallaron → intentar sin idInstancia
     try:
-        response = session.post(
+        response = requests.post(
             api_url,
-            json={
-                "destinatario": numero,
-                "texto": mensaje,
-                "linkPreview": False,
-                "modo": "SYNC"
-            },
-            headers={
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Authorization": "Bearer " + config('TOKEN_WHATSAPP')
-            },
+            json=json_base,
+            headers=headers,
             timeout=15
         )
 
-        content_type = response.headers.get("Content-Type", "")
+        if 200 <= response.status_code < 300:
+            if "application/json" in response.headers.get("Content-Type", ""):
+                return Response(response.json(), status=response.status_code)
 
-        if "application/json" in content_type:
-            return Response(response.json(), status=response.status_code)
+            return Response(
+                {"detail": "Mensaje enviado sin idInstancia pero respuesta no JSON"},
+                status=response.status_code
+            )
 
         return Response(
             {
-                "error": "Respuesta no JSON desde la API WhatsApp",
+                "error": "Falló con sesiones y también sin idInstancia",
                 "status_code": response.status_code,
                 "raw_response": response.text[:500]
             },
@@ -108,6 +162,30 @@ def enviar_whatsapp(numero: str, mensaje: str) -> Response:
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
+def decode_res(res: dict) -> (str, int, datetime, str):
+    response_data = getattr(res, "data", {}) 
+    envio = response_data.get("envio", {})
+    envio_id = None
+    ins = None
+    ack = None
+    if envio:
+        envio_id = envio.get("id")
+        est = envio.get("estado")
+        ts = envio.get("timestamp")
+
+        fecha = datetime.fromtimestamp(ts, TZ).replace(tzinfo=None)
+        if est == "COMPLETADO":
+            ins = get_session(envio_id)
+            ins = str(ins) if ins is not None else ins
+            ack = 1
+        else:
+            ack = -1
+    else:
+        fecha = timezone.now()
+        ack = -5
+    
+    return (envio_id, ack, fecha, ins)
+        
     
 def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
     try:
@@ -280,7 +358,7 @@ def update_estado_Turno(id_sisr: int, id_pac: int, id_est: int) -> Turno | None:
             t.id_estado_id = id_est
             t.save(update_fields=["id_estado_id"])
 
-        print(f"[INFO] Actualizado Turno id={id_sisr} a estado={id_sisr}")
+        print(f"[INFO] Actualizado Turno id={id_sisr} a estado={id_est}")
         return t
     
     except Exception as ex:
@@ -396,24 +474,24 @@ def map_estdo(est: int) -> int:
     return estado
 
 
-def decode_res(res: Response) -> int:
-    match res.status_code:
-        case 503:
-            ack = -5
-        case 400:
-            ack = -4
-        case 404:
-            ack = -3
-        case 422:
-            ack = -2
-        case 500:
-            ack = -1
-        case _:  
-            response_data = getattr(res, "data", {})
-            ack = int(response_data.get("ack", -5)) 
-
-    return ack
-
+#def decode_res(res: Response) -> int:
+#    match res.status_code:
+#        case 503:
+#            ack = -5
+#        case 400:
+#            ack = -4
+#        case 404:
+#            ack = -3
+#        case 422:
+#            ack = -2
+#        case 500:
+#            ack = -1
+#        case _:  
+#            response_data = getattr(res, "data", {})
+#            ack = int(response_data.get("ack", -5)) 
+#
+#    return ack
+#
 
 
 def create_flow(telefono: str, turno: Turno ) -> None:
