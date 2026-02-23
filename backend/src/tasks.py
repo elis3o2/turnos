@@ -532,10 +532,10 @@ def send_reminder_task(
                     try:
                         (envio_id, ack, fecha, ins) = decode_res(res)
                         
-                        create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+                        create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
 
                     except Exception as ex:
-                        print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
+                        print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
                 
             else:
                 ack =-3
@@ -543,7 +543,7 @@ def send_reminder_task(
                     create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=ack)
 
                 except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
+                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
 
             if ack >= 0:
                 turno.msj_recordatorio = 1
