@@ -377,29 +377,14 @@ class HistoricoPacienteSerializer(serializers.Serializer):
     apellido_profesional = serializers.CharField(allow_null=True, allow_blank=True, required=False)
 
     # Campo fecha modificado para truncar hora
-    fecha = serializers.DateField(format="%Y-%m-%d", allow_null=True, required=False)
+    fecha = serializers.DateField(allow_null=True, required=False)
 
     hora = serializers.TimeField(allow_null=True, required=False)
     efector = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     servicio = serializers.CharField(allow_null=True, allow_blank=True, required=False)
     especialidad = serializers.CharField(allow_null=True, allow_blank=True, required=False)
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
 
-        val = rep.get("fecha")
-        if val:
-            try:
-                # Si viene con hora, convertir a date
-                if isinstance(val, str):
-                    val_dt = datetime.fromisoformat(val)
-                    rep["fecha"] = val_dt.date()
-                elif isinstance(val, datetime):
-                    rep["fecha"] = val.date()
-            except Exception:
-                rep["fecha"] = val.split(" ")[0]
-
-        return rep
 
 
 
