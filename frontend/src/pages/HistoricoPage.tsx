@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TextField, Typography, Tooltip, IconButton, Chip, Popover, FormGroup, FormControlLabel, Checkbox, Skeleton, MenuItem
@@ -48,7 +48,8 @@ const ALL_COLUMNS = [
 ] as const;
 
 // ---------------------- Helpers ----------------------
-const safeFormat = (iso: string | null | undefined) => {
+// ---------------------- Helpers (reemplaza safeFormat por lo siguiente) ----------------------
+const formatDateTime = (iso: string | null | undefined) => {
   if (!iso) return '—';
   try {
     const d = typeof iso === 'string' ? new Date(iso) : (iso as unknown as Date);
@@ -58,6 +59,25 @@ const safeFormat = (iso: string | null | undefined) => {
   }
 };
 
+const formatDateOnly = (value: string | Date | null | undefined) => {
+  console.log(value)
+  if (!value) return '—';
+  try {
+    const d = typeof value === 'string' ? new Date(value) : (value as unknown as Date);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString();
+    if (typeof value === 'string' && value.includes(',')) return value.split(',')[0].trim();
+    if (typeof value === 'string') {
+      const m = value.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      if (m) return m[1];
+    }
+    return String(value);
+  } catch {
+    return String(value);
+  }
+};
+
+
+
 const downloadCSV = (rows: HistoricoItem[], visibleKeys: string[], columnsMap: Record<string, string>) => {
   const headers = visibleKeys.map(k => `"${columnsMap[k] ?? k}"`);
   const csvRows = [headers.join(',')];
@@ -65,7 +85,8 @@ const downloadCSV = (rows: HistoricoItem[], visibleKeys: string[], columnsMap: R
   for (const r of rows) {
     const row = visibleKeys.map(k => {
       let val: any = (r as any)[k];
-      if (k === 'fecha_hora_mdf' || k === 'fecha' || k === 'hora') val = safeFormat(val);
+      if (k === 'fecha_hora_mdf') val = formatDateTime(val);
+      if (k === 'fecha') val = formatDateOnly(val);
       if (val === null || val === undefined) val = '';
       return `"${String(val).replace(/"/g, '""')}"`;
     });
@@ -374,7 +395,7 @@ export default function HistoricoPage(): React.ReactElement {
                   >
                     {ALL_COLUMNS.filter(c => visibleCols[c.key]).map(col => {
                       switch (col.key) {
-                        case 'fecha_hora_mdf': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{safeFormat(r.fecha_hora_mdf)}</TableCell>;
+                        case 'fecha_hora_mdf': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{formatDateTime(r.fecha_hora_mdf)}</TableCell>;
                         case 'estado':
                           return (
                             <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>
@@ -398,7 +419,7 @@ export default function HistoricoPage(): React.ReactElement {
                         case 'especialidad': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{r.especialidad ?? '—'}</TableCell>;
                         case 'nombre_profesional': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{r.nombre_profesional ?? '—'}</TableCell>;
                         case 'apellido_profesional': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{r.apellido_profesional ?? '—'}</TableCell>;
-                        case 'fecha': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{safeFormat(r.fecha)}</TableCell>;
+                        case 'fecha': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{formatDateOnly(r.fecha)}</TableCell>;
                         case 'hora': return <TableCell key={col.key} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140, py: 0.5, px: 1 }}>{r.hora ?? '—'}</TableCell>;
                         default: return null;
                       }
