@@ -48,34 +48,34 @@ const ALL_COLUMNS = [
 ] as const;
 
 // ---------------------- Helpers ----------------------
-// ---------------------- Helpers (reemplaza safeFormat por lo siguiente) ----------------------
-const formatDateTime = (iso: string | null | undefined) => {
-  if (!iso) return '—';
-  try {
-    const d = typeof iso === 'string' ? new Date(iso) : (iso as unknown as Date);
-    return isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
-  } catch {
-    return String(iso);
-  }
-};
-
-const formatDateOnly = (value: string | Date | null | undefined) => {
-  console.log(value)
+const formatDateTime = (value: string | null | undefined) => {
   if (!value) return '—';
-  try {
-    const d = typeof value === 'string' ? new Date(value) : (value as unknown as Date);
-    if (!isNaN(d.getTime())) return d.toLocaleDateString();
-    if (typeof value === 'string' && value.includes(',')) return value.split(',')[0].trim();
-    if (typeof value === 'string') {
-      const m = value.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
-      if (m) return m[1];
-    }
-    return String(value);
-  } catch {
-    return String(value);
+
+  const [datePart, timePart] = value.split(/[T ]/);
+  if (!datePart) return value;
+
+  const [y, m, d] = datePart.split('-');
+  if (!y || !m || !d) return value;
+
+  let time = '';
+  if (timePart) {
+    const [hh = '00', mm = '00', ss = '00'] = timePart.split(':');
+    time = `, ${hh}:${mm}:${ss}`;
   }
+
+  return `${d}/${m}/${y}${time}`;
 };
 
+
+const formatDateOnly = (value: string | null | undefined) => {
+  if (!value) return '—';
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return value;
+
+  const [, y, m, d] = match;
+  return `${d}/${m}/${y}`;
+};
 
 
 const downloadCSV = (rows: HistoricoItem[], visibleKeys: string[], columnsMap: Record<string, string>) => {
