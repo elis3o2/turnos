@@ -11,11 +11,11 @@ from django.utils import timezone
 from src.models import (Turno, Plantilla, Mensaje, LastMod,
                         EfeSerEspPlantilla, EstadoTurno, Efector, Servicio,
                         Especialidad, EfeSerEsp, Flow, TurnoFlow, PlantillaFlow)
-from src.utils.utils import enviar_whatsapp, check_turno, format_plantilla, start_flow
+from src.utils.utils import enviar_whatsapp2, check_turno, format_plantilla, start_flow
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
 from src.utils.parse import parse_date, parse_time
-from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res, sacar_Turno_Espera, create_flow, get_session
+from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res2, sacar_Turno_Espera, create_flow, get_session
 from rest_framework.response import Response
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -209,10 +209,10 @@ def verificar_turnos() -> None:
                         }
 
                         mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-                        res = enviar_whatsapp(telefono, mensaje)
-                        try:
-                            (envio_id, ack, fecha, ins) = decode_res(res)
-                            
+                        res = enviar_whatsapp2(telefono, mensaje)
+                        try:                            
+                            (envio_id, ack, fecha, ins) = decode_res2(res)
+
                             create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
 
                         except Exception as ex:
@@ -222,7 +222,7 @@ def verificar_turnos() -> None:
                     else:
                         ack =-3
                         try:
-                            create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=ack)
+                            create_Mensaje(turno=t, plantilla=plantilla, numero=telefono ,estado=ack)
                         except Exception as ex:
                             print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
 
@@ -258,7 +258,7 @@ def verificar_turnos() -> None:
 
 
 
-SEND_TIME = time(10, 30)
+SEND_TIME = time(9, 41)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
 
@@ -501,6 +501,7 @@ def send_reminder_task(
                 if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
                     print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
                     need_retry = True
+                    ack = -1
                 else:
                     d_fecha = parse_date(fecha_turno)
                     d_hora = parse_time(hora_turno)
@@ -527,15 +528,16 @@ def send_reminder_task(
                     }
 
                     mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-                    res = enviar_whatsapp(telefono, mensaje)
+                    res = enviar_whatsapp2(telefono, mensaje)
 
                     try:
-                        (envio_id, ack, fecha, ins) = decode_res(res)
+                
+                        (envio_id, ack, fecha, ins) = decode_res2(res)
                         
-                        create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+                        create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
 
                     except Exception as ex:
-                        print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
+                        print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
                 
             else:
                 ack =-3
@@ -543,7 +545,7 @@ def send_reminder_task(
                     create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=ack)
 
                 except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {idturno}: {ex}")
+                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
 
             if ack >= 0:
                 turno.msj_recordatorio = 1
