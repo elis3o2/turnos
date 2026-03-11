@@ -199,7 +199,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "recordatorios-diarios": {
         "task": "src.tasks.programar_recordatorios",
-        "schedule": crontab(hour=6),
+        "schedule": crontab(hour=9, minute=0),
     },
 }
 

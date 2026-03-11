@@ -258,7 +258,7 @@ def verificar_turnos() -> None:
 
 
 
-SEND_TIME = time(9, 41)
+SEND_TIME = time(10, 30)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
 
