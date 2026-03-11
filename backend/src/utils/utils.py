@@ -20,10 +20,7 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
     Consulta la API externa por el estado del mensaje y actualiza Mensaje(pk=mensaje_id).
     Devuelve el Mensaje actualizado o el original si hay error.
     """
-    api_url = config("API_ESTADO_WHATSAPP")
-    params = {
-        "id": mensaje.id_mensaje
-    }
+    api_url = f'{config("API_ESTADO_WHATSAPP")}/{mensaje.id_sesion_id}/{mensaje.id_mensaje}/{mensaje.numero}'
 
     session = requests.Session()
     session.trust_env = False 
@@ -31,11 +28,9 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
     try:
         resp = session.get(
             api_url,
-            params=params,
             headers={
                 "Content-Type": "application/json",
-                "Accept": "application/json",
-                "Authorization": "Bearer " + config('TOKEN_WHATSAPP')
+                "Accept": "application/json"
             },
             timeout=5
         )
@@ -185,7 +180,93 @@ def decode_res(res: dict) -> (str, int, datetime, str):
         ack = -5
     
     return (envio_id, ack, fecha, ins)
-        
+
+def enviar_whatsapp2(numero: str, mensaje: str) -> Response:
+
+    sesion = (
+        Mensaje.objects
+        .filter(numero=numero)
+        .exclude(id_sesion_id__isnull=True)
+        .order_by("-fecha_envio")
+        .values_list("id_sesion_id", flat=True)
+        .first()
+    )
+
+    return _enviar_whatsapp2(numero, mensaje, sesion)
+
+
+
+def _enviar_whatsapp2(numero: str, mensaje: str, sesion: str | None) -> Response:
+    """
+    Envía el mensaje al número usando la sesión indicada.
+    """
+
+    api_url = config('API_WHATSAPP')
+
+    payload = {
+        "numero": numero,
+        "texto": mensaje,
+    }
+
+    if sesion:
+        payload["session"] = sesion
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    try:
+        response = requests.post(
+            api_url,
+            json=payload,
+            headers=headers,
+            timeout=15
+        )
+
+        if "application/json" in response.headers.get("Content-Type", ""):
+            return Response(response.json(), status=response.status_code)
+
+        return Response(
+            {"detail": "Mensaje enviado pero respuesta no JSON"},
+            status=response.status_code
+        )
+
+    except requests.exceptions.RequestException as e:
+        return Response(
+            {
+                "error": "No se pudo conectar con la API WhatsApp",
+                "detail": str(e)
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+
+
+def decode_res2(res: dict) -> (str, int, datetime, str):
+    response_data = getattr(res, "data", {}) 
+    code = response_data.get("code", {})
+    envio_id = None
+    ins = None
+    ack = None
+    if code == 0:
+        envio_id = response_data.get("id")
+        ack = response_data.get("ack")
+        fecha = response_data.get("time")
+        ins = response_data.get("session")
+    else:
+        fecha = timezone.now()
+        if code == -1:
+            ack = -4
+        elif code == -2:
+            ack = -3
+        elif code == -3:
+            ack = -2
+        else:
+            ack = -5
+    
+    return (envio_id, ack, fecha, ins)
+
     
 def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
     try:
