@@ -7,11 +7,13 @@ import logging
 logger = logging.getLogger(__name__)
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
 from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
 from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
 from zoneinfo import ZoneInfo
+
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
 
 
