@@ -2,29 +2,11 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from src.views import (
-    PlantillaViewSet, EstadoMsjViewSet, EstadoTurnoViewSet,
-    TurnoViewSet, MensajeViewSet, EfectorViewSet, EspecialidadViewSet,
-    EfeSerEspPlantillaViewSet, CustomTokenObtainPairView, ServicioViwSet,
-    SendWSP, TurnosMergedAllAPIView, HistoricoPaciente,
-    GetPacienteAPIView, GetProfesionalAPIView,TurnoEsperaViewSet, DerivaViewSet,
-    EfeSerEspViewSet, EstudioRequeridoViewSet, TurnosAlertasAPIView, GetIncorrectoAPIView
-)
+from src.views import (CustomTokenObtainPairView, SendWSP, TurnosMergedAllAPIView,
+                        HistoricoPaciente, GetPacienteAPIView, GetProfesionalAPIView,
+                        TurnosAlertasAPIView, GetIncorrectoAPIView)
 
-router = DefaultRouter()
-router.register('plantilla', PlantillaViewSet, basename='plantilla')
-router.register('estado_msj', EstadoMsjViewSet, basename='estado_msj')
-router.register('estado_turno', EstadoTurnoViewSet, basename='estado_turno')
-router.register('efectores', EfectorViewSet, basename='efector')
-router.register('turnos', TurnoViewSet, basename='turno')
-router.register('mensajes', MensajeViewSet, basename='mensaje')
-router.register('especialidades', EspecialidadViewSet, basename='especialidad')
-router.register('servicios', ServicioViwSet, basename='servicio')
-router.register('efe_ser_esp_plantilla', EfeSerEspPlantillaViewSet, basename='efe_ser_esp_plantilla')
-router.register('turno_espera', TurnoEsperaViewSet, basename='turno_espera')
-router.register('efe_ser_esp', EfeSerEspViewSet, basename='efe_ser_esp')
-router.register('estudio_requerido', EstudioRequeridoViewSet, basename='estudio_requerido')
-router.register('derivaciones', DerivaViewSet, basename='deriva')
+
 
 # src/urls.py
 urlpatterns = [
