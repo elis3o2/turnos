@@ -23,6 +23,7 @@ from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurn
                 PacienteSerializer, ProfesionalSerializer, EfeSerEspSerializer, EfeSerEspEfectorSerializer,
                 EfeSerEspCompletoSerializer, TurnoEsperaCreateSerializer, TurnoEsperaCloseSerializer,
                 EstudioRequeridoSerializer )
+from src.permissions import ReadOnly, OnlyAdmCreatetUpdatePermission
 from django.utils import timezone
 from typing import List
 from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
@@ -317,6 +318,7 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
     queryset = EfeSerEspPlantilla.objects.all()
     serializer_class = EfeSerEspPlantillaDetailSerializer
+    permission_classes = [ReadOnly]
 
     @action(detail=False, methods=["get"], url_path="buscar")
     def search(self, request) -> Response:
@@ -367,6 +369,7 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
 class TurnoEsperaViewSet(viewsets.ModelViewSet):
     queryset = TurnoEspera.objects.all()
     serializer_class = TurnoEsperaSerializer
+    permission_classes = [OnlyAdmCreatetUpdatePermission]
 
     @action(detail=False, methods=["get"], url_path="espera")
     def search_detalle(self, request) -> Response:
