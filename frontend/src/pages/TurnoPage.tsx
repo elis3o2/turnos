@@ -302,6 +302,7 @@ export default function TurnosPage() {
   };
 
   const allColumns = useMemo(() => [
+    {key: 'id', label: 'ID'},
     { key: 'respuesta', label: 'Respuesta' },
     { key: 'dni', label: 'DNI' },
     { key: 'nombre', label: 'Nombre' },
@@ -322,7 +323,7 @@ export default function TurnosPage() {
 
   const initialVisibility: Record<string, boolean> = useMemo(() => {
     const vis = allColumns.reduce((acc, c) => { acc[c.key] = true; return acc; }, {} as Record<string, boolean>);
-    vis['nombre'] = false; vis['apellido'] = false; vis['prof_nombre'] = false; vis['prof_apellido'] = false;
+    vis['nombre'] = false; vis['apellido'] = false; vis['prof_nombre'] = false; vis['prof_apellido'] = false; vis['id'] = false;
     return vis;
   }, [allColumns]);
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(initialVisibility);
@@ -399,6 +400,7 @@ export default function TurnosPage() {
           if (!visibleColumns[c.key]) continue;
 
           switch (c.key) {
+            case 'id': row.push(t.id_sisr?? ''); break
             case 'respuesta': row.push(t.estado_paciente?.nombre ?? ''); break;
             case 'dni': row.push(t.paciente_dni ?? ''); break;
             case 'nombre': row.push(t.paciente_nombre ?? ''); break;
@@ -471,6 +473,7 @@ export default function TurnosPage() {
             {t.fecha_estado_paciente? <DateTimeStack iso={t.fecha_estado_paciente} /> : null}
           </TableCell>
         );
+      case 'id': return <TableCell key={columnKey} sx={cellSx(140)}>{wrapTypography(t.id_sisr ?? '—')}</TableCell>;
       case 'dni': return <TableCell key={columnKey} sx={cellSx(140)}>{wrapTypography(t.paciente_dni ?? '—')}</TableCell>;
       case 'nombre': return <TableCell key={columnKey} sx={cellSx(160)}>{wrapTypography(t.paciente_nombre ?? '—')}</TableCell>;
       case 'apellido': return <TableCell key={columnKey} sx={cellSx(160)}>{wrapTypography(t.paciente_apellido ?? '—')}</TableCell>;

@@ -411,7 +411,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Turno
         fields = [
-            "id","fecha", "hora", "estado", "estado_paciente", "fecha_estado_paciente",
+            "id","id_sisr","fecha", "hora", "estado", "estado_paciente", "fecha_estado_paciente",
             "msj_recordatorio", "msj_confirmado", "msj_cancelado", "msj_reprogramado",
             "efe_ser_esp",
             "paciente_nombre", "paciente_apellido", "paciente_dni",
