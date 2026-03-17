@@ -77,23 +77,23 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
             .filter(efector=id_efector)
             .values(
                 "id",
-                "id_ser_esp__id_servicio",
-                "id_ser_esp__id_servicio__nombre",
-                "id_ser_esp__id_especialidad",
-                "id_ser_esp__id_especialidad__nombre",
+                "ser_esp__servicio",
+                "ser_esp__servicio__nombre",
+                "ser_esp__especialidad",
+                "ser_esp__especialidad__nombre",
             )
             .distinct()
-            .order_by("id_ser_esp__id_servicio__nombre", "id_ser_esp__id_especialidad__nombre")
+            .order_by("ser_esp__servicio__nombre", "ser_esp__especialidad__nombre")
         )
 
         # Agrupamos por servicio en memoria (una pasada)
         servicios_map = OrderedDict()
         for row in qs:
             id = row["id"]
-            sid = row["id_ser_esp__id_servicio"]
-            sname = row["id_ser_esp__id_servicio__nombre"]
-            eid = row.get("id_ser_esp__id_especialidad")
-            ename = row.get("id_ser_esp__id_especialidad__nombre")
+            sid = row["ser_esp__servicio"]
+            sname = row["ser_esp__servicio__nombre"]
+            eid = row.get("ser_esp__especialidad")
+            ename = row.get("ser_esp__especialidad__nombre")
 
             if sid not in servicios_map:
                 servicios_map[sid] = {

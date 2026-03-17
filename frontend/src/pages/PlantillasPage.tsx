@@ -11,10 +11,10 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { getPlantillas, getPlantillaByTipo } from "../features/plantilla/api";
-import type { Plantilla } from "../features/plantilla/types";
+import { getPlantillas, getPlantillaByTipo } from "../features/mensaje/api";
+import type { Plantilla } from "../features/mensaje/types";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
-import { updateEfectorPlantilla } from "../features/plantilla/api";
+import { updateEfectorPlantilla } from "../features/mensaje/api";
 
 type StateShape = {
   especialidades?: number[]; // <-- siempre IDs

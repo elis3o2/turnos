@@ -1,5 +1,5 @@
 import  { useContext, useEffect, useMemo, useState } from "react";
-import type { Efector } from "../features/efe_ser_esp/types";
+import type { Efector } from "../features/efector/types";
 import type { EstudioRequerido, TurnoEspera } from "../features/turno/types";
 import { AuthContext } from "../common/contex";
 import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno } from "../features/turno/api";

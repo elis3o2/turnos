@@ -1,6 +1,6 @@
 // Especialidades.tsx
 import React from "react";
-import type { Efector} from "../../efe_ser_esp/types";
+import type { Efector} from "../../efector/types";
 import type { EfeSerEspPlantillaExtend } from "../types";
 import {
   Box,

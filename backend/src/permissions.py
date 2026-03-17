@@ -43,10 +43,10 @@ class EfectorPermission(BasePermission):
 class OnlyAdmPostUpdatePermission(BasePermission):
     """
     Permite crear o modificar solo a usuarios que
-    pertenecen al grupo 'lista_espera'.
+    pertenecen al grupo 'administrativo'.
     """
 
-    message = "Solo los usuarios del grupo 'lista_espera' pueden crear o modificar."
+    message = "Solo los usuarios del grupo 'administrativo' pueden crear o modificar."
 
     def has_permission(self, request, view):
 

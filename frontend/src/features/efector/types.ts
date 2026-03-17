@@ -42,11 +42,3 @@ export interface EfeSerEspCompleto  {
 }
 
 
-export interface Deriva {
-    id: number;
-    cupo: number;
-    efector: Efector;
-    efector_deriva: Efector;
-    servicio_deriva: Servicio;
-    especialidad_deriva: Especialidad; 
-}

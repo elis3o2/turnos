@@ -3,12 +3,12 @@ import { AuthContext } from "../common/contex";
 import { useContext, useState } from "react";
 import { Box,   GridLegacy as Grid, Card, CardContent, Typography, Snackbar, Alert, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import type { Efector, Servicio } from "../features/efe_ser_esp/types";
-import { getServicioByEfector } from "../features/efe_ser_esp/api";
-import Servicios from "../features/plantilla/components/ServicioBlock";
-import Especialidades from "../features/plantilla/components/EspecialidadBlock";
+import type { Efector, Servicio } from "../features/efector/types";
+import { getServicioByEfector } from "../features/efector/api";
+import Servicios from "../features/mensaje/components/ServicioBlock";
+import Especialidades from "../features/mensaje/components/EspecialidadBlock";
 import type { AlertSeverity } from "../common/types";
-import type { EfeSerEspPlantillaExtend } from "../features/plantilla/types";
+import type { EfeSerEspPlantillaExtend } from "../features/mensaje/types";
 
 
 function ListaPage() {

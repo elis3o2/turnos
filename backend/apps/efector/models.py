@@ -13,7 +13,7 @@ class Efector(models.Model):
 
 class Servicio(models.Model):
     id = models.IntegerField(primary_key=True)
-    nombre = models.CharField(max_length=64, )
+    nombre = models.CharField(max_length=64)
 
     class Meta:
         managed = False

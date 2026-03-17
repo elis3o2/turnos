@@ -1,5 +1,6 @@
 import http from '../../common/api/client'
-import type { Turno, TurnoEspera, TurnoExtend, EstadoMsj, EstudioRequerido } from './types';
+import type { Turno, TurnoExtend} from './types';
+import type { EstadoMsj } from '../mensaje/types';
 
 export const getTurnosAll = (
   id_servicio?: number,
@@ -153,35 +154,3 @@ export const getHistoricoTurno = (id:number) => {
   return http.get(`get_historico/?id=${id}`).then(res => res.data);
 }
 
-
-export const getTurnoEsperaAbierto = (id: number) :Promise<TurnoEspera[]> =>{
-  return http.get<TurnoEspera[]>(`turno_espera/espera/?id_efector=${id}`).then(res => res.data);
-}
-
-export const getTurnoEsperaAbiertoDeriva = (id: number, id_deriva: number) : Promise<TurnoEspera[]> => {
-  return http.get<TurnoEspera[]>(`turno_espera/deriva/?id_efector=${id}&id_deriva=${id_deriva}`).then(res => res.data);
-}
-
-export const postTurnoEspera = (id_efe_ser_esp: number, id_profesional_solicitante: number,
-  id_efector_solicitante: number,id_paciente:number, estudio_requerido: number[], prioridad: number, cupo:boolean ) => {
-  
-    return http.post("turno_espera/", {id_efe_ser_esp,id_profesional_solicitante,
-    id_efector_solicitante,id_paciente,estudio_requerido, prioridad, cupo,});
-};
-
-
-export const CloseTurnoEspera = (id: number) => {
-  return http.post(`turno_espera/close/?id=${id}`).then(res => res.data);
-}
-
-export const getTurnoEsperaById= (id: number) => {
-  return http.get(`turno_espera/paciente/?id=${id}`).then(res => res.data);
-}
-
-export const getEstudioRequeridoAll = () => {
-  return http.get<EstudioRequerido[]>(`estudio_requerido/`).then(res => res.data)
-} 
-
-export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number }> => {
-  return http.post<{ ok: boolean; actualizados: number }>(`turno_espera/${idTurno}/marcar-estudios/`,{ estudios }).then(res => res.data);
-};

@@ -63,7 +63,6 @@ class GetPacienteAPIView(APIView):
         id_persona = request.query_params.get('id')
         dni = request.query_params.get('dni')
 
-
         try:
             if id_persona:
                 # si se pasa id devolvemos UN solo objeto
@@ -175,398 +174,281 @@ class HistoricoPaciente(APIView):
         serializer = HistoricoPacienteSerializer(instance=result, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+from typing import Callable, Tuple
+from django.db import DatabaseError, connections
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
+logger = logging.getLogger(__name__)
 
-class GetIncorrectoAPIView(APIView):
+class BaseTurnosMerged:
+    """
+    Mixin que ejecuta el pipeline común:
+     - parsea params
+     - valida efectores
+     - construye filters (pero la llave base puede variar)
+     - obtiene QS local vía get_qs_fn(filters)
+     - pagina
+     - consulta Informix y arma ext_map_asig/ext_map_elim
+     - mergea datos externos en instancias Turno
+     - serializa y devuelve
+    """
 
-    def get(self, request) -> Response:
-        cantidad = int(request.query_params.get('cantidad'))  # nuevo: cantidad a devolver
-        efectores_param = request.query_params.getlist('efectores[]')
-        servicios_param = request.query_params.getlist('servicios[]')
-        offset = int(request.query_params.get('offset'))
-        fecha_desde = request.query_params.get('fechaDesde')
-        fecha_hasta = request.query_params.get('fechaHasta')
+    def run_pipeline(self, request, get_qs_fn: Callable[[dict], 'QuerySet']) -> Response:
+        # 1) params
+        cantidad, offset, fecha_desde, fecha_hasta, id_efectores, id_servicios = get_params(request)
 
-        id_efectores = [int(p.strip()) for p in efectores_param]
-        id_servicios = [int(p.strip()) for p in servicios_param]
+        if not id_efectores:
+            return Response({"detail": "Debe proveer 'efector'."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if len(id_efectores) == 0:
-            return Response(
-                {"detail": "Debe proveer 'efector'."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # 2) filtros comunes
+        filters = self.build_filters(id_efectores, id_servicios, fecha_desde, fecha_hasta)
 
-        filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
-        if len(id_servicios) > 0:
-            filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
-        if fecha_desde:
-            filters['fecha__gte'] = fecha_desde
-        if fecha_hasta:
-            filters['fecha__lte'] = fecha_hasta
-
+        # 3) obtener qs local (función provista por la view)
         try:
-            latest_msg_qs = Mensaje.objects.filter(id_turno=OuterRef('pk')).order_by('-fecha_envio')
+            qs = get_qs_fn(filters)
 
-            qs = (
-                Turno.objects
-                .select_related("id_efe_ser_esp")
-                .annotate(
-                    latest_msg_estado=Subquery(latest_msg_qs.values('id_estado')[:1]),
-                )
-                .filter(
-                    Q(latest_msg_estado__lt=0),
-                    **filters
-                )
-                .order_by('-fecha', '-hora', '-id')
-            )
-
-
-            # calcular total antes del slicing (útil para paginación)
-            total = qs.count()
-
-            # aplicar offset y cantidad
-            start = offset
-            end = None if cantidad is None else (offset + cantidad)
-            local_qs = qs[start:end]
-            local_list = list(local_qs)
+            total, local_list = self._paginate_qs_to_list(qs, offset, cantidad)
 
             if not local_list:
                 return Response({"response": [], "count": 0}, status=status.HTTP_200_OK)
-
-        except Exception:
-            logger.exception("Error al obtener turnos locales (GetIncorrectoAPIView)")
-            return Response({"detail": "Error interno al obtener turnos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # 2) Normalizar ids para la consulta a Informix (usamos local_list, igual que TurnosMergedAllAPIView)
-        ids_list = [str(t.id_sisr) for t in local_list if getattr(t, 'id_sisr', None) is not None]
-
-        # 3) Consultar Informix igual que en TurnosMergedAllAPIView, poblar ext_map
-        ext_map_asig = {}
-        ext_map_elim = {}
-        try:
-            with connections['informix'].cursor() as cur:
-
-                # ejecutar sql1
-                cur.execute(query_turnos(len(ids_list)), ids_list)
-                rows = cur.fetchall()
-                for row in rows:
-                    turno_id = str(row[0])
-                    ext_map_asig[turno_id] = {
-                        'paciente_id': row[1],
-                        'paciente_nombre': row[2],
-                        'paciente_apellido': row[3],
-                        'paciente_dni': row[4],
-                        'profesional_nombre': row[5],
-                        'profesional_apellido': row[6],
-                    }
-                
-                cur.execute(query_eliminado(len(ids_list)), ids_list)
-                rows = cur.fetchall()
-                for row in rows:
-                    turno_id = str(row[0])
-                    ext_map_elim[turno_id] = {
-                        'paciente_id': row[1],
-                        'paciente_nombre': row[2],
-                        'paciente_apellido': row[3],
-                        'paciente_dni': row[4],
-                        'profesional_nombre': row[5],
-                        'profesional_apellido': row[6],
-                    }
-
-        except DatabaseError:
-            logger.exception("Error consultando Informix (GetIncorrectoAPIView)")
-            # seguimos y serializamos con campos informix en None si falla
-        except Exception:
-            logger.exception("Error inesperado consultando Informix (GetIncorrectoAPIView)")
-
-        # 4) Inyectar los campos de Informix como atributos dinámicos sobre cada instancia Turno
-        for turno in local_list:
-            ext_asig = ext_map_asig.get(str(turno.id_sisr), {})
-            # si no existe la key, devolvemos None (coherente con tus fields allow_null)
-            if turno.id_paciente == ext_asig.get('paciente_id'):
-                setattr(turno, 'paciente_nombre', ext_asig.get('paciente_nombre'))
-                setattr(turno, 'paciente_apellido', ext_asig.get('paciente_apellido'))
-                setattr(turno, 'paciente_dni', ext_asig.get('paciente_dni'))
-                setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
-
-            if (ext_asig.get('paciente_id') != turno.id_paciente):
-                pac = fetch_paciente(id_persona=turno.id_paciente)
-                if len(pac) > 0:
-                    pac = pac.pop()
-                    setattr(turno, 'paciente_nombre', pac['nombre'])
-                    setattr(turno, 'paciente_apellido', pac['apellido'])
-                    setattr(turno, 'paciente_dni', pac['nro_doc'])
-                    setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                    setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
-
-            ext_elim = ext_map_elim.get(str(turno.id_sisr), {})
-            if turno.id_paciente == ext_elim.get('paciente_id'):
-                setattr(turno, 'paciente_nombre', ext_elim.get('paciente_nombre'))
-                setattr(turno, 'paciente_apellido', ext_elim.get('paciente_apellido'))
-                setattr(turno, 'paciente_dni', ext_elim.get('paciente_dni'))
-                setattr(turno, 'profesional_nombre', ext_elim.get('profesional_nombre'))
-                setattr(turno, 'profesional_apellido', ext_elim.get('profesional_apellido'))
-
-        # 5) Serializar y devolver. Como le pasamos instancias Turno, los campos nested funcionarán.
-        serializer = TurnoMergedSerializer(local_list, many=True)
-        return Response({"response": serializer.data, "count": total})
-
-
-class TurnosMergedAllAPIView(APIView):
-
-    def get(self, request):
-        cantidad = int(request.query_params.get('cantidad'))  # nuevo: cantidad a devolver
-        efectores_param = request.query_params.getlist('efectores[]')
-        servicios_param = request.query_params.getlist('servicios[]')
-        offset = int(request.query_params.get('offset'))
-        fecha_desde = request.query_params.get('fechaDesde')
-        fecha_hasta = request.query_params.get('fechaHasta')
-        ids_order = None  # mantendrá el orden solicitado por el cliente (si aplica)
-        total = 0
-
-        id_efectores = [int(p.strip()) for p in efectores_param] 
-        id_servicios = [int(p.strip()) for p in servicios_param]
-
-        if  len(id_efectores)==0:
-            return Response(
-                {"detail": "Debe proveer 'efector'."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
-        if len(id_servicios)>0:
-            filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
-        if fecha_desde:
-            filters['fecha__gte'] = fecha_desde
-        if fecha_hasta:
-            filters['fecha__lte'] = fecha_hasta
-
-        try:
-            qs = (
-                Turno.objects
-                .select_related(
-                    "id_efe_ser_esp",
-                    "id_efe_ser_esp__id_ser_esp",
-                    "id_efe_ser_esp__id_ser_esp__id_servicio",
-                    "id_efe_ser_esp__id_ser_esp__id_especialidad",
-                )
-                .filter(**filters)
-                .order_by('-fecha', '-hora', '-id')
-            )
-
-            # calcular total antes del slicing (útil para paginación)
-            total = qs.count()
-
-            # aplicar offset y cantidad
-            start = offset
-            end = None if cantidad is None else (offset + cantidad)
-            local_qs = qs[start:end]
-            local_list = list(local_qs)
-
-            if not local_list:
-                return Response({"response":[], "count": 0}, status=status.HTTP_200_OK)
-
         except Exception:
             logger.exception("Error al obtener turnos locales")
             return Response({"detail": "Error interno al obtener turnos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # 2) Normalizar ids para la consulta a Informix (igual que venías haciendo)
-        ids_list = [str(t.id_sisr) for t in local_list]
+        # 4) normalizar ids para Informix
+        ids_list = [str(t.id_sisr) for t in local_list if getattr(t, "id_sisr", None) is not None]
+        # 5) consultar Informix
+        ext_map_asig, ext_map_elim = self.fetch_informix_maps(ids_list)
 
-        # 3) Consultar Informix igual que tenías, poblar ext_map
+        # 6) merge (usa fetch_pacientes bulk si está disponible)
+        self.merge_external_data(local_list, ext_map_asig, ext_map_elim)
+
+        # 7) serializar y responder
+        serializer = TurnoMergedSerializer(local_list, many=True)
+        return Response({"response": serializer.data, "count": total})
+
+    def build_filters(self, id_efectores, id_servicios, fecha_desde, fecha_hasta) -> dict:
+        """Filtro por defecto — si una view necesita otra estructura, puede construirla en su get antes."""
+        filters = {'efe_ser_esp__efector__in': id_efectores}
+        if id_servicios:
+            filters['efe_ser_esp__ser_esp__servicio__in'] = id_servicios
+        if fecha_desde:
+            filters['fecha__gte'] = fecha_desde
+        if fecha_hasta:
+            filters['fecha__lte'] = fecha_hasta
+        return filters
+
+    def _paginate_qs_to_list(self, qs, offset: int, cantidad: int) -> Tuple[int, list]:
+        total = qs.count()
+        start = offset or 0
+        end = None if cantidad is None else (start + cantidad)
+        local_qs = qs[start:end]
+        return total, list(local_qs)
+
+    def fetch_informix_maps(self, ids_list: list) -> Tuple[dict, dict]:
+        """Devuelve (ext_map_asig, ext_map_elim). Maneja ids_list vacío y errores."""
         ext_map_asig = {}
         ext_map_elim = {}
+        if not ids_list:
+            return ext_map_asig, ext_map_elim
+
         try:
             with connections['informix'].cursor() as cur:
                 cur.execute(query_turnos(len(ids_list)), ids_list)
                 rows = cur.fetchall()
                 for row in rows:
-                    turno_id = str(row[0])
-                    ext_map_asig[turno_id] = {
-                        'paciente_id': row[1],
-                        'paciente_nombre': row[2],
-                        'paciente_apellido': row[3],
-                        'paciente_dni': row[4],
-                        'profesional_nombre': row[5],
-                        'profesional_apellido': row[6],
-                    }
+                    asig_dic(row, ext_map_asig)
+
                 cur.execute(query_eliminado(len(ids_list)), ids_list)
                 rows = cur.fetchall()
                 for row in rows:
-                    turno_id = str(row[0])
-                    ext_map_elim[turno_id] = {
-                        'paciente_id': row[1],
-                        'paciente_nombre': row[2],
-                        'paciente_apellido': row[3],
-                        'paciente_dni': row[4],
-                        'profesional_nombre': row[5],
-                        'profesional_apellido': row[6],
-                    }
-
+                    asig_dic(row, ext_map_elim)
 
         except DatabaseError:
             logger.exception("Error consultando Informix")
-            # no detenemos la ejecución: seguimos y serializamos con campos informix en None si falla
         except Exception:
             logger.exception("Error inesperado consultando Informix")
+        return ext_map_asig, ext_map_elim
 
-        # 4) Inyectar los campos de Informix como atributos dinámicos sobre cada instancia Turno
+    def merge_external_data(self, local_list: list, ext_map_asig: dict, ext_map_elim: dict) -> None:
+        """
+        Merge optimizado:
+         - recolecta ids de pacientes que necesitamos buscar en batch
+         - intenta usar `fetch_pacientes(ids)` si existe, si no cae al per-turn `fetch_paciente`
+        """
+        # 1) setear datos cuando coinciden
+        patient_ids_to_fetch = set()
         for turno in local_list:
             ext_asig = ext_map_asig.get(str(turno.id_sisr), {})
-            # si no existe la key, devolvemos None (coherente con tus campos allow_null)
-            if (turno.id_paciente ==  ext_asig.get('paciente_id')):
-                setattr(turno, 'paciente_nombre', ext_asig.get('paciente_nombre'))
-                setattr(turno, 'paciente_apellido', ext_asig.get('paciente_apellido'))
-                setattr(turno, 'paciente_dni', ext_asig.get('paciente_dni'))
-                setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
-            
-            if (ext_asig.get('paciente_id') != turno.id_paciente):
-                pac = fetch_paciente(id_persona=turno.id_paciente)
-                if len(pac) > 0:
-                    pac = pac.pop()
-                    setattr(turno, 'paciente_nombre',pac['nombre'] )
-                    setattr(turno, 'paciente_apellido', pac['apellido'])
-                    setattr(turno, 'paciente_dni',pac['nro_doc'])
-                    setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                    setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
+            if turno.id_paciente == ext_asig.get('paciente_id'):
+                setear_pac(turno, ext_asig)
+                setear_prof(turno, ext_asig)
+            else:
+                # si ext_asig no coincide, tendremos que buscar datos locales del paciente
+                patient_ids_to_fetch.add(turno.id_paciente)
 
             ext_elim = ext_map_elim.get(str(turno.id_sisr), {})
-            if (turno.id_paciente ==  ext_elim.get('paciente_id')):
-                setattr(turno, 'paciente_nombre', ext_elim.get('paciente_nombre'))
-                setattr(turno, 'paciente_apellido', ext_elim.get('paciente_apellido'))
-                setattr(turno, 'paciente_dni', ext_elim.get('paciente_dni'))
-                setattr(turno, 'profesional_nombre', ext_elim.get('profesional_nombre'))
-                setattr(turno, 'profesional_apellido', ext_elim.get('profesional_apellido'))
-        # 5) Serializar y devolver. Como le pasamos instancias Turno, los campos nested funcionarán.
-        serializer = TurnoMergedSerializer(local_list, many=True)
-        return Response({"response": serializer.data, "count": total})
+            if turno.id_paciente == ext_elim.get('paciente_id'):
+                setear_pac(turno, ext_elim)
+                setear_prof(turno, ext_elim)
 
-class TurnosAlertasAPIView(APIView):
-    def get(self, request):
-
+        # 2) obtener pacientes en bulk (si tu proyecto puede hacerlo)
+        paciente_map = {}
         try:
-            cantidad = int(request.query_params.get('cantidad'))  # nuevo: cantidad a devolver
-            efectores_param = request.query_params.getlist('efectores[]')
-            servicios_param = request.query_params.getlist('servicios[]')
-            offset = int(request.query_params.get('offset'))
-            fecha_desde = request.query_params.get('fechaDesde')
-            fecha_hasta = request.query_params.get('fechaHasta')
-            tipo = request.query_params.get('tipo')
-            total = 0
+            # Si tienes una función que trae varios pacientes a la vez, úsala (más eficiente)
+            if patient_ids_to_fetch:
+                # ejemplo: si exists fetch_pacientes(ids) -> retorna lista/dict
+                if 'fetch_pacientes' in globals():
+                    pacs = fetch_pacientes(list(patient_ids_to_fetch))
+                    # normalizar a dict {id_persona: {nombre,apellido,nro_doc}}
+                    paciente_map = {p['id_persona']: p for p in pacs}
+                else:
+                    # fallback: llamar a fetch_paciente por cada id (tu código actual)
+                    for pid in patient_ids_to_fetch:
+                        try:
+                            pac = fetch_paciente(id_persona=pid)
+                            if pac:
+                                paciente_map[pid] = pac.pop()
+                        except Exception:
+                            logger.debug("fetch_paciente falló para id %s", pid)
+        except Exception:
+            logger.exception("Error obteniendo pacientes en bloque")
 
-            id_efectores = [int(p.strip()) for p in efectores_param]
-            id_servicios = [int(p.strip()) for p in servicios_param]
+        # 3) inyectar campos faltantes usando paciente_map
+        for turno in local_list:
+            ext_asig = ext_map_asig.get(str(turno.id_sisr), {})
+            if ext_asig.get('paciente_id') != turno.id_paciente:
+                pac = paciente_map.get(turno.id_paciente)
+                if pac:
+                    setattr(turno, 'paciente_nombre', pac.get('nombre'))
+                    setattr(turno, 'paciente_apellido', pac.get('apellido'))
+                    setattr(turno, 'paciente_dni', pac.get('nro_doc'))
+                    setear_prof(turno, ext_asig)
 
-            if len(id_efectores) == 0 or tipo is None:
-                return Response(
-                    {"detail": "Debe proveer 'efector' y 'tipo'."},
-                    status=status.HTTP_400_BAD_REQUEST
+
+# ---- ahora las views usando el mixin ----
+
+class GetIncorrectoAPIView(BaseTurnosMerged, APIView):
+    def get(self, request):
+        def build_qs(filters):
+            latest_msg_qs = Mensaje.objects.filter(id_turno=OuterRef('pk')).order_by('-fecha_envio')
+            return (
+                Turno.objects
+                .select_related("id_efe_ser_esp")
+                .annotate(latest_msg_estado=Subquery(latest_msg_qs.values('id_estado')[:1]))
+                .filter(Q(latest_msg_estado__lt=0), **filters)
+                .order_by('-fecha', '-hora', '-id')
+            )
+        return self.run_pipeline(request, build_qs)
+
+
+class TurnosMergedAllAPIView(BaseTurnosMerged, APIView):
+    def get(self, request):
+        def build_qs(filters):
+            return (
+                Turno.objects
+                .select_related(
+                    "efe_ser_esp",
+                    "efe_ser_esp__ser_esp",
+                    "efe_ser_esp__ser_esp__servicio",
+                    "efe_ser_esp__ser_esp__especialidad",
                 )
+                .filter(**filters)
+                .order_by('-fecha', '-hora', '-id')
+            )
+        return self.run_pipeline(request, build_qs)
 
-            filters = {'id_efe_ser_esp__id_efector__in': id_efectores}
-            if len(id_servicios) > 0:
-                filters['id_efe_ser_esp__id_ser_esp__id_servicio__in'] = id_servicios
+
+class TurnosAlertasAPIView(BaseTurnosMerged, APIView):
+    def get(self, request):
+        tipo = request.query_params.get('tipo')
+        if not tipo:
+            return Response({"detail": "Debe proveer 'tipo'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        def build_qs(filters):
+            qs = (
+                Turno.objects
+                .select_related("id_efe_ser_esp")
+                .filter(**filters)
+                .order_by('-fecha', '-hora', '-id')
+            )
+            if tipo == 'cancelados':
+                qs = qs.filter(estado__id=1, estado_paciente__id=2)
+            elif tipo == 'incorrectos':
+                qs = qs.filter(estado__id=1, estado_paciente__id=3)
+            elif tipo == 'sin_respuesta':
+                qs = qs.filter(estado__id=1, estado_paciente__id=4)
+            return qs
+
+        # Nota: TurnosAlertas usa diferente nombre de campo para efectores en tu ejemplo original.
+        # Si eso es fijo, sobreescribe build_filters localmente:
+        def build_filters_alertas(id_efectores, id_servicios, fecha_desde, fecha_hasta):
+            filters = {'efe_ser_esp__efector__in': id_efectores}
+            if id_servicios:
+                filters['efe_ser_esp__ser_esp__servicio__in'] = id_servicios
             if fecha_desde:
                 filters['fecha__gte'] = fecha_desde
             if fecha_hasta:
                 filters['fecha__lte'] = fecha_hasta
+            return filters
 
-            try:
-                qs = (
-                    Turno.objects
-                    .select_related("id_efe_ser_esp")
-                    .filter(**filters)
-                    .order_by('-fecha', '-hora', '-id')
-                )
-
-                # ------- Grupo A: estado=1 y estado_paciente=2 -------
-                if tipo == 'cancelados':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=2)
-
-                # ------- Grupo B: estado=1 y estado_paciente=3 -------
-                if tipo == 'incorrectos':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=3)
-
-                # ------- Grupo C: estado=1 y existe TurnoFlow -> Flow.id_plantilla_flow = 1 y Flow.id_estado = 0 -------
-                if tipo == 'sin_respuesta':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=4)
-               
-                # calcular total antes del slicing (útil para paginación)
-                total = qs.count()
-
-                # aplicar offset y cantidad
-                start = offset
-                end = None if cantidad is None else (offset + cantidad)
-                local_qs = qs[start:end]
-                local_list = list(local_qs)
-
-                if not local_list:
-                    return Response({"response": [], "count": total}, status=status.HTTP_200_OK)
-
-            except Exception:
-                logger.exception("Error al obtener turnos locales")
-                return Response({"detail": "Error interno al obtener turnos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-            # 2) Normalizar ids para la consulta a Informix (igual que en TurnosMergedAllAPIView)
-            ids_list = [str(t.id_sisr) for t in local_list if getattr(t, "id_sisr", None) is not None]
-
-            # 3) Consultar Informix igual que en TurnosMergedAllAPIView, poblar ext_map_asig y ext_map_elim
-            ext_map_asig = {}
-            try:
-                if ids_list:
-                    with connections['informix'].cursor() as cur:
-                        cur.execute(query_turnos(len(ids_list)), ids_list)
-                        rows = cur.fetchall()
-                        for row in rows:
-                            turno_id = str(row[0])
-                            ext_map_asig[turno_id] = {
-                                'paciente_id': row[1],
-                                'paciente_nombre': row[2],
-                                'paciente_apellido': row[3],
-                                'paciente_dni': row[4],
-                                'profesional_nombre': row[5],
-                                'profesional_apellido': row[6],
-                            }
+        # corto: llamar al pipeline pero usando la versión personalizada de build_filters
+        # para eso temporalmente parcheamos self.build_filters (alternativa: extraer build_filters como parámetro)
+        original_build_filters = self.build_filters
+        try:
+            self.build_filters = build_filters_alertas
+            return self.run_pipeline(request, build_qs)
+        finally:
+            self.build_filters = original_build_filters
 
 
-            except DatabaseError:
-                logger.exception("Error consultando Informix")
-            except Exception:
-                logger.exception("Error inesperado consultando Informix")
 
-            # 4) Inyectar los campos de Informix como atributos dinámicos sobre cada instancia Turno
-            for turno in local_list:
-                ext_asig = ext_map_asig.get(str(turno.id_sisr), {})
-                # si no existe la key, devolvemos None (coherente con tus campos allow_null)
-                if (turno.id_paciente == ext_asig.get('paciente_id')):
-                    setattr(turno, 'paciente_nombre', ext_asig.get('paciente_nombre'))
-                    setattr(turno, 'paciente_apellido', ext_asig.get('paciente_apellido'))
-                    setattr(turno, 'paciente_dni', ext_asig.get('paciente_dni'))
-                    setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                    setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
 
-                if (ext_asig.get('paciente_id') != turno.id_paciente):
-                    # fallback a tu función fetch_paciente si la tenés definida
-                    try:
-                        pac = fetch_paciente(id_persona=turno.id_paciente)
-                        if len(pac) > 0:
-                            pac = pac.pop()
-                            setattr(turno, 'paciente_nombre', pac['nombre'])
-                            setattr(turno, 'paciente_apellido', pac['apellido'])
-                            setattr(turno, 'paciente_dni', pac['nro_doc'])
-                            # profesional sigue siendo el de ext_asig si existe
-                            setattr(turno, 'profesional_nombre', ext_asig.get('profesional_nombre'))
-                            setattr(turno, 'profesional_apellido', ext_asig.get('profesional_apellido'))
-                    except Exception:
-                        # si fetch_paciente falla, ignoramos y dejamos campos en None
-                        logger.debug("fetch_paciente falló o no está disponible")
+def asig_dic(row: tuple, dic: dict[str, InformixData]) -> None:
+    turno_id = str(row[0])
+    dic[turno_id] = {
+        'paciente_id': row[1],
+        'paciente_nombre': row[2],
+        'paciente_apellido': row[3],
+        'paciente_dni': row[4],
+        'profesional_nombre': row[5],
+        'profesional_apellido': row[6],
+    }
 
-            # 5) Serializar y devolver. Como le pasamos instancias Turno, los campos nested funcionarán.
-            serializer = TurnoMergedSerializer(local_list, many=True)
-            return Response({"response": serializer.data, "count": total})
+def setear_pac(turno: Any, dic: dict) -> None:
+    setattr(turno, 'paciente_nombre', dic.get('paciente_nombre'))
+    setattr(turno, 'paciente_apellido', dic.get('paciente_apellido'))
+    setattr(turno, 'paciente_dni', dic.get('paciente_dni'))
 
-        except Exception:
-            logger.exception("Error en turnos_agrupados_view")
-            return Response({"detail": "Error interno al obtener grupos de turnos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+def setear_prof(turno: Any, dic: dict) -> None:
+    setattr(turno, 'profesional_nombre', dic.get('profesional_nombre'))
+    setattr(turno, 'profesional_apellido', dic.get('profesional_apellido'))
+
+
+def get_params(request) -> tuple[int, int, str | None, str | None, list[int], list[int]]:
+    cantidad = int(request.query_params.get('cantidad', 0))
+    offset = int(request.query_params.get('offset', 0))
+
+    fecha_desde = request.query_params.get('fechaDesde')
+    fecha_hasta = request.query_params.get('fechaHasta')
+
+    efectores_param = request.query_params.getlist('efectores[]')
+    servicios_param = request.query_params.getlist('servicios[]')
+
+    id_efectores = [int(p.strip()) for p in efectores_param]
+    id_servicios = [int(p.strip()) for p in servicios_param]
+
+    return (cantidad, offset, fecha_desde, fecha_hasta, id_efectores, id_servicios)
+
+
+from typing import TypedDict
+
+class InformixData(TypedDict, total=False):
+    paciente_id: int
+    paciente_nombre: str
+    paciente_apellido: str
+    paciente_dni: str
+    profesional_nombre: str
+    profesional_apellido: str

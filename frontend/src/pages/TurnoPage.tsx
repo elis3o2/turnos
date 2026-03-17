@@ -39,9 +39,9 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { getTurnosMergedLimit, getTurnosAlerta, getTurnosErrorMergedLimit } from '../features/turno/api';
 import type { TurnoExtend } from '../features/turno/types';
 import { useNavigate } from 'react-router-dom';
-import type { Efector, Servicio } from '../features/efe_ser_esp/types';
+import type { Efector, Servicio } from '../features/efector/types';
 import { AuthContext } from '../common/contex';
-import { getServicioByEfector } from '../features/efe_ser_esp/api';
+import { getServicioByEfector } from '../features/efector/api';
 
 export default function TurnosPage() {
   const [turnos, setTurnos] = useState<TurnoExtend[]>([]);

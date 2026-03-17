@@ -1,4 +1,4 @@
-import type { Servicio, Efector } from "../../efe_ser_esp/types";
+import type { Servicio, Efector } from "../../efector/types";
 import type { EfeSerEspPlantillaExtend } from "../types";
 import { getPlantillaByEfectorServicio } from "../api";
 import {

@@ -16,7 +16,7 @@ class PlantillaSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspPlantillaSerializer(serializers.ModelSerializer):
-    efe_ser_esp = EfeSerEspSerializer(source='id_efe_ser_esp', read_only=True)
+    efe_ser_esp = EfeSerEspSerializer(source='efe_ser_esp', read_only=True)
     class Meta:
         model = EfeSerEspPlantilla
         fields = '__all__'
@@ -96,9 +96,9 @@ class EstadoMsjSerializer(serializers.ModelSerializer):
 
 
 class MensajeSerializer(serializers.ModelSerializer):
-    turno = TurnoSerializer(source='id_turno', read_only=True)
-    plantilla = PlantillaSerializer(source='id_plantilla', read_only=True)
-    estado = EstadoMsjSerializer(source='id_estado', read_only=True)
+    turno = TurnoSerializer(source='turno', read_only=True)
+    plantilla = PlantillaSerializer(source='plantilla', read_only=True)
+    estado = EstadoMsjSerializer(source='estado', read_only=True)
     class Meta:
         model = Mensaje
         fields = '__all__'

@@ -26,7 +26,7 @@ import type {
   EfeSerEspCompleto,
   Deriva,
   SerEsp,
-} from "../../efe_ser_esp/types";
+} from "../../efector/types";
 
 interface Props {
   setCupo: React.Dispatch<React.SetStateAction<boolean>>;

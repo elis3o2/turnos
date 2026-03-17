@@ -1,4 +1,4 @@
-import type { Efector } from "../../features/efe_ser_esp/types";
+import type { Efector } from "../../features/efector/types";
 
 export interface AuthTokens {
     access: string;

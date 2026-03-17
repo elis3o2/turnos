@@ -21,8 +21,8 @@ class EspecialidadSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspSerializer(serializers.ModelSerializer):    
-    id_servicio = serializers.IntegerField(source='id_ser_esp.id_servicio.id',read_only=True)
-    id_especialidad = serializers.IntegerField(source='id_ser_esp.id_especialidad.id',read_only=True)
+    id_servicio = serializers.IntegerField(source='ser_esp.servicio.id',read_only=True)
+    id_especialidad = serializers.IntegerField(source='ser_esp.especialidad.id',read_only=True)
     class Meta:
         model = EfeSerEsp
         fields = ['id', 'id_efector', 'id_servicio', 'id_especialidad']
@@ -30,8 +30,8 @@ class EfeSerEspSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspEfectorSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source="id_efector.id", read_only=True)
-    nombre = serializers.CharField(source="id_efector.nombre", read_only=True)
+    id = serializers.IntegerField(source="efector.id", read_only=True)
+    nombre = serializers.CharField(source="efector.nombre", read_only=True)
     class Meta:
         model = EfeSerEsp
         fields = ["id", "nombre"]
@@ -39,9 +39,9 @@ class EfeSerEspEfectorSerializer(serializers.ModelSerializer):
 
 class EfeSerEspCompletoSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
-    efector = EfectorSerializer(source='id_efector', read_only=True)
-    servicio = ServicioSerializer(source='id_ser_esp.id_servicio', read_only=True)
-    especialidad = EspecialidadSerializer(source='id_ser_esp.id_especialidad', read_only=True)
+    efector = EfectorSerializer(source='efector', read_only=True)
+    servicio = ServicioSerializer(source='ser_esp.servicio', read_only=True)
+    especialidad = EspecialidadSerializer(source='ser_esp.especialidad', read_only=True)
     class Meta:
         model = EfeSerEsp
         fields = ["id", "efector", "servicio", "especialidad"]

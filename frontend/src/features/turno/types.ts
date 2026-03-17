@@ -1,5 +1,5 @@
-import type { Efector, Servicio, EfeSerEsp, Especialidad, EfeSerEspCompleto } from "../efe_ser_esp/types";
-import type { Paciente, Profesional, User } from "../persona/types";
+import type {EfeSerEsp, EfeSerEspCompleto } from "../efector/types";
+import type { EstadoMsj } from "../mensaje/types";
 
 export interface Turno {
     id: number;
@@ -13,23 +13,6 @@ export interface Turno {
     efe_ser_esp: EfeSerEsp;
 }
 
-export interface TurnoEspera {
-    id: number;
-    estado: EstadoMsj;
-    profesional_solicitante: Profesional;
-    efector: Efector;
-    servicio: Servicio;
-    especialidad: Especialidad;
-    efector_solicitante: Efector;
-    paciente: Paciente;
-    prioridad: number;
-    estudio_requerido:  EstudioRequerido[];
-    fecha_hora_creacion: string;
-    fecha_hora_cierre: string | null;
-    usuario_creacion: User;
-    usuario_cierre: User | null;
-    cupo: boolean;
-}
 
 export interface EstadoTurno {
     id: number,
@@ -42,10 +25,6 @@ export interface EstadoTurnoPaciente {
 }
 
 
-export interface EstadoMsj {
-    id: number;
-    significado: string;
-}
 
 
 export interface TurnoExtend {
@@ -69,12 +48,3 @@ export interface TurnoExtend {
 }
 
 
-export interface EstudioRequerido {
-    id: number,
-    estudio_requerido: {id: number, nombre: string},
-    nombre: string,
-    estado: boolean,
-    fecha_cierre: string,
-    usuario_cierre: number,
-    id_turno_espera: number
-}

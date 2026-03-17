@@ -1,4 +1,11 @@
-import type { EfeSerEsp, Especialidad } from "../efe_ser_esp/types";
+import type { EfeSerEsp, Especialidad } from "../efector/types";
+
+
+export interface EstadoMsj {
+    id: number;
+    significado: string;
+}
+
 
 
 export interface Plantilla {

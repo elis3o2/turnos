@@ -32,9 +32,9 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
     serializer_class = TurnoEsperaSerializer
     queryset = TurnoEspera.objects.select_related(
         "estado",
-        "efe_ser_esp__id_efector",
-        "efe_ser_esp__id_ser_esp__id_servicio",
-        "efe_ser_esp__id_ser_esp__id_especialidad",
+        "efe_ser_esp__efector",
+        "efe_ser_esp__ser_esp__servicio",
+        "efe_ser_esp__ser_esp__especialidad",
         "efector_solicitante",
         "usuario_creacion",
         "usuario_cierre",
@@ -81,7 +81,7 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
 
         queryset = self.get_queryset().filter(
             estado_id=0,
-            efe_ser_esp__id_efector=id_efector,
+            efe_ser_esp__efector=id_efector,
             efector_solicitante=id_deriva,
         )
 

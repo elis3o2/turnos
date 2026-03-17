@@ -1,7 +1,7 @@
 import { createContext, useState, useRef, } from 'react'
 import type {ReactNode } from 'react';
 import type { AuthContextType, InitializeAuthData, AuthTokens } from './types';
-import type { Efector } from '../../features/efe_ser_esp/types';
+import type { Efector } from '../../features/efector/types';
 
 const defaultContext: AuthContextType = {
     authTokens: null,
