@@ -15,7 +15,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 
-import { getEstudioRequeridoAll } from "../api";
+import { getEstudioRequeridoAll} from "../api";
 import type { EstudioRequerido } from "../types";
 
 interface Props {

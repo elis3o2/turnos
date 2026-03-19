@@ -7,7 +7,7 @@ export const getTurnosAll = (
   id_especialidad?: number,
   id_estado?: number
 ): Promise<Turno[]> => {
-  let url = `turnos/`;
+  let url = `turno/turnos/`;
 
   const params: string[] = [];
   if (id_servicio !== undefined) params.push(`id_servicio=${id_servicio}`);
@@ -34,7 +34,7 @@ export const getTurnosCount = (
   efectores?: number | number[],
   id_estado?: number
 ): Promise<TurnosCountResult> => {
-  let url = `turnos/count/`;
+  let url = `turno/turnos/count/`;
   const params: string[] = [];
 
   const toCsv = (val: number | number[] | undefined) =>
@@ -95,7 +95,7 @@ export const getTurnosByCombinations = async (
 // Obtener todos los turnos con un límite de cantidad
 export const getTurnosMergedLimit = (cantidad: number, offset:number, efectores: number[], servicios: number[], fechaDesde: string | null, fechaHasta: string| null ): Promise<{response: TurnoExtend[], count:number}> => {
   if (cantidad <= 0) return Promise.resolve({response:[], count:0});
-  const url = '/turnos-merged-all-list/';
+  const url = 'turnos-merged-all-list/';
   return http
     .get<{response: TurnoExtend[], count:number}>(url, { params: { cantidad, offset, efectores, servicios, fechaDesde, fechaHasta } })
     .then(res => res.data);
@@ -104,7 +104,7 @@ export const getTurnosMergedLimit = (cantidad: number, offset:number, efectores:
 // Mantengo las funciones originales
 export const getTurnosMergedAll = (ids?: Array<string | number>): Promise<TurnoExtend[]> => {
   if (ids && ids.length === 0) return Promise.resolve([]);
-  const url = '/turnos-merged-all-list/';
+  const url = 'turnos-merged-all-list/';
   if (!ids) return http.get<TurnoExtend[]>(url).then(res => res.data);
 
   const idsCsv = ids.map(String).map(encodeURIComponent).join(',');
@@ -115,7 +115,7 @@ export const getTurnosMergedAll = (ids?: Array<string | number>): Promise<TurnoE
 // Obtener todos los turnos con un límite de cantidad
 export const getTurnosErrorMergedLimit = (cantidad: number, offset:number, efectores: number[], servicios: number[], fechaDesde: string | null, fechaHasta: string| null ): Promise<{response: TurnoExtend[], count:number}> => {
   if (cantidad <= 0) return Promise.resolve({response:[], count:0});
-  const url = '/turnos-merged-error/';
+  const url = 'turnos-merged-error/';
   return http
     .get<{response: TurnoExtend[], count:number}>(url, { params: { cantidad, offset, efectores, servicios, fechaDesde, fechaHasta } })
     .then(res => res.data);
@@ -128,7 +128,7 @@ export const getTurnosErrorMergedLimit = (cantidad: number, offset:number, efect
 
 export const getTurnosAlerta = (tipo: string, cantidad: number, offset:number, efectores: number[], servicios: number[], fechaDesde: string | null, fechaHasta: string| null ):
  Promise<{response: TurnoExtend[], count:number}> => {
-  const url = '/turnos-merged-alerta/';
+  const url = 'turnos-merged-alerta/';
 
   return http.get<{response: TurnoExtend[], count:number}>(url, { params: { tipo, cantidad, offset, efectores, servicios, fechaDesde, fechaHasta }
    }).then(res => res.data);
@@ -143,14 +143,14 @@ export const getTurnosByIds = (ids: Array<string | number>): Promise<TurnoExtend
 
 
 export const getEstadomsj = (id: number, id_mensaje: string, numero: string) => {
-  return http.post('get_last_ack/', { id, id_mensaje, numero });
+  return http.post('turno/get_last_ack/', { id, id_mensaje, numero });
 };
 export const getSignificado = async (id: number): Promise<EstadoMsj> => {
-  return await http.get<EstadoMsj>(`estado_msj/${id}/`).then(res => res.data);
+  return await http.get<EstadoMsj>(`turno/turno/estado_msj/${id}/`).then(res => res.data);
 };
 
 
 export const getHistoricoTurno = (id:number) => {
-  return http.get(`get_historico/?id=${id}`).then(res => res.data);
+  return http.get(`turno/get_historico/?id=${id}`).then(res => res.data);
 }
 

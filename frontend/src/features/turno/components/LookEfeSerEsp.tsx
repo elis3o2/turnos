@@ -15,18 +15,19 @@ import {
 
 import {
   getSerEspByEfector,
-  getDerivaByEfector,
   getIdByEfeSerEsp,
-} from "../../efe_ser_esp/api";
+} from "../../efector/api";
 
 import type {
   Efector,
   Servicio,
   Especialidad,
   EfeSerEspCompleto,
-  Deriva,
   SerEsp,
 } from "../../efector/types";
+
+import type { Deriva } from "../types";
+import { getDerivaByEfector } from "../api";
 
 interface Props {
   setCupo: React.Dispatch<React.SetStateAction<boolean>>;

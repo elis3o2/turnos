@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Efector, Servicio, Especialidad, EfeSerEsp
 from .serializers import (EfectorSerializer, ServicioSerializer, EspecialidadSerializer, 
                         EfeSerEspSerializer, EfeSerEspCompletoSerializer, EfeSerEspEfectorSerializer)
@@ -50,11 +51,11 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 
         # Obtenemos servicios únicos, ordenados por nombre
         servicios = [
-            {"id": item["id_ser_esp__id_servicio"], "nombre": item["id_ser_esp__id_servicio__nombre"]}
+            {"id": item["ser_esp__servicio"], "nombre": item["ser_esp__servicio__nombre"]}
             for item in (
                 queryset
-                .values("id_ser_esp__id_servicio", "id_ser_esp__id_servicio__nombre")
-                .order_by("id_ser_esp__id_servicio__nombre")  # <-- orden alfabético por nombre
+                .values("ser_esp__servicio", "ser_esp__servicio__nombre")
+                .order_by("ser_esp__servicio__nombre")  # <-- orden alfabético por nombre
                 .distinct()
             )
         ]

@@ -1,6 +1,7 @@
 from django.db import models
-from apps.efector.models import EfeSerEsp
-from apps.turno.models import Turno
+from src.apps.efector.models import EfeSerEsp
+from src.apps.turno.models import Turno
+from django.conf import settings
 
 class TipoPlantilla(models.Model):
     id = models.IntegerField(primary_key=True)

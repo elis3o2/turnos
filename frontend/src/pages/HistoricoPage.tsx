@@ -11,7 +11,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getHistoricoTurno } from '../features/turno/api'; // adapta si tu ruta es distinta
 import type { Paciente } from '../features/persona/types';
-import LookPaciente from '../features/turno/components/LookPaciente';
+import LookPaciente from '../features/turno_espera/components/LookPaciente';
 import { useEffect } from 'react';
 // ---------------------- Tipos ----------------------
 export type HistoricoItem = {

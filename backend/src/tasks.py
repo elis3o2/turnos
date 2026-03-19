@@ -8,9 +8,11 @@ from django.conf import settings
 from django.db import connections, transaction, connection as default_connection
 from django.db.models import OuterRef, Subquery, Exists, IntegerField, Max
 from django.utils import timezone
-from src.models import (Turno, Plantilla, Mensaje, LastMod,
-                        EfeSerEspPlantilla, EstadoTurno, Efector, Servicio,
-                        Especialidad, EfeSerEsp, Flow, TurnoFlow, PlantillaFlow)
+
+from src.apps.turno.models import Turno, EstadoTurno
+from src.apps.efector.models import Efector, Servicio, Especialidad, EfeSerEsp
+from src.apps.mensaje.models import (Plantilla, Mensaje, EfeSerEspPlantilla, LastMod,
+                                    Flow, TurnoFlow, PlantillaFlow)
 from src.utils.utils import enviar_whatsapp2, check_turno, format_plantilla, start_flow
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
@@ -137,22 +139,22 @@ def verificar_turnos() -> None:
                             ese_obj = (
                                 EfeSerEsp.objects
                                 .select_related(
-                                    "id_efector",
-                                    "id_ser_esp__id_servicio",
-                                    "id_ser_esp__id_especialidad",
+                                    "efector",
+                                    "ser_esp__id_servicio",
+                                    "ser_esp__id_especialidad",
                                 )
                                 .get(pk=id_efe_ser_esp)
                             )
 
                             # IDs reales
                             id_efector = ese_obj.id_efector_id
-                            id_servicio = ese_obj.id_ser_esp.id_servicio_id
-                            id_especialidad = ese_obj.id_ser_esp.id_especialidad_id
+                            id_servicio = ese_obj.ser_esp.id_servicio_id
+                            id_especialidad = ese_obj.ser_esp.id_especialidad_id
 
                             # Valores reales (nombre)
                             nombre_efector = ese_obj.id_efector.nombre
-                            nombre_servicio = ese_obj.id_ser_esp.id_servicio.nombre
-                            nombre_especialidad = ese_obj.id_ser_esp.id_especialidad.nombre
+                            nombre_servicio = ese_obj.ser_esp.id_servicio.nombre
+                            nombre_especialidad = ese_obj.ser_esp.id_especialidad.nombre
 
                             # datos del efector vía cursor Informix
                             nombre_efector = calle = altura = letra = coordx = coordy = tel_efe = calle_nom = None
@@ -282,7 +284,7 @@ def programar_recordatorios() -> None:
 
         turnos_qs = (
             Turno.objects
-            .filter(id_estado=1, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
+            .filter(estado_id=1, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
             .annotate(
                 efp_exists=Exists(efp_qs),
                 plantilla_reco=Subquery(efp_qs.values('plantilla_reco')[:1]),
@@ -470,7 +472,7 @@ def send_reminder_task(
                 return
 
             # Si el turno cambió de estado o ya tiene recordatorio, no enviamos
-            if turno.id_estado_id != 1 or turno.msj_recordatorio == 1:
+            if turno.estado_id != 1 or turno.msj_recordatorio == 1:
                 print(f"Cambio de estado o ya enviado para turno {id_turno}, abortando envío.")
                 return
 
@@ -480,7 +482,7 @@ def send_reminder_task(
                 print(f"[DEBUG] check_turno returned send={send_flag}, plantilla={plantilla} for turno {id_turno}")
                 return
 
-            if Mensaje.objects.filter(id_turno=id, id_plantilla__id_tipo__id=4).exists():
+            if Mensaje.objects.filter(id_turno=id, plantilla__tipo__id=4).exists():
                 print(f"[DEBUG] ya se intento enviar el mensaje, abortando")
                 return
 
@@ -498,7 +500,7 @@ def send_reminder_task(
             if len(telefono) == 13:
 
             # Si existe algun TurnoFlow con Flow en estado 0, marcamos reintento
-                if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
+                if Flow.objects.filter(numero=telefono, estado_id=0).exists():
                     print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
                     need_retry = True
                     ack = -1

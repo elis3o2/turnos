@@ -71,10 +71,10 @@ async def get_or_create_flow(pk:str, para: str, sesion: str) -> Flow:
         flow, created = Flow.objects.get_or_create(
             pk=pk,
             defaults={
-                "id_plantilla_flow_id": 1,
+                "plantilla_flow_id": 1,
                 "numero": para,
-                "id_sesion_id": sesion,
-                "id_estado_id": 0,
+                "sesion_id": sesion,
+                "estado_id": 0,
                 "fecha_inicio": datetime.now(tz=ARG_TZ).replace(tzinfo=None)
             },
         )
@@ -86,7 +86,7 @@ ARG_TZ = ZoneInfo("America/Argentina/Buenos_Aires")
 async def set_flow_estado(pk, estado, fecha):
     def _set():
         f = Flow.objects.get(pk=pk)
-        f.id_estado_id = estado
+        f.estado_id = estado
 
         # Determinar cierre como naive en hora ARG
         if fecha is None:
@@ -167,10 +167,10 @@ async def handle_finish(id_flow_pk, plantilla_name=None):
 
 
         if nuevo_estado_pk is not None:
-            t.id_estado_paciente_id = nuevo_estado_pk
+            t.estado_paciente_id = nuevo_estado_pk
             try:
-                t.save(update_fields=["id_estado_paciente"])
-                logger.info("Turno %s actualizado: id_estado_paciente=%s (flow %s)", t.pk, nuevo_estado_pk, id_flow_pk)
+                t.save(update_fields=["estado_paciente"])
+                logger.info("Turno %s actualizado: estado_paciente=%s (flow %s)", t.pk, nuevo_estado_pk, id_flow_pk)
             except Exception:
                 logger.exception("Fallo guardando Turno %s con update_fields, aplicando save() completo", t.pk)
                 t.save()

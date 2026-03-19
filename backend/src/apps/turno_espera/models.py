@@ -1,6 +1,7 @@
 from django.db import models
-from apps.efector.models import Efector, EfeSerEsp
-from apps.src.models import CustomUser
+from django.conf import settings
+from src.apps.efector.models import Efector, EfeSerEsp
+from src.models import CustomUser
 
 class Deriva(models.Model):
     id = models.AutoField(primary_key=True)

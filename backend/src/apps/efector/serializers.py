@@ -21,6 +21,7 @@ class EspecialidadSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspSerializer(serializers.ModelSerializer):    
+    id_efector = serializers.IntegerField(source='efector.id', read_only=True)
     id_servicio = serializers.IntegerField(source='ser_esp.servicio.id',read_only=True)
     id_especialidad = serializers.IntegerField(source='ser_esp.especialidad.id',read_only=True)
     class Meta:

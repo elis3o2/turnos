@@ -25,10 +25,10 @@ if res.status_code == 200 and isinstance(res.data, dict):
         f, created = Flow.objects.get_or_create(
             pk=flow_pk,
             defaults={
-                "id_plantilla_flow": plantilla,
+                "plantilla_flow_id": plantilla,
                 "para": telefono,
                 "desde":"516555",
-                "id_estado_id":0
+                "estado_id":0
             },
         )
         # crear TurnoFlow idempotente

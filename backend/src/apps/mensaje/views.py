@@ -1,4 +1,6 @@
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import EstadoMsj, Mensaje, Plantilla, EfeSerEspPlantilla
 from .serializers import (EstadoMsjSerializer, MensajeSerializer, PlantillaSerializer,
                         EfeSerEspPlantilla, EfeSerEspPlantillaDetailSerializer)
@@ -65,14 +67,14 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
         # Optimización de consultas y ordenamiento
         queryset = (
             queryset.select_related(
-                "id_efe_ser_esp",
+                "efe_ser_esp",
                 "plantilla_conf",
                 "plantilla_repr",
                 "plantilla_canc",
                 "plantilla_reco",
             )
             .order_by(
-                "id_efe_ser_esp__id_ser_esp__id_especialidad__nombre",
+                "efe_ser_esp__ser_esp__especialidad__nombre",
             )
         )
 

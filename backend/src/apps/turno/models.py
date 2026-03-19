@@ -1,5 +1,5 @@
 from django.db import models
-from apps.efector.models import EfeSerEsp
+from src.apps.efector.models import EfeSerEsp
 
 
 class EstadoTurno(models.Model):

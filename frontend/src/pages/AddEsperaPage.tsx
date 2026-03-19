@@ -1,31 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import Divider from "@mui/material/Divider";
-import Paper from "@mui/material/Paper";
-import IconButton from "@mui/material/IconButton";
-import CloseIcon from "@mui/icons-material/Close";
-import Stack from "@mui/material/Stack";
-import FormControl from "@mui/material/FormControl";
-import FormLabel from "@mui/material/FormLabel";
-import RadioGroup from "@mui/material/RadioGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Radio from "@mui/material/Radio";
-import Chip from "@mui/material/Chip";
+import {Box, Typography, Button, CircularProgress, Divider, Paper, 
+      IconButton, Stack, FormControl, FormLabel, RadioGroup,
+       FormControlLabel, Radio, Chip, Snackbar, Alert } from "@mui/material";
 import { postTurnoEspera } from "../features/turno_espera/api";
+
 import type { Efector, EfeSerEspCompleto } from "../features/efector/types";
 import { getEfectorById } from "../features/efector/api";
 import type { Paciente, Profesional } from "../features/persona/types";
-import LookPaciente from "../features/turno/components/LookPaciente";
-import LookProfesional from "../features/turno/components/LookProfesional";
-import LookEfeSerEsp from "../features/turno/components/LookEfeSerEsp";
-import LookEstudioRequerido from "../features/turno/components/LookEstudioRequerido";
+import LookPaciente from "../features/turno_espera/components/LookPaciente";
+import LookProfesional from "../features/turno_espera/components/LookProfesional";
+import LookEfeSerEsp from "../features/turno_espera/components/LookEfeSerEsp";
+import LookEstudioRequerido from "../features/turno_espera/components/LookEstudioRequerido";
 import type { EstudioRequerido } from "../features/turno_espera/types";
-import Snackbar from "@mui/material/Snackbar";
-import Alert from "@mui/material/Alert";
+import CloseIcon from "@mui/icons-material/Close";
 
 type AlertSeverity = "success" | "info" | "warning" | "error";
 
@@ -47,8 +35,7 @@ export default function AddEspera(): React.ReactElement {
   const [profesional, setProfesional] = useState<Profesional | null>(null);
   const [finishProfesional, setFinishProfesional] = useState(false);
 
-  const [efeSerEspSeleccionado, setEfeSerEspSeleccionado] =
-    useState<EfeSerEspCompleto | null>(null);
+  const [efeSerEspSeleccionado, setEfeSerEspSeleccionado] = useState<EfeSerEspCompleto | null>(null);
   const [finishEfeSerEsp, setFinishEfeSerEsp] = useState(false);
 
   const [cupo, setCupo] = useState(false)
@@ -81,7 +68,7 @@ export default function AddEspera(): React.ReactElement {
       try {
         const data = await getEfectorById(efectorId);
         if (!mounted) return;
-        setEfector(data ?? null);
+        setEfector(data);
       } catch (e: unknown) {
         const msg = (e as { message?: string })?.message ?? "Error al cargar efector";
         if (!mounted) return;
@@ -118,12 +105,10 @@ export default function AddEspera(): React.ReactElement {
     setEfeSerEspSeleccionado(null);
     setFinishEfeSerEsp(false);
     setPriority(null);
-    // limpio también los estudios requeridos al cambiar la especialidad/servicio
     setEstudioRequerido([]);
     setFinishEstudioRequerido(false);
   };
 
-  // NUEVO: reset específico para estudios requeridos (tarjeta)
   const resetEstudioRequerido = () => {
     setEstudioRequerido([]);
     setFinishEstudioRequerido(false);
@@ -131,7 +116,6 @@ export default function AddEspera(): React.ReactElement {
   };
 
   // puede seleccionarse prioridad solo si todas las selecciones anteriores están hechas
-  // ahora se requiere además que los estudios requeridos estén confirmados (finishEstudioRequerido)
   const canSelectPriority = Boolean(
     (efector || efectorId) &&
       paciente &&
@@ -140,7 +124,7 @@ export default function AddEspera(): React.ReactElement {
       finishEstudioRequerido
   );
 
-  // si por cualquier motivo canSelectPriority deja de cumplirse, limpiamos priority
+  // si canSelectPriority deja de cumplirse, limpiamos priority
   useEffect(() => {
     if (!canSelectPriority) setPriority(null);
   }, [canSelectPriority]);
@@ -172,7 +156,7 @@ export default function AddEspera(): React.ReactElement {
       const prioridadNum = mapPriority[priority!];
       const idPaciente = paciente!.id;
       const idsEstudios = estudioRequerido.map(e => e.id)
-      // llamada al backend (asegurate que postTurnoEspera devuelva una Promise)
+      // llamada al backend 
       await postTurnoEspera(idEfeSerEsp, idProf, idEfeSolicitante, idPaciente, idsEstudios, prioridadNum, cupo);
 
       // éxito: mostrar alerta
@@ -198,7 +182,7 @@ export default function AddEspera(): React.ReactElement {
     }
   };
 
-  // mapeo de colores por prioridad (sin tocar)
+  // mapeo de colores por prioridad 
   const priorityBg = (p: string | null) => {
     if (p === "baja") return { bgcolor: "success.light", color: "success.contrastText" };
     if (p === "media") return { bgcolor: "warning.light", color: "warning.contrastText" };
@@ -207,12 +191,11 @@ export default function AddEspera(): React.ReactElement {
     return { bgcolor: "background.paper", color: "text.primary" };
   };
 
-  // colores exclusivos para las otras tarjetas (no se repiten con success/warning/error)
+  // colores exclusivos para las otras tarjetas 
   const efectorStyle = { bgcolor: "primary.light", color: "primary.contrastText" }; // azul claro
   const pacienteStyle = { bgcolor: "info.light", color: "info.contrastText" }; // cian distinto
   const profesionalStyle = { bgcolor: "#8b5cf6", color: "common.white" }; // violeta personalizado
   const especialidadStyle = { bgcolor: "#cf7302ff", color: "common.white" }; // naranja con texto blanco
-  // NUEVO: color exclusivo para estudios (no usado anteriormente)
   const estudioStyle = { bgcolor: "secondary.light", color: "secondary.contrastText" };
 
   return (
@@ -348,7 +331,6 @@ export default function AddEspera(): React.ReactElement {
         )
       )}
 
-      {/* -- NUEVO: Mostrar selector de Estudios Requeridos justo después de elegir EfeSerEsp y antes de prioridad -- */}
       { finishEfeSerEsp && !finishEstudioRequerido && (
         <Box sx={{ mb: 2 }}>
           <LookEstudioRequerido

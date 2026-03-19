@@ -1,11 +1,11 @@
 import  { useContext, useEffect, useMemo, useState } from "react";
 import type { Efector } from "../features/efector/types";
-import type { EstudioRequerido, TurnoEspera } from "../features/turno/types";
+import type { EstudioRequerido, TurnoEspera } from "../features/turno_espera/types";
 import { AuthContext } from "../common/contex";
-import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno } from "../features/turno/api";
-import { CloseTurnoEspera } from "../features/turno/api";
-import {getDerivaByEfector} from "../features/efe_ser_esp/api"
-// MUI
+import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno,
+   CloseTurnoEspera,  getDerivaByEfector} from "../features/turno_espera/api";
+
+   // MUI
 import {
   Box,
   Select,

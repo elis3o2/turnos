@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from core import settings
-        
+from src.apps.efector.models import Efector
 
 class CustomUser(AbstractUser):
     efectores = models.ManyToManyField(Efector, related_name="usuarios", blank=True)

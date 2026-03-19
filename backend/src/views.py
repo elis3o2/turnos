@@ -4,30 +4,24 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from decouple import config
-from django.db.models import Count, Sum,  Q, Subquery, OuterRef
-from django.db.models.functions import Coalesce
-from django.conf import settings
+from django.db.models import Count,  Q, Subquery, OuterRef
 from django.db import connections, DatabaseError
-from django.core.cache import cache
-from collections import OrderedDict
-from src.models import (Plantilla,  EstadoMsj, EstadoTurno, Turno, TurnoEspera, Deriva,
-                        Mensaje, Efector,Servicio, Especialidad, EfeSerEspPlantilla,
-                        EfeSerEsp, EstudioRequerido, Flow, TurnoFlow, TurnoEsperaEstudio)
-from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurnoSerializer,
-                TurnoSerializer, TurnoEsperaSerializer, MensajeSerializer, DerivaSerializer,
-                EfectorSerializer, ServicioSerializer,EspecialidadSerializer, EfeSerEspPlantillaSerializer, EfeSerEspPlantillaDetailSerializer,
-                CustomTokenObtainPairSerializer,  TurnoMergedSerializer, HistoricoPacienteSerializer, 
-                PacienteSerializer, ProfesionalSerializer, EfeSerEspSerializer, EfeSerEspEfectorSerializer,
-                EfeSerEspCompletoSerializer, TurnoEsperaCreateSerializer, TurnoEsperaCloseSerializer,
-                EstudioRequeridoSerializer )
-from django.utils import timezone
-from typing import List
+from typing import Callable, Tuple, TypedDict, Any
 from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
+from .serializers import CustomTokenObtainPairSerializer
+from src.apps.turno.models import Turno
+from src.apps.turno.serializers import TurnoMergedSerializer
 import logging
 logger = logging.getLogger(__name__)
 
+class InformixData(TypedDict, total=False):
+    paciente_id: int
+    paciente_nombre: str
+    paciente_apellido: str
+    paciente_dni: str
+    profesional_nombre: str
+    profesional_apellido: str
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -174,13 +168,7 @@ class HistoricoPaciente(APIView):
         serializer = HistoricoPacienteSerializer(instance=result, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-from typing import Callable, Tuple
-from django.db import DatabaseError, connections
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
 
-logger = logging.getLogger(__name__)
 
 class BaseTurnosMerged:
     """
@@ -333,11 +321,11 @@ class BaseTurnosMerged:
 class GetIncorrectoAPIView(BaseTurnosMerged, APIView):
     def get(self, request):
         def build_qs(filters):
-            latest_msg_qs = Mensaje.objects.filter(id_turno=OuterRef('pk')).order_by('-fecha_envio')
+            latest_msg_qs = Mensaje.objects.filter(turno_id=OuterRef('pk')).order_by('-fecha_envio')
             return (
                 Turno.objects
-                .select_related("id_efe_ser_esp")
-                .annotate(latest_msg_estado=Subquery(latest_msg_qs.values('id_estado')[:1]))
+                .select_related("efe_ser_esp")
+                .annotate(latest_msg_estado=Subquery(latest_msg_qs.values('estado')[:1]))
                 .filter(Q(latest_msg_estado__lt=0), **filters)
                 .order_by('-fecha', '-hora', '-id')
             )
@@ -370,7 +358,7 @@ class TurnosAlertasAPIView(BaseTurnosMerged, APIView):
         def build_qs(filters):
             qs = (
                 Turno.objects
-                .select_related("id_efe_ser_esp")
+                .select_related("efe_ser_esp")
                 .filter(**filters)
                 .order_by('-fecha', '-hora', '-id')
             )
@@ -442,13 +430,3 @@ def get_params(request) -> tuple[int, int, str | None, str | None, list[int], li
 
     return (cantidad, offset, fecha_desde, fecha_hasta, id_efectores, id_servicios)
 
-
-from typing import TypedDict
-
-class InformixData(TypedDict, total=False):
-    paciente_id: int
-    paciente_nombre: str
-    paciente_apellido: str
-    paciente_dni: str
-    profesional_nombre: str
-    profesional_apellido: str

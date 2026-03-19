@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Plantilla, EfeSerEspPlantilla, EstadoMsj, Mensaje
-from apps.efector.serializers import EfeSerEspSerializer, EspecialidadSerializer
-from apps.turno.serializers import TurnoSerializer
+from src.apps.efector.serializers import EfeSerEspSerializer, EspecialidadSerializer
+from src.apps.turno.serializers import TurnoSerializer
 import emoji
 
 
@@ -31,7 +31,7 @@ class EfeSerEspPlantillaSerializer(serializers.ModelSerializer):
 
 
 class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
-    especialidad = EspecialidadSerializer(source="id_efe_ser_esp.id_ser_esp.id_especialidad", read_only=True)
+    especialidad = EspecialidadSerializer(source="efe_ser_esp.ser_esp.especialidad", read_only=True)
     id_efector = serializers.SerializerMethodField()
     id_servicio = serializers.SerializerMethodField()
     # HACEMOS LOS CAMPOS ESCRIBIBLES POR PK (aceptan un entero en el request)
@@ -64,10 +64,10 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_id_efector(self, obj):
-        return obj.id_efe_ser_esp.id_efector_id if obj.id_efe_ser_esp else None
+        return obj.efe_ser_esp.efector_id if obj.efe_ser_esp else None
 
     def get_id_servicio(self, obj):
-        return obj.id_efe_ser_esp.id_ser_esp.id_servicio_id if obj.id_efe_ser_esp else None
+        return obj.efe_ser_esp.ser_esp.servicio_id if obj.efe_ser_esp else None
 
     def to_representation(self, instance):
         """

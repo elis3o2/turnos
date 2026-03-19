@@ -59,7 +59,7 @@ def update_state():
 
                     for turno in turnos:
                         try:
-                            turno.id_estado_id = nuevo_estado
+                            turno.estado_id = nuevo_estado
                             turno.save(update_fields=["id_estado"])
 
                             if nuevo_estado == 4:
@@ -76,7 +76,7 @@ def update_state():
                                 f"id={turno.id}",
                                 f"id_sisr={turno.id_sisr}",
                                 f"paciente={turno.id_paciente}",
-                                f"estado_actual={turno.id_estado_id}",
+                                f"estado_actual={turno.estado_id}",
                                 f"nuevo_estado={nuevo_estado}",
                                 "|",
                                 e

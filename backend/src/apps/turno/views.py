@@ -1,8 +1,11 @@
+from django.db.models import Count, Sum
+from django.db.models.functions import Coalesce
 from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import EstadoTurno, Turno
 from .serializers import EstadoTurnoSerializer, TurnoSerializer
 from src.permissions import ReadOnly, EfectorPermission
-from rest_framework.response import Response
 
 
 class EstadoTurnoViewSet(viewsets.ModelViewSet):
@@ -44,7 +47,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
         especialidades = self._parse_csv_param('id_ser_esp__id_especialidad')
         efectores = self._parse_csv_param('id_efector')
 
-        id_estado = rp.get('id_estado')
+        id_estado = rp.get('estado')
         if id_estado not in (None, ''):
             try:
                 qs = qs.filter(estado=int(id_estado))

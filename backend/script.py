@@ -6,7 +6,7 @@ from src.models import Mensaje, Turno
 def cantidad_turnos_por_estado():
 
     # 1. Mensajes válidos
-    mensajes = Mensaje.objects.filter(id_estado__gte=0)
+    mensajes = Mensaje.objects.filter(estado__gte=0)
 
     # Turnos de noviembre (excluir servicios 68 y 77)
     id_turnos_noviembre = mensajes.filter(

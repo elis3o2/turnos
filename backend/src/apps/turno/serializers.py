@@ -1,7 +1,10 @@
 from rest_framework import serializers
+from concurrent.futures import ThreadPoolExecutor
+from src.utils.utils import update_msg_state
+import emoji
 from .models import EstadoTurno, EstadoTurnoPaciente, Turno
-from apps.mensaje.models import Mensaje
-from datetime import datetime, date
+from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
+from src.apps.efector.serializers import EfeSerEspSerializer, EfeSerEspCompletoSerializer
 
 class EstadoTurnoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,8 +61,8 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     profesional_nombre = serializers.CharField(read_only=True, allow_null=True)
     profesional_apellido = serializers.CharField(read_only=True, allow_null=True)
 
-    estado = EstadoTurnoSerializer(source="id_estado", read_only=True)
-    estado_paciente = EstadoTurnoPacienteSerializer(source="id_estado_paciente", read_only=True)
+    estado = EstadoTurnoSerializer(read_only=True)
+    estado_paciente = EstadoTurnoPacienteSerializer(read_only=True)
     # Nuevo campo dinámico
     mensaje_asociado = serializers.SerializerMethodField()
     
@@ -75,7 +78,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         ]
     @staticmethod
     def procesar_mensaje(m: Mensaje):
-        if 0 <= m.id_estado_id < 3:
+        if 0 <= m.estado_id < 3:
             update_msg_state(m)
 
         return {
@@ -84,18 +87,18 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
             "numero": m.numero if m.numero else None,
             "fecha_envio": m.fecha_envio if m.fecha_envio else None,
             "estado": {
-                "id": m.id_estado.id if m.id_estado else None,
-                "significado": m.id_estado.significado if m.id_estado else None,
-            } if m.id_estado else None,
+                "id": m.estado.id if m.estado else None,
+                "significado": m.estado.significado if m.estado else None,
+            } if m.estado else None,
             "plantilla": {
-                "id": m.id_plantilla.id if m.id_plantilla else None,
-                "contenido": emoji.emojize(m.id_plantilla.contenido)
-                if m.id_plantilla else None,
+                "id": m.plantilla.id if m.plantilla else None,
+                "contenido": emoji.emojize(m.plantilla.contenido)
+                if m.plantilla else None,
                 "tipo": {
-                    "id": m.id_plantilla.id_tipo.id,
-                    "nombre": m.id_plantilla.id_tipo.nombre,
-                } if m.id_plantilla and m.id_plantilla.id_tipo else None,
-            } if m.id_plantilla else None,
+                    "id": m.plantilla.tipo.id,
+                    "nombre": m.plantilla.tipo.nombre,
+                } if m.plantilla and m.plantilla.tipo else None,
+            } if m.plantilla else None,
             "fecha_last_ack": m.fecha_last_ack if m.fecha_last_ack else None,
         }
 
@@ -107,8 +110,8 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         """
         
         mensajes = (
-             Mensaje.objects.filter(id_turno=obj.id)
-             .select_related("id_plantilla__id_tipo", "id_estado")
+             Mensaje.objects.filter(turno_id=obj.id)
+             .select_related("plantilla__tipo", "estado")
              .order_by("-fecha_envio")
             )
         
@@ -117,19 +120,19 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         return dic
     
     def get_fecha_estado_paciente(self, obj):
-        flow_ids = TurnoFlow.objects.filter(id_turno=obj.id).values_list("id_flow", flat=True)
+        flow_ids = TurnoFlow.objects.filter(turno_id=obj.id).values_list("flow_id", flat=True)
 
-        # usar obj.id_estado_id (atributo del modelo Turno)
-        if obj.id_estado_id in (1, 2):
+        # usar obj.estado_id (atributo del modelo Turno)
+        if obj.estado_id in (1, 2):
             flow = (
-                Flow.objects.filter(id__in=flow_ids, id_plantilla_flow=1)
+                Flow.objects.filter(id__in=flow_ids, plantilla_flow_id=1)
                 .order_by("fecha_cierre")
                 .first()
             )
             return flow.fecha_cierre if flow else None
 
         flow = (
-            Flow.objects.filter(id__in=flow_ids, id_plantilla_flow=1)
+            Flow.objects.filter(id__in=flow_ids, plantilla_flow_id=1)
             .order_by("fecha_inicio")
             .first()
         )

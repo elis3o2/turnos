@@ -18,13 +18,14 @@ import {
 } from "@mui/material"
 import { useNavigate } from 'react-router-dom'
 import { getTurnosCount } from '../features/turno/api'
-import {  getServiciosAll, getEspecialidadesAll, getEfeSerEspAll} from '../features/efe_ser_esp/api'
+import {  getServiciosAll, getEspecialidadesAll, getEfeSerEspAll} from '../features/efector/api'
 import type {  Especialidad, Servicio } from '../features/efector/types'
 import type { EfeSerEsp } from '../features/efector/types'
 import HospitalIcon from '../assets/hospital.png'
 import AidKitIcon from '../assets/first-aid-kit.png'
 import MedicalReportIcon from '../assets/medical-report.png'
 import {  AuthContext } from '../common/contex'
+import { getServicioByEfector } from '../features/efector/api'
 
 function InitPage() {
   const [turnos, setTurnos] = useState<number>(0)
@@ -41,6 +42,57 @@ function InitPage() {
   const [selectedEfectores, setSelectedEfectores] = useState<number[]>([])
   const [selectedServicios, setSelectedServicios] = useState<number[]>([])
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<number[]>([])
+
+
+  const efectoresMap: Record<number, string> = Object.fromEntries(
+    efectores?.map(e => [e.id, e.nombre])
+  );
+
+  const [servicios, setServicios] = useState<Record<number, string>>({})
+  const [especialidadades, setEspecialidades] = useState<Record<number, string>>({})
+  const [efecServ, setEfecServ] = useState<Record<number, number[]>>({})
+  const [especialidadades, setEspecialidades] = useState<Record<number, string>>({})
+  const [efeSerEsp, setEfecServEsp] = useState<Record<number,Record<number, number[]>>>({})
+
+
+
+  
+useEffect(() => {
+  const fetchData = async () => {
+    const newEfeSerEsp = { ...efeSerEsp };
+    const newEspecialidades = { ...especialidades };
+    const newServicios = { ...servicios };
+
+    for (const e of selectedEfectores) {
+      if (!newEfeSerEsp[e]) {
+        const data = await getServEspByEfector(e);
+
+        newEfeSerEsp[e] = {};
+
+        for (const serv of data) {
+          const sid = serv.id_ser;
+          newServicios[sid] = serv.ser_nombre;
+
+          newEfeSerEsp[e][sid] = [];
+
+          for (const esp of serv.especialidades) {
+            newEspecialidades[esp.id_esp] = esp.esp_nombre;
+            newEfeSerEsp[e][sid].push(esp.id_esp);
+          }
+        }
+      }
+    }
+
+    setEfeSerEsp(newEfeSerEsp);
+    setEspecialidades(newEspecialidades);
+    setServicios(newServicios);
+  };
+
+  fetchData();
+}, [selectedEfectores]);
+
+
+
 
   // Menús abiertos
   const [anchorEfector, setAnchorEfector] = useState<null | HTMLElement>(null)

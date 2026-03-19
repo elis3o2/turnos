@@ -1,7 +1,9 @@
 import requests
 import emoji
 from decouple import config
-from src.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow, Turno, Plantilla, TurnoEspera, PlantillaFlow
+from src.apps.mensaje.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow,Plantilla, PlantillaFlow 
+from src.apps.turno.models import Turno
+from src.apps.turno_espera.models import TurnoEspera
 import re
 import logging
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
     Consulta la API externa por el estado del mensaje y actualiza Mensaje(pk=mensaje_id).
     Devuelve el Mensaje actualizado o el original si hay error.
     """
-    api_url = f'{config("API_ESTADO_WHATSAPP")}/{mensaje.id_sesion_id}/{mensaje.id_mensaje}/{mensaje.numero}'
+    api_url = f'{config("API_ESTADO_WHATSAPP")}/{mensaje.sesion_id}/{mensaje.id_mensaje}/{mensaje.numero}'
 
     session = requests.Session()
     session.trust_env = False 
@@ -52,7 +54,7 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
     try:
         mensaje.fecha_last_ack = now()
         if isinstance(data, dict) and "ack" in data:
-            mensaje.id_estado_id = data["ack"]
+            mensaje.estado_id = data["ack"]
 
         mensaje.save(update_fields=["fecha_last_ack", "id_estado"])
         return mensaje
@@ -66,9 +68,9 @@ def enviar_whatsapp(numero: str, mensaje: str) -> Response:
     ms = (
         Mensaje.objects
         .filter(numero=numero)
-        .exclude(id_sesion_id__isnull=True)
+        .exclude(sesion_id__isnull=True)
         .order_by("-fecha_envio")
-        .values_list("id_sesion_id", flat=True)
+        .values_list("sesion_id", flat=True)
         .distinct()
     )
 
@@ -187,9 +189,9 @@ def enviar_whatsapp2(numero: str, mensaje: str) -> Response:
     sesion = (
         Mensaje.objects
         .filter(numero=numero)
-        .exclude(id_sesion_id__isnull=True)
+        .exclude(sesion_id__isnull=True)
         .order_by("-fecha_envio")
-        .values_list("id_sesion_id", flat=True)
+        .values_list("sesion_id", flat=True)
         .first()
     )
 
@@ -450,9 +452,9 @@ def update_estado_Turno(id_sisr: int, id_pac: int, id_est: int) -> Turno | None:
             return None
 
         # Asignar estado en la instancia y guardar (mínimo)
-        if t.id_estado_id != id_est:
-            t.id_estado_id = id_est
-            t.save(update_fields=["id_estado_id"])
+        if t.estado_id != id_est:
+            t.estado_id = id_est
+            t.save(update_fields=["estado_id"])
 
         print(f"[INFO] Actualizado Turno id={id_sisr} a estado={id_est}")
         return t
@@ -509,7 +511,7 @@ def create_Turno(id_sisr: int, id_pac: int, id_est: int,
     t = Turno.objects.create(
             id_sisr=id_sisr,
             id_paciente=id_pac,
-            id_estado_id=id_est,
+            estado_id=id_est,
             id_estado_paciente_id=0,
             msj_confirmado=0,
             msj_reprogramado=0,
@@ -536,12 +538,12 @@ def create_Mensaje(
 
     m = Mensaje.objects.create(
         id_mensaje=id,
-        id_turno=turno,
+        turno=turno,
         numero=numero,
-        id_plantilla=plantilla,
+        plantilla=plantilla,
         fecha_envio=fecha,
-        id_estado_id=estado,
-        id_sesion_id=sesion
+        estado_id=estado,
+        sesion_id=sesion
     )
 
 
@@ -550,8 +552,8 @@ def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int) -> bool:
     updated = TurnoEspera.objects.filter(
         id_paciente=id_pac,
         id_efe_ser_esp=id_efe_ser_esp,
-        id_estado_id=0
-    ).update(id_estado_id=1, fecha_hora_cierre=now())
+        estado_id=0
+    ).update(estado_id=1, fecha_hora_cierre=now())
 
     return updated > 0
 
@@ -607,20 +609,20 @@ def create_flow(telefono: str, turno: Turno ) -> None:
             f, created = Flow.objects.get_or_create(
                 pk=flow_pk,
                 defaults={
-                    "id_plantilla_flow": plantilla_flow,
+                    "plantilla_flow_id": plantilla_flow,
                     "numero": telefono,
-                    "id_sesion_id": sesion,
-                    "id_estado_id": 0,
+                    "sesion_id": sesion,
+                    "estado_id": 0,
                     "fecha_inicio": timezone.now()
                 },
             )
             # si ya existía y querés forzar estado a 0:
-            if not created and f.id_estado_id != 0:
-                f.id_estado_id = 0
-                f.save(update_fields=["id_estado_id"])
+            if not created and f.estado_id != 0:
+                f.estado_id = 0
+                f.save(update_fields=["estado_id"])
 
             # crear TurnoFlow idempotente
-            TurnoFlow.objects.get_or_create(id_turno=turno, id_flow=f)
+            TurnoFlow.objects.get_or_create(turno=turno, flow=f)
 
             # actualizar estado paciente
             turno.id_estado_paciente_id = 4

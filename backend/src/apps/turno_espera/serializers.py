@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from .models import Deriva, EstadoTurnoEspera, EstudioRequerido, TurnoEspera, TurnoEsperaEstudio
-from apps.efector.serializers import EfectorSerializer, ServicioSerializer, EspecialidadSerializer
+from src.apps.efector.models import Efector, EfeSerEsp
+from src.apps.efector.serializers import EfectorSerializer, ServicioSerializer, EspecialidadSerializer
 from src.utils.utils import fetch_paciente, fetch_profesional
 
 class DerivaSerializer(serializers.ModelSerializer):
-    efector = EfectorSerializer(source='id_efector', read_only=True)
-    efector_deriva = EfectorSerializer(source='id_efe_ser_esp_deriva.id_efector', read_only=True)
-    servicio_deriva = ServicioSerializer(source='id_efe_ser_esp_deriva.id_ser_esp.id_servicio', read_only=True)
-    especialidad_deriva = EspecialidadSerializer(source='id_efe_ser_esp_deriva.id_ser_esp.id_especialidad', read_only=True)
+    efector = EfectorSerializer(read_only=True)
+    efector_deriva = EfectorSerializer(source='efe_ser_esp_deriva.efector', read_only=True)
+    servicio_deriva = ServicioSerializer(source='efe_ser_esp_deriva.ser_esp.servicio', read_only=True)
+    especialidad_deriva = EspecialidadSerializer(source='efe_ser_esp_deriva.ser_esp.iespecialidad', read_only=True)
     class Meta:
         model = Deriva
         fields = '__all__'

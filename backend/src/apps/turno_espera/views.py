@@ -5,8 +5,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Deriva, EstudioRequerido, TurnoEspera
 from .serializers import (DerivaSerializer, EstudioRequeridoSerializer,
-                        TurnoEsperaSerializer,TurnoEsperaCreateSerializer,TurnoEsperaCloseSerializer)
-from .src.permissions import ReadOnly, TurnoEsperaCreateUpdatePermission
+                        TurnoEsperaSerializer)
+from src.permissions import ReadOnly
+from .permissions import TurnoEsperaCreateUpdatePermission, TurnoEsperaReadPermission
 
 class DerivaViewSet(viewsets.ModelViewSet):
     serializer_class = DerivaSerializer

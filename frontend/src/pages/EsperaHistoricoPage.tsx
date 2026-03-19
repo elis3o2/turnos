@@ -10,10 +10,10 @@ import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getTurnoEsperaById } from '../features/turno/api'; // adapta la ruta según tu proyecto
-import type { TurnoEspera } from '../features/turno/types';
+import { getTurnoEsperaById } from '../features/turno_espera/api'; // adapta la ruta según tu proyecto
+import type { TurnoEspera } from '../features/turno_espera/types';
 // Component para buscar paciente (ajusta la ruta de import si es necesario)
-import LookPaciente from '../features/turno/components/LookPaciente';
+import LookPaciente from '../features/turno_espera/components/LookPaciente';
 import type { Paciente } from '../features/persona/types';
 
 
