@@ -1,0 +1,197 @@
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import Deriva, EstudioRequerido, TurnoEspera
+from .serializers import (DerivaSerializer, EstudioRequeridoSerializer,
+                        TurnoEsperaSerializer)
+from src.permissions import ReadOnly
+from .permissions import TurnoEsperaCreateUpdatePermission, TurnoEsperaReadPermission
+
+class DerivaViewSet(viewsets.ModelViewSet):
+    serializer_class = DerivaSerializer
+    permission_classes = [ReadOnly]
+
+    def get_queryset(self):
+        queryset = Deriva.objects.all()
+        id_efector = self.request.query_params.get("id_efector")
+
+        if id_efector:
+            queryset = queryset.filter(efector=id_efector)
+
+        return queryset
+
+
+class EstudioRequeridoViewSet(viewsets.ModelViewSet):
+    serializer_class = EstudioRequeridoSerializer
+    queryset = EstudioRequerido.objects.all()
+    permission_classes = [ReadOnly]
+
+
+class TurnoEsperaViewSet(viewsets.ModelViewSet):
+    serializer_class = TurnoEsperaSerializer
+    queryset = TurnoEspera.objects.select_related(
+        "estado",
+        "efe_ser_esp__efector",
+        "efe_ser_esp__ser_esp__servicio",
+        "efe_ser_esp__ser_esp__especialidad",
+        "efector_solicitante",
+        "usuario_creacion",
+        "usuario_cierre",
+    ).prefetch_related(
+        "estudios_requerido"
+    )
+    permission_classes = [
+        TurnoEsperaCreateUpdatePermission,
+        TurnoEsperaReadPermission,
+    ]
+
+    # ----------------------------------------------------
+    # LISTA ESPERA
+    # ----------------------------------------------------
+    @action(detail=False, methods=["get"], url_path="espera")
+    def search_detalle(self, request):
+
+        id_efector = request.query_params.get("id_efector")
+        queryset = self.get_queryset().filter(estado_id=0)
+
+        if id_efector:
+            queryset = queryset.filter(
+                Q(efe_ser_esp__id_efector=id_efector, cupo=False)
+                | Q(efector_solicitante=id_efector, cupo=True)
+            )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # ----------------------------------------------------
+    # DERIVACIONES
+    # ----------------------------------------------------
+    @action(detail=False, methods=["get"], url_path="deriva")
+    def search_deriva(self, request):
+
+        id_efector = request.query_params.get("id_efector")
+        id_deriva = request.query_params.get("id_deriva")
+
+        if not id_efector or not id_deriva:
+            return Response(
+                {"detail": "Faltan datos"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        queryset = self.get_queryset().filter(
+            estado_id=0,
+            efe_ser_esp__efector=id_efector,
+            efector_solicitante=id_deriva,
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # ----------------------------------------------------
+    # BUSCAR POR PACIENTE
+    # ----------------------------------------------------
+    @action(detail=False, methods=["get"], url_path="paciente")
+    def search_paciente(self, request):
+
+        id_paciente = request.query_params.get("id")
+        queryset = self.get_queryset()
+
+        if id_paciente:
+            queryset = queryset.filter(id_paciente=id_paciente)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # ----------------------------------------------------
+    # MARCAR ESTUDIOS
+    # ----------------------------------------------------
+
+    @action(detail=True, methods=["post"], url_path="marcar-estudios")
+    def marcar_estudios(self, request, pk=None):
+
+        turno = self.get_object()
+        estudios_ids = request.data.get("estudios", [])
+
+        if not isinstance(estudios_ids, list) or not estudios_ids:
+            return Response(
+                {"error": "Debe enviar una lista de estudios"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        qs = TurnoEsperaEstudio.objects.filter(
+            turno_espera=turno,
+            id__in=estudios_ids,
+            estado=False,
+        )
+
+        now = timezone.now()
+        user = request.user if request.user.is_authenticated else None
+
+        updated = qs.update(
+            estado=True,
+            fecha_cierre=now,
+            usuario_cierre=user,
+        )
+
+        return Response(
+            {"ok": True, "actualizados": updated},
+            status=status.HTTP_200_OK,
+        )
+
+    # ----------------------------------------------------
+    # CREATE
+    # ----------------------------------------------------
+
+    def create(self, request, *args, **kwargs):
+
+        paciente = request.data.get("id_paciente")
+        efe_ser_esp = request.data.get("efe_ser_esp_id")
+
+        if paciente and efe_ser_esp:
+            if TurnoEspera.objects.filter(
+                id_paciente=paciente,
+                efe_ser_esp_id=efe_ser_esp,
+                estado_id=0,
+            ).exists():
+                return Response(
+                    {"detail": "Ya se encuentra el mismo turno en la lista"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        instance = serializer.save(
+            usuario_creacion=request.user,
+            fecha_hora_creacion=timezone.now(),
+        )
+
+        return Response(
+            self.get_serializer(instance).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    # ----------------------------------------------------
+    # CERRAR TURNO
+    # ----------------------------------------------------
+
+    @action(detail=True, methods=["post"], url_path="close")
+    def close_turno(self, request, pk=None):
+
+        turno = self.get_object()
+
+        turno.estado_id = 1
+        turno.fecha_hora_cierre = timezone.now()
+        turno.usuario_cierre = request.user
+
+        turno.save(
+            update_fields=[
+                "estado",
+                "fecha_hora_cierre",
+                "usuario_cierre",
+            ]
+        )
+
+        return Response(self.get_serializer(turno).data)
