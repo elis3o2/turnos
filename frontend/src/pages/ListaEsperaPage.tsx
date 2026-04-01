@@ -2,7 +2,7 @@ import  { useContext, useEffect, useMemo, useState } from "react";
 import type { Efector } from "../features/efe_ser_esp/types";
 import type { EstudioRequerido, TurnoEspera } from "../features/turno/types";
 import { AuthContext } from "../common/contex";
-import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, postMarcarEstudiosTurno } from "../features/turno/api";
+import { getTurnoEsperaAbierto, getTurnoEsperaAbiertoDeriva, getTurnoEsperaClose, getTurnoEsperaCloseDeriva, postMarcarEstudiosTurno } from "../features/turno/api";
 import { CloseTurnoEspera } from "../features/turno/api";
 import {getDerivaByEfector} from "../features/efe_ser_esp/api"
 // MUI
@@ -70,6 +70,8 @@ export default function ListaEspera(): React.ReactElement {
   const [alertMsg, setAlertMsg] = useState<string>("");
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>("info");
 
+  const [closeMode, setCloseMode] = useState<boolean>(false)
+
   useEffect(() => {
     let mounted = true;
     const fetchTurnos = async () => {
@@ -80,9 +82,16 @@ export default function ListaEspera(): React.ReactElement {
       setLoading(true);
       setError(null);
       try {
-        const data = await getTurnoEsperaAbierto(selectedEfector.id);
-        if (!mounted) return;
-        setTurnos(data);
+        if (!closeMode){
+          const data = await getTurnoEsperaAbierto(selectedEfector.id);
+          if (!mounted) return;
+          setTurnos(data);
+        }
+        else{
+          const data = await getTurnoEsperaClose(selectedEfector.id)
+          if (!mounted) return;
+          setTurnos(data);
+        }
       } catch (e: unknown) {
         // obtener mensaje sin introducir `any`
         const msg = (e as { message?: string })?.message ?? "Error al obtener turnos";
@@ -102,7 +111,7 @@ export default function ListaEspera(): React.ReactElement {
     return () => {
       mounted = false;
     };
-  }, [selectedEfector]);
+  }, [selectedEfector, closeMode]);
 
   // cuando cambie efector, resetear filtros
   useEffect(() => {
@@ -164,15 +173,28 @@ export default function ListaEspera(): React.ReactElement {
     const load = async () => {
       try {
         setLoading(true);
+        if (!closeMode){
+          const data = selectedDerivacion
+            ? await getTurnoEsperaAbiertoDeriva(
+                selectedDerivacion.id,
+                selectedEfector.id
+              )
+            : await getTurnoEsperaAbierto(selectedEfector.id);
 
-        const data = selectedDerivacion
-          ? await getTurnoEsperaAbiertoDeriva(
-              selectedDerivacion.id,
-              selectedEfector.id
-            )
-          : await getTurnoEsperaAbierto(selectedEfector.id);
+          if (mounted) setTurnos(data);
+        }
+        else{
+          const data = selectedDerivacion
+            ? await getTurnoEsperaCloseDeriva(
+                selectedDerivacion.id,
+                selectedEfector.id
+              )
+            : await getTurnoEsperaClose(selectedEfector.id);
 
-        if (mounted) setTurnos(data);
+          if (mounted) setTurnos(data);
+        }
+
+
       } catch (e: any) {
         if (!mounted) return;
         setAlertMsg(e?.message ?? "Error al obtener turnos");
@@ -189,12 +211,12 @@ export default function ListaEspera(): React.ReactElement {
     return () => {
       mounted = false;
     };
-  }, [selectedEfector, selectedDerivacion]);
+  }, [selectedEfector, selectedDerivacion, closeMode]);
 
 
     const handleGuardarEstudios = async () => {
     if (!activeTurno) return;
-
+    if (closeMode) return;
     try {
       setLoading(true);
 
@@ -250,15 +272,21 @@ export default function ListaEspera(): React.ReactElement {
 
   const diasEnEsperaNumber = (t: TurnoEspera): number => {
     try {
-      // Convertimos la fecha de creación al inicio del día
-      const fecha = new Date(t.fecha_hora_creacion);
-      const fechaMid = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()).getTime();
+      let fechaFinMid: number;
 
-      // Fecha actual truncada al inicio del día
-      const today = new Date();
-      const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      if (closeMode && t.fecha_hora_cierre) {
+        const cierre = new Date(t.fecha_hora_cierre);
+        fechaFinMid = new Date(cierre.getFullYear(), cierre.getMonth(),cierre.getDate()).getTime();
+      } else {
+        const today = new Date();
+        fechaFinMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      }
 
-      const diffMs = todayMid - fechaMid;
+      // Fecha de creación truncada
+      const creacion = new Date(t.fecha_hora_creacion);
+      const fechaInicioMid = new Date(creacion.getFullYear(), creacion.getMonth(), creacion.getDate()).getTime();
+
+      const diffMs = fechaFinMid - fechaInicioMid;
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
       return days >= 0 ? days : 0;
@@ -306,6 +334,7 @@ export default function ListaEspera(): React.ReactElement {
         : [...prev, estudio.id]
       );
   };
+
   // opciones de filtro construidas a partir de turnos -> array de { id, nombre }
   const especialidadesOptions = useMemo(() => {
     const map = new Map<number, string>();
@@ -493,6 +522,15 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
             onClick={() => navigate(`/espera-paciente`)}
           >
             Buscar Paciente
+          </Button>
+
+            <Button
+            color={closeMode ? 'error' : 'inherit'}
+            variant={closeMode ? 'contained' : 'outlined'}
+            disableElevation
+            onClick={() => setCloseMode(!closeMode)}
+          >
+            Cerrados
           </Button>
         </Box>
       </Box>
@@ -696,6 +734,20 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
                   >
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 
+                        {closeMode ? (
+                          <Chip
+                            label="CERRADO"
+                            size="small"
+                            sx={{
+                              fontWeight: 700,
+                              height: 20,
+                              lineHeight: "20px",
+                              px: 0.7,
+                            }}
+                          />
+                        ) : null}
+
+
                         {t.cupo ? (
                           <Chip
                             label="CUPO"
@@ -774,6 +826,11 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
               <Typography variant="body2" sx={{ mb: 0.5 }}>
                 <strong>Fecha creación:</strong> {new Date(activeTurno.fecha_hora_creacion).toLocaleString()}
               </Typography>
+              {activeTurno.fecha_hora_cierre && (
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                <strong>Fecha cierre:</strong> {new Date(activeTurno.fecha_hora_cierre).toLocaleString()}
+              </Typography>
+              )}
               <Typography variant="body2" sx={{ mb: 0.5 }}>
                 <strong>Días en espera:</strong> {diasEnEsperaNumber(activeTurno)}
               </Typography>
@@ -840,7 +897,7 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
           )}
         </DialogContent>
         <DialogActions>
-          {(selectedDerivacion === null || activeTurno?.cupo)  &&
+          {(!closeMode && (selectedDerivacion === null || activeTurno?.cupo))  &&
               <Button
                 color="error"
                 onClick={handleRemove}
@@ -855,7 +912,7 @@ const telefonoEstado = (carac: string | null | undefined, nro: string | null | u
         <Button
           variant="contained"
           onClick={handleGuardarEstudios}
-          disabled={!activeTurno || selectedEstudios.length === 0}
+          disabled={closeMode && (!activeTurno || selectedEstudios.length === 0)}
         >
           Guardar estudios
         </Button>
