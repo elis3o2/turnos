@@ -617,3 +617,31 @@ def create_flow(telefono: str, turno: Turno ) -> None:
         if ack < 0:
             turno.id_estado_paciente_id = ack
             turno.save(update_fields=["id_estado_paciente"])
+
+
+
+
+def token_url(id: int) -> str :
+    token =signing.dumps(id)
+    url = f'{config("DOMAIN")}/confirma/?id={token}'
+    return url
+
+
+HORA_INICIO = time(9, 0)
+HORA_FIN = time(20, 0)
+def ajustar_horario_envio(dt):
+    t = dt.time()
+
+    if t < HORA_INICIO:
+        return dt.replace(hour=HORA_INICIO.hour, minute=0, second=0, microsecond=0)
+
+    if t > HORA_FIN:
+        next_day = dt + timedelta(days=1)
+        return next_day.replace(hour=HORA_INICIO.hour, minute=0, second=0, microsecond=0)
+
+    return dt
+
+
+def calcular_proximo_retry(now):
+    eta = now + timedelta(minutes=15)
+    return ajustar_horario_envio(eta)

@@ -261,11 +261,9 @@ def verificar_turnos() -> None:
 SEND_TIME = time(10, 30)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
-
-
 @shared_task
 def programar_recordatorios() -> None:
-    print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")        
+    print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")
 
     try:
         hoy = datetime.now().date()
@@ -290,8 +288,10 @@ def programar_recordatorios() -> None:
             )
             .filter(efp_exists=True)
             .order_by('fecha', 'hora')
-            .values('id','id_sisr', 'id_efe_ser_esp',
-                    'fecha', 'hora', 'dias_antes', 'plantilla_reco')
+            .values(
+                'id', 'id_sisr', 'id_efe_ser_esp',
+                'fecha', 'hora', 'dias_antes', 'plantilla_reco'
+            )
         )
 
         turnos = list(turnos_qs)
@@ -333,7 +333,7 @@ def programar_recordatorios() -> None:
         for r in resultados:
             try:
                 (
-                    id_turno ,id_efector, id_servicio, id_especialidad,
+                    id_turno, id_efector, id_servicio, id_especialidad,
                     id_efe_ser_esp, tipo_doc, nro_doc,
                     ape_pac, nom_pac, fecha_turno_inf, hora_turno_inf,
                     ape_prof, nom_prof, nombre_servicio, nombre_especialidad,
@@ -349,71 +349,35 @@ def programar_recordatorios() -> None:
                 print(f"[WARN] No se encontró turno local para id_turno={id_turno}")
                 continue
 
-            fecha_turno = t_local["fecha"]            # fecha del turno
-            hora_turno = t_local["hora"]              # hora del turno
+            telefono = normalizar_telefono(carac_tel, tel)
+            if not telefono:
+                print(f"[DEBUG] Teléfono inválido para turno {id_turno}")
+
+                try:
+                    turno_obj = Turno.objects.get(id=t_local["id"])
+                    send_flag, plantilla = check_turno(id_efe_ser_esp, 4)
+                    if plantilla:
+                        create_Mensaje(turno=turno_obj, plantilla=plantilla, estado=-3)
+                except Exception as ex:
+                    print(f"[ERROR] creando mensaje inválido {id_turno}: {ex}")
+
+                continue
+
+            fecha_turno = t_local["fecha"]
             dias_antes = int(t_local.get("dias_antes") or 0)
             id = t_local["id"]
 
             # fecha objetivo para el envío (la que determinó el candidato)
             target_date = fecha_turno - timedelta(days=dias_antes)
 
-            # construir send_dt de forma robusta
-            # si el recordatorio es para el mismo día del turno (dias_antes == 0),
-            # aplicamos las reglas por hora; si no, programamos sobre target_date (ej. 12:50)
-            if dias_antes == 0:
-                dt_naive = datetime.combine(fecha_turno, hora_turno)
-                try:
-                    send_dt = make_aware(dt_naive, tz)
-                except Exception as ex:
-                    try:
-                        send_dt = dt_naive.replace(tzinfo=tz)
-                    except Exception as ex2:
-                        print(f"[ERROR] No se pudo crear send_dt aware para id_turno={id_turno}: {ex} / {ex2}")
-                        continue
+            base_naive = datetime.combine(target_date, SEND_TIME)
+            try:
+                send_dt = make_aware(base_naive, tz)
+            except Exception:
+                send_dt = base_naive.replace(tzinfo=tz)
 
-                if fecha_turno == hoy:
-                    if hora_turno <= time(10, 30):
-                        send_dt = send_dt - timedelta(hours=2)
-                    elif hora_turno <= time(13, 0):
-                        send_dt = send_dt - timedelta(hours=3)
-                    else:
-                        send_dt = send_dt - timedelta(hours=4)
+            send_dt = ajustar_horario_envio(send_dt)
 
-
-            else:
-                # dias_antes > 0 -> programar en target_date a la base SEND_TIME y escalonar con batching
-                base_naive = datetime.combine(target_date, SEND_TIME)
-                try:
-                    base = make_aware(base_naive, tz)
-                except Exception:
-                    try:
-                        base = base_naive.replace(tzinfo=tz)
-                    except Exception:
-                        print(f"[ERROR] No se pudo crear base aware para id_turno={id_turno}")
-                        continue
-
-                idx = per_day_counter[target_date]
-                # cálculo de batching: batch index y posición dentro del batch
-                batch_index = idx // BATCH_SIZE
-                pos_in_batch = idx % BATCH_SIZE
-                batch_key = (target_date, batch_index)
-
-                # generar offsets aleatorios ordenados para el batch si no existen
-                if batch_key not in per_day_batches:
-                    try:
-                        offsets = sorted(random.sample(range(BATCH_WINDOW_SECONDS), k=BATCH_SIZE))
-                    except ValueError:
-                        offsets = sorted(random.randint(0, BATCH_WINDOW_SECONDS - 1) for _ in range(BATCH_SIZE))
-                    per_day_batches[batch_key] = offsets
-
-                offsets = per_day_batches[batch_key]
-                offset = offsets[pos_in_batch]
-
-                send_dt = base + timedelta(seconds=(batch_index * BATCH_WINDOW_SECONDS + offset))
-
-                per_day_counter[target_date] += 1
-
-            # comparar con now aware (y debug si algo raro pasa)
             now = timezone.now()
             if getattr(now, "tzinfo", None) is None:
                 try:
@@ -439,8 +403,7 @@ def programar_recordatorios() -> None:
         print(f"Error en recordatorios: {str(e)}")
 
 
-# Usa bind=True para poder llamar self.retry()
-@shared_task(bind=True, max_retries=20, default_retry_delay=3600)
+@shared_task(bind=True, max_retries=100)
 def send_reminder_task(
     self,
     id_turno,
@@ -484,68 +447,51 @@ def send_reminder_task(
                 print(f"[DEBUG] ya se intento enviar el mensaje, abortando")
                 return
 
-            # validar teléfono
-            if carac_tel == None or tel == None:
-                print(f"[DEBUG] No hay teléfono válido para id_turno={id_turno} (carac={carac_tel}, tel={tel})")
-                try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-4)
-                except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
+            telefono = normalizar_telefono(carac_tel, tel)
+            if not telefono:
                 return
 
-            telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
+            d_fecha = parse_date(fecha_turno)
+            d_hora = parse_time(hora_turno)
+            turno_dt = make_aware(datetime.combine(d_fecha, d_hora), tz)
 
-            if len(telefono) == 13:
+            now = timezone.now()
 
-            # Si existe algun TurnoFlow con Flow en estado 0, marcamos reintento
-                if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
-                    print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
-                    need_retry = True
-                    ack = -1
-                else:
-                    d_fecha = parse_date(fecha_turno)
-                    d_hora = parse_time(hora_turno)
-                    d_fecha_str = d_fecha.strftime("%d-%m-%Y")
-                    d_hora_str = d_hora.strftime("%H:%M")
+            if now >= turno_dt:
+                print(f"[INFO] Turno vencido {id_turno}")
+                return
 
-                    datos_plantilla = {
-                        "nompac": nom_pac or "",
-                        "apepac": ape_pac or "",
-                        "fecha": d_fecha_str,
-                        "horaturno": d_hora_str,
-                        "nomprof": nom_prof or "",
-                        "apeprof": ape_prof or "",
-                        "especialidad": nombre_especialidad or "",
-                        "efector": nombre_efector or "",
-                        "nombre_servicio": nombre_servicio or "",
-                        "calle": calle or "",
-                        "altura": altura or "",
-                        "letra": letra or "",
-                        "coordx": coordx or "",
-                        "coordy": coordy or "",
-                        "tel_efe": tel_efe or "",
-                        "calle_nom": calle_nom or "",
-                    }
+            if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
+                eta = calcular_proximo_retry(now)
+                if eta < turno_dt:
+                    raise self.retry(eta=eta)
+                return
 
-                    mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-                    res = enviar_whatsapp2(telefono, mensaje)
+            datos_plantilla = {
+                "nompac": nom_pac or "",
+                "apepac": ape_pac or "",
+                "fecha": d_fecha.strftime("%d-%m-%Y"),
+                "horaturno": d_hora.strftime("%H:%M"),
+                "nomprof": nom_prof or "",
+                "apeprof": ape_prof or "",
+                "especialidad": nombre_especialidad or "",
+                "efector": nombre_efector or "",
+            }
 
-                    try:
-                
-                        (envio_id, ack, fecha, ins) = decode_res2(res)
-                        
-                        create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+            mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
 
-                    except Exception as ex:
-                        print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
-                
-            else:
-                ack =-3
-                try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=ack)
+            res = enviar_whatsapp2(telefono, mensaje)
+            (envio_id, ack, fecha, ins) = decode_res2(res)
 
-                except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
+            create_Mensaje(
+                id=envio_id,
+                turno=turno,
+                numero=telefono,
+                plantilla=plantilla,
+                estado=ack,
+                fecha=fecha,
+                sesion=ins
+            )
 
             if ack >= 0:
                 turno.msj_recordatorio = 1
@@ -563,6 +509,18 @@ def send_reminder_task(
                 print(f"[WARN] Max retries excedidos para turno {id_turno}. No se enviará recordatorio.")
                 return
 
+            if ack == -5:
+                eta = calcular_proximo_retry(now)
+                if eta < turno_dt:
+                    print(f"[RETRY] turno {id_turno} en {eta}")
+                    raise self.retry(eta=eta)
+                print(f"[STOP] se alcanzó la fecha/hora del turno {id_turno}")
+                return
+
+            return
+
+    except self.MaxRetriesExceededError:
+        print(f"[WARN] Max retries alcanzado {id_turno}")
 
     except Exception as e:
         print(f"[ERROR general en send_reminder_task para id_turno={id_turno}]: {e}")
