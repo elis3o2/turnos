@@ -8,16 +8,15 @@ from django.conf import settings
 from django.db import connections, transaction, connection as default_connection
 from django.db.models import OuterRef, Subquery, Exists, IntegerField, Max
 from django.utils import timezone
-
-from src.apps.turno.models import Turno, EstadoTurno
-from src.apps.efector.models import Efector, Servicio, Especialidad, EfeSerEsp
-from src.apps.mensaje.models import (Plantilla, Mensaje, EfeSerEspPlantilla, LastMod,
-                                    Flow, TurnoFlow, PlantillaFlow)
+from src.models import (Turno, Plantilla, Mensaje, LastMod,
+                        EfeSerEspPlantilla, EstadoTurno, Efector, Servicio,
+                        Especialidad, EfeSerEsp, Flow, TurnoFlow, PlantillaFlow)
 from src.utils.utils import enviar_whatsapp2, check_turno, format_plantilla, start_flow
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
-from src.utils.parse import parse_date, parse_time
-from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res2, sacar_Turno_Espera, create_flow, get_session
+from src.utils.parse import parse_date, parse_time, normalizar_telefono
+from src.utils.utils import (create_Turno, token_url, update_estado_Turno, create_Mensaje, map_estdo, decode_res2,
+                             sacar_Turno_Espera, create_flow, get_session, ajustar_horario_envio, calcular_proximo_retry)
 from rest_framework.response import Response
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -139,22 +138,22 @@ def verificar_turnos() -> None:
                             ese_obj = (
                                 EfeSerEsp.objects
                                 .select_related(
-                                    "efector",
-                                    "ser_esp__id_servicio",
-                                    "ser_esp__id_especialidad",
+                                    "id_efector",
+                                    "id_ser_esp__id_servicio",
+                                    "id_ser_esp__id_especialidad",
                                 )
                                 .get(pk=id_efe_ser_esp)
                             )
 
                             # IDs reales
                             id_efector = ese_obj.id_efector_id
-                            id_servicio = ese_obj.ser_esp.id_servicio_id
-                            id_especialidad = ese_obj.ser_esp.id_especialidad_id
+                            id_servicio = ese_obj.id_ser_esp.id_servicio_id
+                            id_especialidad = ese_obj.id_ser_esp.id_especialidad_id
 
                             # Valores reales (nombre)
                             nombre_efector = ese_obj.id_efector.nombre
-                            nombre_servicio = ese_obj.ser_esp.id_servicio.nombre
-                            nombre_especialidad = ese_obj.ser_esp.id_especialidad.nombre
+                            nombre_servicio = ese_obj.id_ser_esp.id_servicio.nombre
+                            nombre_especialidad = ese_obj.id_ser_esp.id_especialidad.nombre
 
                             # datos del efector vía cursor Informix
                             nombre_efector = calle = altura = letra = coordx = coordy = tel_efe = calle_nom = None
@@ -233,6 +232,7 @@ def verificar_turnos() -> None:
                             if estado == 1:
                                 t.msj_confirmado = 1
                                 t.save(update_fields=["msj_confirmado"])
+                                #create_flow(telefono, t, ins)
                             elif estado == 2:
                                 t.msj_cancelado = 1
                                 t.save(update_fields=["msj_cancelado"])
@@ -260,14 +260,12 @@ def verificar_turnos() -> None:
 
 
 
-SEND_TIME = time(9, 41)
+SEND_TIME = time(15, 30)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
-
-
 @shared_task
 def programar_recordatorios() -> None:
-    print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")        
+    print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")
 
     try:
         hoy = datetime.now().date()
@@ -284,7 +282,7 @@ def programar_recordatorios() -> None:
 
         turnos_qs = (
             Turno.objects
-            .filter(estado_id=1, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
+            .filter(id_estado=1, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
             .annotate(
                 efp_exists=Exists(efp_qs),
                 plantilla_reco=Subquery(efp_qs.values('plantilla_reco')[:1]),
@@ -292,8 +290,10 @@ def programar_recordatorios() -> None:
             )
             .filter(efp_exists=True)
             .order_by('fecha', 'hora')
-            .values('id','id_sisr', 'id_efe_ser_esp',
-                    'fecha', 'hora', 'dias_antes', 'plantilla_reco')
+            .values(
+                'id', 'id_sisr', 'id_efe_ser_esp',
+                'fecha', 'hora', 'dias_antes', 'plantilla_reco'
+            )
         )
 
         turnos = list(turnos_qs)
@@ -301,10 +301,9 @@ def programar_recordatorios() -> None:
             print("No hay turnos candidatos para recordatorios.")
             return
 
-        # Filtrar los que realmente correspondan: fecha - dias_antes == hoy
         candidatos = []
         for t in turnos:
-            fecha: date = t['fecha']
+            fecha = t['fecha']
             dias_antes = int(t['dias_antes'] or 0)
             if fecha - timedelta(days=dias_antes) == hoy:
                 candidatos.append(t)
@@ -324,18 +323,15 @@ def programar_recordatorios() -> None:
                 resultados = cur.fetchall()
 
         if not resultados:
-            print("No se obtuvieron resultados desde Informix para los turnos solicitados.")
+            print("No se obtuvieron resultados desde Informix.")
             return
 
-        # distribuimos envíos para turnos en días futuros: evitar picos
-        per_day_counter = defaultdict(int)
-        per_day_batches = {}  # nuevo: guarda offsets por (target_date, batch_index)
         tz = timezone.get_current_timezone()
 
         for r in resultados:
             try:
                 (
-                    id_turno ,id_efector, id_servicio, id_especialidad,
+                    id_turno, id_efector, id_servicio, id_especialidad,
                     id_efe_ser_esp, tipo_doc, nro_doc,
                     ape_pac, nom_pac, fecha_turno_inf, hora_turno_inf,
                     ape_prof, nom_prof, nombre_servicio, nombre_especialidad,
@@ -343,106 +339,59 @@ def programar_recordatorios() -> None:
                     tel_efe, calle_nom, carac_tel, tel
                 ) = r
             except Exception as ex:
-                print(f"[WARN] Tuple de resultados con longitud inesperada: {ex} -> {r}")
+                print(f"[WARN] Tuple inválida: {ex}")
                 continue
 
             t_local = turnos_map.get(id_turno)
             if not t_local:
-                print(f"[WARN] No se encontró turno local para id_turno={id_turno}")
                 continue
 
-            fecha_turno = t_local["fecha"]            # fecha del turno
-            hora_turno = t_local["hora"]              # hora del turno
+            telefono = normalizar_telefono(carac_tel, tel)
+            if not telefono:
+                print(f"[DEBUG] Teléfono inválido para turno {id_turno}")
+
+                try:
+                    turno_obj = Turno.objects.get(id=t_local["id"])
+                    send_flag, plantilla = check_turno(id_efe_ser_esp, 4)
+                    if plantilla:
+                        create_Mensaje(turno=turno_obj, plantilla=plantilla, estado=-3)
+                except Exception as ex:
+                    print(f"[ERROR] creando mensaje inválido {id_turno}: {ex}")
+
+                continue
+
+            fecha_turno = t_local["fecha"]
             dias_antes = int(t_local.get("dias_antes") or 0)
             id = t_local["id"]
 
-            # fecha objetivo para el envío (la que determinó el candidato)
             target_date = fecha_turno - timedelta(days=dias_antes)
 
-            # construir send_dt de forma robusta
-            # si el recordatorio es para el mismo día del turno (dias_antes == 0),
-            # aplicamos las reglas por hora; si no, programamos sobre target_date (ej. 12:50)
-            if dias_antes == 0:
-                dt_naive = datetime.combine(fecha_turno, hora_turno)
-                try:
-                    send_dt = make_aware(dt_naive, tz)
-                except Exception as ex:
-                    try:
-                        send_dt = dt_naive.replace(tzinfo=tz)
-                    except Exception as ex2:
-                        print(f"[ERROR] No se pudo crear send_dt aware para id_turno={id_turno}: {ex} / {ex2}")
-                        continue
+            base_naive = datetime.combine(target_date, SEND_TIME)
+            try:
+                send_dt = make_aware(base_naive, tz)
+            except Exception:
+                send_dt = base_naive.replace(tzinfo=tz)
 
-                if fecha_turno == hoy:
-                    if hora_turno <= time(10, 30):
-                        send_dt = send_dt - timedelta(hours=2)
-                    elif hora_turno <= time(13, 0):
-                        send_dt = send_dt - timedelta(hours=3)
-                    else:
-                        send_dt = send_dt - timedelta(hours=4)
+            send_dt = ajustar_horario_envio(send_dt)
 
-
-            else:
-                # dias_antes > 0 -> programar en target_date a la base SEND_TIME y escalonar con batching
-                base_naive = datetime.combine(target_date, SEND_TIME)
-                try:
-                    base = make_aware(base_naive, tz)
-                except Exception:
-                    try:
-                        base = base_naive.replace(tzinfo=tz)
-                    except Exception:
-                        print(f"[ERROR] No se pudo crear base aware para id_turno={id_turno}")
-                        continue
-
-                idx = per_day_counter[target_date]
-                # cálculo de batching: batch index y posición dentro del batch
-                batch_index = idx // BATCH_SIZE
-                pos_in_batch = idx % BATCH_SIZE
-                batch_key = (target_date, batch_index)
-
-                # generar offsets aleatorios ordenados para el batch si no existen
-                if batch_key not in per_day_batches:
-                    try:
-                        offsets = sorted(random.sample(range(BATCH_WINDOW_SECONDS), k=BATCH_SIZE))
-                    except ValueError:
-                        offsets = sorted(random.randint(0, BATCH_WINDOW_SECONDS - 1) for _ in range(BATCH_SIZE))
-                    per_day_batches[batch_key] = offsets
-
-                offsets = per_day_batches[batch_key]
-                offset = offsets[pos_in_batch]
-
-                send_dt = base + timedelta(seconds=(batch_index * BATCH_WINDOW_SECONDS + offset))
-
-                per_day_counter[target_date] += 1
-
-            # comparar con now aware (y debug si algo raro pasa)
             now = timezone.now()
-            if getattr(now, "tzinfo", None) is None:
-                try:
-                    now = make_aware(now, tz)
-                except Exception:
-                    pass
+            eta = send_dt if send_dt > now else now + timedelta(seconds=5)
 
-            if send_dt <= now:
-                eta = now + timedelta(seconds=5)
-            else:
-                eta = send_dt
             try:
                 args = list(map(str, r))
                 args.append(str(id))
                 send_reminder_task.apply_async(args=args, eta=eta)
-                print(f"Programado reminder para id_turno={id_turno} en {eta.isoformat()}")
+                print(f"Programado turno {id_turno} en {eta}")
             except Exception as ex:
-                print(f"[ERROR] al programar send_reminder_task para id_turno={id_turno}: {ex}")
+                print(f"[ERROR] programando {id_turno}: {ex}")
 
-        print("Procesamiento de recordatorios completado")
+        print("Procesamiento completo")
 
     except Exception as e:
-        print(f"Error en recordatorios: {str(e)}")
+        print(f"Error en recordatorios: {e}")
 
 
-# Usa bind=True para poder llamar self.retry()
-@shared_task(bind=True, max_retries=20, default_retry_delay=3600)
+@shared_task(bind=True, max_retries=100)
 def send_reminder_task(
     self,
     id_turno,
@@ -453,118 +402,93 @@ def send_reminder_task(
     nombre_efector, calle, altura, letra, coordx, coordy,
     tel_efe, calle_nom, carac_tel, tel, id
 ):
-    # seguridad: inicializar ack
-    ack = None
-
-    need_retry = False  # bandera para reintentar después del commit
-
     try:
+        tz = timezone.get_current_timezone()
+
         with transaction.atomic():
-            # 🔒 LOCK del turno (FOR UPDATE)
-            turno = (
-                Turno.objects
-                .select_for_update()
-                .get(id=id)
-            )
+            turno = Turno.objects.select_for_update().get(id=id)
 
-            if not turno:
-                print(f"[WARN] Turno {id_turno} no existe.")
+            if turno.id_estado_id != 1 or turno.msj_recordatorio == 1:
                 return
 
-            # Si el turno cambió de estado o ya tiene recordatorio, no enviamos
-            if turno.estado_id != 1 or turno.msj_recordatorio == 1:
-                print(f"Cambio de estado o ya enviado para turno {id_turno}, abortando envío.")
-                return
-
-            # comprobar si aún corresponde (ej: chequeos de configuración dinámica)
             send_flag, plantilla = check_turno(id_efe_ser_esp, 4)
             if not send_flag or not plantilla:
-                print(f"[DEBUG] check_turno returned send={send_flag}, plantilla={plantilla} for turno {id_turno}")
                 return
 
-            if Mensaje.objects.filter(id_turno=id, plantilla__tipo__id=4).exists():
-                print(f"[DEBUG] ya se intento enviar el mensaje, abortando")
+            if Mensaje.objects.filter(id_turno=id, id_plantilla__id_tipo__id=4).exists():
                 return
 
-            # validar teléfono
-            if carac_tel == None or tel == None:
-                print(f"[DEBUG] No hay teléfono válido para id_turno={id_turno} (carac={carac_tel}, tel={tel})")
-                try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, estado=-4)
-                except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
+            telefono = normalizar_telefono(carac_tel, tel)
+            if not telefono:
                 return
 
-            telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
+            d_fecha = parse_date(fecha_turno)
+            d_hora = parse_time(hora_turno)
+            turno_dt = make_aware(datetime.combine(d_fecha, d_hora), tz)
 
-            if len(telefono) == 13:
+            now = timezone.now()
 
-            # Si existe algun TurnoFlow con Flow en estado 0, marcamos reintento
-                if Flow.objects.filter(numero=telefono, estado_id=0).exists():
-                    print(f"[INFO] Existe TurnoFlow con Flow abierto {id_turno}, reintentando luego.")
-                    need_retry = True
-                    ack = -1
-                else:
-                    d_fecha = parse_date(fecha_turno)
-                    d_hora = parse_time(hora_turno)
-                    d_fecha_str = d_fecha.strftime("%d-%m-%Y")
-                    d_hora_str = d_hora.strftime("%H:%M")
+            if now >= turno_dt:
+                print(f"[INFO] Turno vencido {id_turno}")
+                return
 
-                    datos_plantilla = {
-                        "nompac": nom_pac or "",
-                        "apepac": ape_pac or "",
-                        "fecha": d_fecha_str,
-                        "horaturno": d_hora_str,
-                        "nomprof": nom_prof or "",
-                        "apeprof": ape_prof or "",
-                        "especialidad": nombre_especialidad or "",
-                        "efector": nombre_efector or "",
-                        "nombre_servicio": nombre_servicio or "",
-                        "calle": calle or "",
-                        "altura": altura or "",
-                        "letra": letra or "",
-                        "coordx": coordx or "",
-                        "coordy": coordy or "",
-                        "tel_efe": tel_efe or "",
-                        "calle_nom": calle_nom or "",
-                    }
+            if Flow.objects.filter(numero=telefono, id_estado_id=0).exists():
+                eta = calcular_proximo_retry(now)
+                if eta < turno_dt:
+                    raise self.retry(eta=eta)
+                return
 
-                    mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-                    res = enviar_whatsapp2(telefono, mensaje)
+            datos_plantilla = {
+                "nompac": nom_pac or "",
+                "apepac": ape_pac or "",
+                "fecha": d_fecha.strftime("%d-%m-%Y"),
+                "horaturno": d_hora.strftime("%H:%M"),
+                "nomprof": nom_prof or "",
+                "apeprof": ape_prof or "",
+                "especialidad": nombre_especialidad or "",
+                "efector": nombre_efector or "",
+                "servicio": nombre_servicio or "",
+                "calle": calle or "",
+                "altura": altura or "",
+                "letra": letra or "",
+                "coordx": coordx or "",
+                "coordy": coordy or "",
+                "tel_efe": tel_efe or "",
+                "calle_nom": calle_nom or "",
+            }
 
-                    try:
-                
-                        (envio_id, ack, fecha, ins) = decode_res2(res)
-                        
-                        create_Mensaje(id=envio_id, turno=turno, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
+            mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
 
-                    except Exception as ex:
-                        print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
-                
-            else:
-                ack =-3
-                try:
-                    create_Mensaje(turno=turno, plantilla=plantilla, numero=telefono ,estado=ack)
+            res = enviar_whatsapp2(telefono, mensaje)
+            (envio_id, ack, fecha, ins) = decode_res2(res)
 
-                except Exception as ex:
-                    print(f"[ERROR] al crear Mensaje para turno {id_turno}: {ex}")
+            create_Mensaje(
+                id=envio_id,
+                turno=turno,
+                numero=telefono,
+                plantilla=plantilla,
+                estado=ack,
+                fecha=fecha,
+                sesion=ins
+            )
 
             if ack >= 0:
                 turno.msj_recordatorio = 1
                 turno.save(update_fields=["msj_recordatorio"])
-
-        # if ack >= 0 and not need_retry:
-            # create_flow(telefono, turno)
-
-        # si marcamos reintento, lo hacemos **fuera** del atomic y usando el mecanismo de Celery
-        if need_retry:
-            try:
-                # self.retry lanzará una excepción especial que marca el task como reintentado
-                raise self.retry(exc=Exception("Flow activo, reintentando más tarde"))
-            except self.MaxRetriesExceededError:
-                print(f"[WARN] Max retries excedidos para turno {id_turno}. No se enviará recordatorio.")
                 return
 
+            if ack == -5:
+                eta = calcular_proximo_retry(now)
+                if eta < turno_dt:
+                    print(f"[RETRY] turno {id_turno} en {eta}")
+                    raise self.retry(eta=eta)
+                print(f"[STOP] se alcanzó la fecha/hora del turno {id_turno}")
+                return
+
+            return
+
+    except self.MaxRetriesExceededError:
+        print(f"[WARN] Max retries alcanzado {id_turno}")
 
     except Exception as e:
-        print(f"[ERROR general en send_reminder_task para id_turno={id_turno}]: {e}")
+        print(f"[ERROR] send_reminder_task {id_turno}: {e}")
