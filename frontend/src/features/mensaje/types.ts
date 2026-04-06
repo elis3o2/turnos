@@ -46,15 +46,19 @@ export interface EfeSerEspPlantillaExtend {
     dias_antes?: number; 
 }
 
-
-export interface MensajeAsociado {
+export type Mensaje = {
     id: number,
     numero: string,
     fecha_envio: string,
     estado: string,
-    plantilla: {
-        id: number
-        tipo: string,
-    }
+    plantilla_id?: number,
     last_ack: string
+}
+
+
+export interface MensajeAsociado {
+    CANCELACION? : Mensaje,
+    ASIGNACION? : Mensaje
+    REPROGRAMACION? : Mensaje
+    RECORDATORIO? : Mensaje
 }

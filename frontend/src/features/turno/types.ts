@@ -52,6 +52,7 @@ export interface TurnoExtend {
 
 export interface TurnoMerged {
     id: number;
+    id_sisr: number;
     estado: string;
     estado_paciente: string;
     fecha_estado_paciente: string;
@@ -69,7 +70,7 @@ export interface TurnoMerged {
     paciente_dni: string | null;
     profesional_nombre: string | null;
     profesional_apellido: string | null;
-    mensaje_asociado: MensajeAsociado[];
+    mensaje_asociado: MensajeAsociado;
 }
 
 export interface TurnoMergedFilters  {
@@ -79,10 +80,11 @@ export interface TurnoMergedFilters  {
   fecha_hasta: string | null;
   cantidad: number;
   offset: number;
-  tipo?: "cancelados" | "incorrectos" | "sin_respuesta";
+  tipo?: "rechazados" | "incorrectos" | "sin_respuesta";
+  csv?: number;
 };
 
 export interface TurnoMergedResp {
-    response: TurnoMerged[],
+    data: TurnoMerged[],
     count: number
 }

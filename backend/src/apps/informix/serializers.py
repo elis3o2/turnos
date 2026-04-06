@@ -34,10 +34,9 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     especialidad = serializers.CharField(source="efe_ser_esp.ser_esp.especialidad.nombre", read_only=True)
 
     estado = serializers.CharField(source="estado.nombre", read_only=True)
-    estado_paciente = serializers.CharField(source="estado.paciente", read_only=True)
+    estado_paciente = serializers.CharField(source="estado_paciente.nombre", read_only=True)
 
     mensaje_asociado = serializers.SerializerMethodField()
-    fecha_estado_paciente = serializers.SerializerMethodField()
 
     paciente_nombre = serializers.CharField(read_only=True)
     paciente_apellido = serializers.CharField(read_only=True)
@@ -65,7 +64,6 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     def get_mensaje_asociado(self, obj):
         return self.context["mensajes_map"].get(obj.id, [])
 
-    def get_fecha_estado_paciente(self, obj):
-        return self.context["fechas_map"].get(obj.id)
+
 
     

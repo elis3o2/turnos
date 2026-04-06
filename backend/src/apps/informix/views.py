@@ -1,8 +1,8 @@
 from __future__ import annotations
-
+import csv
+from django.http import HttpResponse
 import logging
 from typing import Any, Callable, Iterable, Optional
-
 from django.db import DatabaseError, connections
 from django.db.models import OuterRef, Q, QuerySet, Subquery
 from rest_framework import status
@@ -19,6 +19,8 @@ from rest_framework.views import APIView
 from .utils import (safe_int, get_params ,parse_int_list, asig_dic, setear_pac, setear_prof)
 from .services import procesar_mensaje
 logger = logging.getLogger(__name__)
+
+
 
 
 
@@ -103,8 +105,6 @@ class GetProfesionalAPIView(APIView):
 
 
 
-
-
 # ============================================================
 # Base class
 # ============================================================
@@ -134,52 +134,93 @@ class BaseTurnosMerged(GenericAPIView):
         context = super().get_serializer_context()
         context.update({
             "mensajes_map": getattr(self, "_mensajes_map", {}),
-            "fechas_map": getattr(self, "_fechas_map", {}),
         })
         return context
+
+    def wants_csv(self, request) -> bool:
+        return str(request.query_params.get("csv", "")).lower() in {"1", "true", "si", "yes"}
+
+    def _csv_value(self, value):
+        if value is None:
+            return ""
+        if isinstance(value, (dict, list, tuple)):
+            return json.dumps(value, ensure_ascii=False)
+        return str(value)
+
+    def _build_csv_response(self, data: list[dict[str, Any]], filename: str = "turnos.csv") -> HttpResponse:
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write("\ufeff")  
+
+        if not data:
+            return response
+
+        fieldnames: list[str] = []
+        seen: set[str] = set()
+        for row in data:
+            for key in row.keys():
+                if key not in seen:
+                    seen.add(key)
+                    fieldnames.append(key)
+
+        writer = csv.DictWriter(response, fieldnames=fieldnames, extrasaction="ignore")
+        writer.writeheader()
+
+        for row in data:
+            writer.writerow({k: self._csv_value(row.get(k)) for k in fieldnames})
+
+        return response
+
 
     # --------------------------------------------------------
     # API principal
     # --------------------------------------------------------
 
-    def run_pipeline(
-        self,
-        request,
-        get_qs_fn: Callable[[dict[str, Any]], QuerySet],
-        build_filters_fn: Optional[
-            Callable[[list[int], list[int], Optional[str], Optional[str]], dict[str, Any]]
-        ] = None,
-    ) -> Response:
+    def run_pipeline(self, request, get_qs_fn, build_filters_fn=None, paginate=True, csv_filename: str = "turnos.csv"):
         try:
-            cantidad, offset, fecha_desde, fecha_hasta, id_efectores, id_servicios = get_params(request)
-        except ValueError:
-            return Response(
-                {"detail": "Parámetros inválidos."},
-                status=status.HTTP_400_BAD_REQUEST,
+            wants_csv = self.wants_csv(request)
+
+            result = self.get_pipeline_data(
+                request,
+                get_qs_fn,
+                build_filters_fn,
+                paginate=not wants_csv, 
             )
 
+            if wants_csv:
+                return self._build_csv_response(result["data"], filename=csv_filename)
+
+            return Response(result, status=200)
+
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except Exception:
+            logger.exception("Error en pipeline")
+            return Response({"detail": "Error interno"}, status=500)
+
+    def get_pipeline_data(
+        self,
+        request,
+        get_qs_fn,
+        build_filters_fn=None,
+        paginate=True,
+    ):
+        cantidad, offset, fecha_desde, fecha_hasta, id_efectores, id_servicios = get_params(request)
+
         if not id_efectores:
-            return Response(
-                {"detail": "Debe proveer 'efector'."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValueError("Debe proveer 'efector'.")
 
         build_filters_fn = build_filters_fn or self.build_filters
         filters = build_filters_fn(id_efectores, id_servicios, fecha_desde, fecha_hasta)
 
-        try:
-            qs = get_qs_fn(filters)
-            total, local_list = self._paginate_qs_to_list(qs, offset, cantidad)
+        qs = get_qs_fn(filters)
 
-            if not local_list:
-                return Response({"response": [], "count": 0}, status=status.HTTP_200_OK)
-
-        except Exception:
-            logger.exception("Error al obtener turnos locales")
-            return Response(
-                {"detail": "Error interno al obtener turnos."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        total, local_list = self._paginate_qs_to_list(
+            qs,
+            offset,
+            cantidad,
+            paginate=paginate,
+        )
 
         ids_list = [
             str(t.id_sisr)
@@ -191,11 +232,14 @@ class BaseTurnosMerged(GenericAPIView):
         self.merge_external_data(local_list, ext_map_asig, ext_map_elim)
 
         self._mensajes_map = self.build_mensajes_map(local_list)
-        self._fechas_map = self.build_fecha_estado_map(local_list)
 
         serializer = self.get_serializer(local_list, many=True)
-        return Response({"response": serializer.data, "count": total}, status=status.HTTP_200_OK)
-
+        print("AAAAA")
+        print(serializer.data)
+        return {
+            "data": serializer.data,
+            "count": total,
+        }
     # --------------------------------------------------------
     # Filtros y paginación
     # --------------------------------------------------------
@@ -227,8 +271,13 @@ class BaseTurnosMerged(GenericAPIView):
         qs: QuerySet,
         offset: int,
         cantidad: Optional[int],
+        paginate: bool = True,
     ) -> tuple[int, list[Any]]:
         total = qs.count()
+
+        if not paginate:
+            return total, list(qs)
+
         start = max(offset or 0, 0)
 
         if cantidad is None or cantidad <= 0:
@@ -242,7 +291,7 @@ class BaseTurnosMerged(GenericAPIView):
     # Context para serializer
     # --------------------------------------------------------
 
-    def build_mensajes_map(self, turnos: list[Any]) -> dict[int, list[dict[str, Any]]]:
+    def build_mensajes_map(self, turnos: list[Any]) -> dict[int, dict[str, dict[str, Any]]]:
         turno_ids = [t.id for t in turnos]
         if not turno_ids:
             return {}
@@ -250,48 +299,24 @@ class BaseTurnosMerged(GenericAPIView):
         mensajes = (
             Mensaje.objects
             .filter(turno_id__in=turno_ids)
-            .select_related("plantilla__tipo", "estado")
-            .order_by("-fecha_envio")
+            .select_related("plantilla", "estado")
+            .order_by("-fecha_envio") 
         )
 
-        result: dict[int, list[dict[str, Any]]] = {tid: [] for tid in turno_ids}
+        result: dict[int, dict[str, dict[str, Any]]] = {
+            tid: {} for tid in turno_ids
+        }
+
         for m in mensajes:
-            result[m.turno_id].append(procesar_mensaje(m))
-        return result
+            turno_id = m.turno_id
+            tipo = m.plantilla.tipo.nombre
 
-    def build_fecha_estado_map(self, turnos: list[Any]) -> dict[int, Any]:
-        turno_ids = [t.id for t in turnos]
-        if not turno_ids:
-            return {}
 
-        turno_flows = TurnoFlow.objects.filter(turno_id__in=turno_ids).values_list("turno_id", "flow_id")
-        flow_ids_by_turno: dict[int, list[int]] = {}
-        all_flow_ids: set[int] = set()
-
-        for turno_id, flow_id in turno_flows:
-            flow_ids_by_turno.setdefault(turno_id, []).append(flow_id)
-            all_flow_ids.add(flow_id)
-
-        flows = Flow.objects.filter(id__in=all_flow_ids, plantilla_flow_id=1)
-        flow_by_id = {f.id: f for f in flows}
-
-        result: dict[int, Any] = {}
-        for turno in turnos:
-            flow_ids = flow_ids_by_turno.get(turno.id, [])
-            candidates = [flow_by_id.get(fid) for fid in flow_ids if fid in flow_by_id]
-
-            if not candidates:
-                result[turno.id] = None
-                continue
-
-            if turno.estado_id in (1, 2):
-                flow = min(candidates, key=lambda x: x.fecha_cierre or x.fecha_inicio)
-                result[turno.id] = flow.fecha_cierre if flow else None
-            else:
-                flow = min(candidates, key=lambda x: x.fecha_inicio)
-                result[turno.id] = flow.fecha_inicio if flow else None
+            if tipo not in result[turno_id]:
+                result[turno_id][tipo] = procesar_mensaje(m)
 
         return result
+
 
     # --------------------------------------------------------
     # Informix
@@ -433,7 +458,7 @@ class GetIncorrectoAPIView(BaseTurnosMerged):
                 .order_by("-fecha", "-hora", "-id")
             )
 
-        return self.run_pipeline(request, build_qs)
+        return self.run_pipeline(request, build_qs, csv_filename="turnos_incorrectos.csv")
 
 
 class TurnosMergedAllAPIView(BaseTurnosMerged):
@@ -445,7 +470,7 @@ class TurnosMergedAllAPIView(BaseTurnosMerged):
                 .order_by("-fecha", "-hora", "-id")
             )
 
-        return self.run_pipeline(request, build_qs)
+        return self.run_pipeline(request, build_qs, csv_filename="turnos_todos.csv")
 
 
 class TurnosAlertasAPIView(BaseTurnosMerged):
@@ -464,7 +489,7 @@ class TurnosAlertasAPIView(BaseTurnosMerged):
                 .order_by("-fecha", "-hora", "-id")
             )
 
-            if tipo == "cancelados":
+            if tipo == "rechazados":
                 qs = qs.filter(estado__id=1, estado_paciente__id=2)
             elif tipo == "incorrectos":
                 qs = qs.filter(estado__id=1, estado_paciente__id=3)
@@ -473,8 +498,7 @@ class TurnosAlertasAPIView(BaseTurnosMerged):
 
             return qs
 
-        return self.run_pipeline(request, build_qs)
-
+        return self.run_pipeline(request, build_qs, csv_filename=f"turnos_alertas_{tipo}.csv")
 
 
 

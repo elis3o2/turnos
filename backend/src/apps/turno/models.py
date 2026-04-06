@@ -30,6 +30,7 @@ class Turno(models.Model):
         EstadoTurnoPaciente, models.DO_NOTHING, default=0, db_column='id_estado_paciente')
     fecha = models.DateField()
     hora = models.TimeField()
+    fecha_estado_paciente = models.DateTimeField()
     msj_confirmado = models.IntegerField()
     msj_reprogramado = models.IntegerField()
     msj_cancelado = models.IntegerField()

@@ -10,7 +10,7 @@ import {
   Paper
 } from "@mui/material";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import type { KeySLabel } from "../types";
 
@@ -35,6 +35,7 @@ export function TableComponent<T>({
 }: Props<T>) {
   
   const visible = columns.filter(c => visibleColumns.includes(c.key));
+  const MotionTableRow = motion(TableRow);
 
   return (
     <TableContainer component={Paper} elevation={4}>
@@ -53,19 +54,15 @@ export function TableComponent<T>({
 
         {/* BODY */}
         <TableBody>
-          
-          {/* LOADING */}
-          {loading &&
+          {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
                 {visible.map(col => (
                   <TableCell key={col.key}>...</TableCell>
                 ))}
               </TableRow>
-            ))}
-
-          {/* EMPTY */}
-          {!loading && data.length === 0 && (
+            ))
+          ) : data.length === 0 ? (
             <TableRow>
               <TableCell colSpan={visible.length}>
                 <Box sx={{ p: 3, textAlign: "center" }}>
@@ -73,28 +70,23 @@ export function TableComponent<T>({
                 </Box>
               </TableCell>
             </TableRow>
+          ) : (
+            data.map((row, i) => (
+              <MotionTableRow
+                key={(row as any).id ?? i}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {visible.map(col => (
+                  <TableCell key={col.key}>
+                    <Typography variant="body">
+                    {renderCell(col.key, row)}
+                    </Typography>
+                  </TableCell>
+                ))}
+              </MotionTableRow>
+            ))
           )}
-
-          {/* DATA */}
-          <AnimatePresence>
-            {!loading &&
-              data.map((row, i) => (
-                <TableRow
-                  key={i}
-                  component={motion.tr}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                >
-                  {visible.map(col => (
-                    <TableCell key={col.key}>
-                      {renderCell(col.key, row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-          </AnimatePresence>
-
         </TableBody>
       </Table>
     </TableContainer>

@@ -12,16 +12,19 @@ def procesar_mensaje(m: Mensaje) -> dict:
     if 0 <= m.estado_id < 3:
         update_msg_state(m)
 
+
+
+def procesar_mensaje(m: Mensaje) -> dict:
+    if 0 <= m.estado_id < 3:
+        update_msg_state(m)
+
     return {
         "id": m.id,
         "numero": m.numero,
         "fecha_envio": m.fecha_envio,
-        "estado":  m.estado.significado,
-        "plantilla": {
-            "id": m.plantilla.id,
-            "tipo": m.plantilla.tipo.id,
-            } if m.plantilla else None,
-        "fecha_last_ack": m.fecha_last_ack
+        "estado": m.estado.significado,
+        "plantilla_id": m.plantilla.id if m.plantilla else None,
+        "fecha_last_ack": m.fecha_last_ack,
     }
 
 

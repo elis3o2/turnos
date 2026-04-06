@@ -3,26 +3,17 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress,
-  FormControl,
-  FormControlLabel,
   GridLegacy as Grid,
   IconButton,
-  InputLabel,
-  ListItemText,
-  MenuItem,
   Pagination,
   Paper,
-  Select,
   Stack,
-  Switch,
   TextField,
-  Tooltip,
   Typography,
-  TableCell,
   Chip,
 } from "@mui/material";
+
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import GetAppIcon from "@mui/icons-material/GetApp";
@@ -34,18 +25,21 @@ import { getServiciosByEfector } from "../features/efector/api";
 import { getTurnosMerged, getTurnosMergedAlerta, getTurnosMergedError } from "../features/turno/api";
 
 import type { TurnoMerged, TurnoMergedFilters } from "../features/turno/types";
-import type { KeyNLabel, KeySLabel } from "../common/types";
+import type { KeyNLabel } from "../common/types";
 import { AlertaComponent } from "../features/turno/components/AlertComponent";
 import { TableComponent } from "../common/components/TableComponent"
 import {ColumnSelector } from "../common/components/ColumnSelector"
 import { EfectorForm } from "../features/efector/components/EfectorForm";
-
-type AlertCategory = "cancelados" | "incorrectos" | "sin_respuesta";
+import type { Mensaje } from "../features/mensaje/types";
+import { DateTimeStack} from "../common/components/DateTimeStack";
+import { DateStack } from "../common/components/DateStack";
+import { ServicioForm } from "../features/efector/components/ServicioForm";
+type AlertCategory = "rechazados" | "incorrectos" | "sin_respuesta";
 
 type AlertData = {
   count_total: number;
   grupos: {
-    cancelados: TurnoMerged[];
+    rechazados: TurnoMerged[];
     incorrectos: TurnoMerged[];
     sin_respuesta: TurnoMerged[];
   };
@@ -71,7 +65,6 @@ export default function TurnosPage() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const [anchorCols, setAnchorCols] = useState<null | HTMLElement>(null);
-  const [compactView, setCompactView] = useState(false);
 
   const [page, setPage] = useState(1);
   const pageSize = 25;
@@ -80,13 +73,14 @@ export default function TurnosPage() {
   const [errorMode, setErrorMode] = useState(false);
   const [alertMode, setAlertMode] = useState(false);
   const [activeAlertCategory, setActiveAlertCategory] =
-    useState<AlertCategory>("cancelados");
+    useState<AlertCategory>("rechazados");
 
   const [alertData, setAlertData] = useState<AlertData | null>(null);
   const [alertLoading, setAlertLoading] = useState(false);
 
   const allColumns = useMemo(
     () => [
+      { key: "id", label: "ID" },
       { key: "respuesta", label: "Respuesta" },
       { key: "dni", label: "DNI" },
       { key: "nombre", label: "Nombre" },
@@ -97,7 +91,7 @@ export default function TurnosPage() {
       { key: "prof_nombre", label: "Nombre profesional" },
       { key: "prof_apellido", label: "Apellido profesional" },
       { key: "estado", label: "Estado" },
-      { key: "confirmacion", label: "Confirmación" },
+      { key: "asignacion", label: "Asignación" },
       { key: "cancelacion", label: "Cancelación" },
       { key: "reprogramacion", label: "Reprogramación" },
       { key: "recordatorio", label: "Recordatorio" },
@@ -108,14 +102,9 @@ export default function TurnosPage() {
   );
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(
-      ["nombre", "apellido","prof_nombre", "prof_apellido"]);
+      ["respuesta","dni","efector","servicio","especialidad","estado",
+        "asignacion","cancelacion","reprogramacion","recordatorio","fecha","hora"]);
 
-  const visibleKeys = useMemo(
-    () => allColumns.filter((c) => visibleColumns[c.key]).map((c) => c.key),
-    [allColumns, visibleColumns]
-  );
-
-  const visibleCount = Math.max(1, visibleKeys.length);
 
   async function loadServicios() {
     if (selectedEfectores.length === 0) {
@@ -128,7 +117,7 @@ export default function TurnosPage() {
       const data = await getServiciosByEfector(selectedEfectores);
       setServicios(data);
       setSelectedServicios((prev) =>
-        prev.filter((id) => data.some((s) => s.value === id))
+        prev.filter((id) => data.some((s) => s.key === id))
       );
     } catch (err) {
       console.error("Error cargando servicios", err);
@@ -174,8 +163,8 @@ export default function TurnosPage() {
       } else {
         data = await getTurnosMerged(requestFilters);
       }
-
-      setTurnos(data.response ?? []);
+      console.log("DATA", data)
+      setTurnos(data.data ?? []);
       setTotal(data.count ?? 0);
     } catch (e) {
       console.error("Error cargando turnos paginados", e);
@@ -185,6 +174,7 @@ export default function TurnosPage() {
       setLoading(false);
     }
   }
+  console.log("turnos",turnos)
 
   function buildAppliedFilters(): TurnoMergedFilters {
     const fallbackEfectores =
@@ -254,28 +244,28 @@ export default function TurnosPage() {
           fecha_hasta: null,
         };
 
-        const [resCancel, resIncorrect, resSinResp] = await Promise.all([
-          getTurnosMergedAlerta({ ...baseFilters, tipo: "cancelados" }),
+        const [resRechaz, resIncorrect, resSinResp] = await Promise.all([
+          getTurnosMergedAlerta({ ...baseFilters, tipo: "rechazados" }),
           getTurnosMergedAlerta({ ...baseFilters, tipo: "incorrectos" }),
           getTurnosMergedAlerta({ ...baseFilters, tipo: "sin_respuesta" }),
         ]);
 
         const grupos = {
-          cancelados: resCancel.response ?? [],
+          rechazados: resRechaz.response ?? [],
           incorrectos: resIncorrect.response ?? [],
           sin_respuesta: resSinResp.response ?? [],
         };
 
         const count_total =
-          (resCancel.count ?? 0) +
+          (resRechaz.count ?? 0) +
           (resIncorrect.count ?? 0) +
           (resSinResp.count ?? 0);
-
-        setAlertData({ count_total, grupos });
+          setAlertData({ count_total, grupos });
       } catch (err) {
         console.error("Error cargando turnos alerta", err);
         setAlertData(null);
       } finally {
+
         setAlertLoading(false);
       }
     })();
@@ -296,13 +286,13 @@ export default function TurnosPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
+  console.log(turnos)
   function estadoRespChipColor(t: TurnoMerged) {
     const n = t.estado_paciente ?? "";
     if (n === "SIN DATOS") return "info";
     if (n === "CONFIRMADO") return "success";
-    if (n === "CANCELADO") return "error";
-    if (n === "PERSONA INCORRECTA") return "warning";
+    if (n === "RECHAZADO") return "error";
+    if (n === "INCORRECTO") return "warning";
     if (n === "SIN RESPUESTA") return "warning";
     return "default";
   }
@@ -316,41 +306,63 @@ export default function TurnosPage() {
     return "default";
   }
 
+
+  function mensajeChip(m?: Mensaje | null): JSX.Element | null {
+    if (!m) return "—";
+
+    return (
+       <Box sx={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 0.5,
+          maxWidth: 120, 
+          }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2">{m.estado}</Typography>
+           {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
+        </Box>
+    </Box>
+    );
+  }
+
   function renderCell(columnKey: string, t: TurnoMerged) {
     switch (columnKey) {
+      case "id": return t.id_sisr;
       case "respuesta":
         return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-            <Chip size="small" label={t.estado_paciente ?? "-"} color={estadoRespChipColor(t) as any} variant="outlined" />
-            {t.fecha_estado_paciente ? (
-              <Typography variant="caption">{t.fecha_estado_paciente}</Typography>
-            ) : null}
+          <Box sx={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            gap: 0.5,
+            width: "fit-content",
+          }}>
+            <Chip
+              size="small"
+              label={t.estado_paciente ?? "-"}
+              color={estadoRespChipColor(t) as any}
+              variant="outlined"
+            />
+            {t.fecha_estado_paciente ? <DateTimeStack value={t.fecha_estado_paciente} /> : null}
           </Box>
         );
-      case "dni":
-        return t.paciente_dni;
-      case "nombre":
-        return t.paciente_nombre;
-      case "apellido":
-        return t.paciente_apellido;
-      case "efector":
-        return t.efector;
-      case "servicio":
-        return t.servicio;
-      case "especialidad":
-        return t.especialidad;
-      case "prof_nombre":
-        return t.profesional_nombre;
-      case "prof_apellido":
-        return t.profesional_apellido;
-      case "estado":
-        return (<Chip size="small" label={t.estado} color={estadoChipColor(t) as any} variant="outlined"/>)
-      case "fecha":
-        return t.fecha ?? "—";
-      case "hora":
-        return t.hora ?? "—";
-      default:
-        return "—";
+      case "dni": return t.paciente_dni;
+      case "nombre": return t.paciente_nombre;
+      case "apellido": return t.paciente_apellido;
+      case "efector": return t.efector;
+      case "servicio": return t.servicio;
+      case "especialidad": return t.especialidad;
+      case "prof_nombre": return t.profesional_nombre;
+      case "prof_apellido": return t.profesional_apellido;
+      case "estado": return (<Chip size="small" label={t.estado} color={estadoChipColor(t) as any} variant="outlined"/>)
+      case "fecha": return <DateStack value={t.fecha}  />;
+      case "hora": return t.hora ?? "—";
+      case "asignacion": return mensajeChip(t.mensaje_asociado.ASIGNACION)
+      case "cancelacion": return mensajeChip(t.mensaje_asociado.CANCELACION)
+      case "reprogramacion": return mensajeChip(t.mensaje_asociado.REPROGRAMACION)
+      case "recordatorio": return mensajeChip(t.mensaje_asociado.RECORDATORIO)
+
+
+      default: return "—";
     }
   }
 
@@ -363,13 +375,11 @@ export default function TurnosPage() {
         activeAlertCategory={activeAlertCategory}
         setActiveAlertCategory={setActiveAlertCategory}
         handleToggleAlertMode={handleToggleAlertMode}
-        noEfectoresAvailable={selectedEfectores.length === 0}
       />
 
       <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            {/* tu componente de efectores */}
             {efectores? 
             <EfectorForm 
             efectores={efectores}
@@ -377,38 +387,13 @@ export default function TurnosPage() {
             setSelectedEfectores={setSelectedEfectores}/>
             : "-"}
           </Grid>
-
           <Grid item xs={12} md={4}>
-            <FormControl size="small" fullWidth>
-              <InputLabel id="servicio-select-label">Servicio</InputLabel>
-              <Select
-                labelId="servicio-select-label"
-                multiple
-                value={selectedServicios}
-                label="Servicio"
-                onChange={(e) =>
-                  setSelectedServicios(e.target.value as number[])
-                }
-                renderValue={(selected) =>
-                  (selected as number[])
-                    .map((id) => servicios.find((x) => x.key === id)?.label ?? String(id))
-                    .join(", ")
-                }
-              >
-                {servicios.length > 0 ? (
-                  servicios.map((se) => (
-                    <MenuItem key={se.key} value={se.key}>
-                      <Checkbox checked={selectedServicios.includes(se.key)} />
-                      <ListItemText primary={se.label} />
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem value="">(sin servicios)</MenuItem>
-                )}
-              </Select>
-            </FormControl>
+            <ServicioForm
+              servicios={servicios}
+              selectedServicios={selectedServicios}
+              setSelectedServicios={setSelectedServicios}
+            />
           </Grid>
-
           <Grid item xs={12} md={2}>
             <TextField
               size="small"
@@ -416,9 +401,7 @@ export default function TurnosPage() {
               type="date"
               InputLabelProps={{ shrink: true }}
               value={fechaDesde ?? ""}
-              onChange={(e) =>
-                setFechaDesde(e.target.value ? e.target.value : null)
-              }
+              onChange={(e) => setFechaDesde(e.target.value ? e.target.value : null)}
               fullWidth
             />
           </Grid>
@@ -430,9 +413,7 @@ export default function TurnosPage() {
               type="date"
               InputLabelProps={{ shrink: true }}
               value={fechaHasta ?? ""}
-              onChange={(e) =>
-                setFechaHasta(e.target.value ? e.target.value : null)
-              }
+              onChange={(e) =>setFechaHasta(e.target.value ? e.target.value : null)}
               fullWidth
             />
           </Grid>
@@ -459,7 +440,6 @@ export default function TurnosPage() {
               >
                 Error mensajes
               </Button>
-
               <Button
                 startIcon={<GetAppIcon />}
                 variant="contained"
@@ -479,8 +459,8 @@ export default function TurnosPage() {
 
               <ColumnSelector
                 columns={allColumns}
-                value={visibleKeys}
-                onChange={(nextKeys) => {setVisibleColumns(nextKeys)}}
+                value={visibleColumns}
+                onChange={setVisibleColumns}
                 anchorEl={anchorCols}
                 onClose={() => setAnchorCols(null)}
               />
@@ -492,20 +472,6 @@ export default function TurnosPage() {
               >
                 <MenuBookIcon fontSize="small" />
               </IconButton>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={compactView}
-                    onChange={() => setCompactView((v) => !v)}
-                  />
-                }
-                label="Vista compacta"
-              />
             </Box>
           </Grid>
         </Grid>

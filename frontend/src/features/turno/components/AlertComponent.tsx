@@ -9,12 +9,12 @@ import {
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 // 👇 tipado correcto
-type AlertCategory = 'cancelados' | 'incorrectos' | 'sin_respuesta';
+type AlertCategory = 'rechazados' | 'incorrectos' | 'sin_respuesta';
 
 type AlertData = {
   count_total: number;
   grupos: {
-    cancelados: any[];
+    rechazados: any[];
     incorrectos: any[];
     sin_respuesta: any[];
   };
@@ -29,7 +29,6 @@ type Props = {
   setActiveAlertCategory: React.Dispatch<React.SetStateAction<AlertCategory>>;
   handleToggleAlertMode: () => void;
 
-  noEfectoresAvailable: boolean;
 };
 
 export const AlertaComponent = ({
@@ -39,7 +38,6 @@ export const AlertaComponent = ({
   activeAlertCategory,
   setActiveAlertCategory,
   handleToggleAlertMode,
-  noEfectoresAvailable,
 }: Props) => {
   return (
     <Box sx={{ p: 2 }}>
@@ -75,10 +73,10 @@ export const AlertaComponent = ({
           <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Button
               size="small"
-              variant={activeAlertCategory === 'cancelados' ? 'contained' : 'outlined'}
-              onClick={() => setActiveAlertCategory('cancelados')}
+              variant={activeAlertCategory === 'rechazados' ? 'contained' : 'outlined'}
+              onClick={() => setActiveAlertCategory('rechazados')}
             >
-              CANCELADOS {alertData ? `(${alertData.grupos.cancelados.length})` : ''}
+              RECHAZADOS {alertData ? `(${alertData.grupos.rechazados.length})` : ''}
             </Button>
 
             <Button
@@ -104,7 +102,7 @@ export const AlertaComponent = ({
             color={alertMode ? 'warning' : 'inherit'}
             variant={alertMode ? 'contained' : 'outlined'}
             onClick={handleToggleAlertMode}
-            disabled={alertLoading || noEfectoresAvailable}
+            disabled={alertLoading}
             size="small"
           >
             {alertLoading ? (
