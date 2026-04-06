@@ -115,7 +115,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
           - msj_recordatorio
           - msj_cancelacion
           - msj_reprogramacion
-          - msj_confirmacion
+          - msj_asignacion
 
         """
         qs = self.filter_queryset(self.get_queryset())  # aplica filtros DRF si los hay
@@ -125,7 +125,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
             recordatorios=Coalesce(Sum('msj_recordatorio'), 0),
             cancelaciones=Coalesce(Sum('msj_cancelado'), 0),
             reprogramaciones=Coalesce(Sum('msj_reprogramado'), 0),
-            confirmaciones=Coalesce(Sum('msj_confirmado'), 0),
+            asignaciones=Coalesce(Sum('msj_asignado'), 0),
         )
 
         # Asegurarnos de devolver enteros (Coalesce ya lo hace, pero por seguridad)
@@ -134,7 +134,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
             "msj_recordatorio": int(agg.get("recordatorios", 0) or 0),
             "msj_cancelacion": int(agg.get("cancelaciones", 0) or 0),
             "msj_reprogramacion": int(agg.get("reprogramaciones", 0) or 0),
-            "msj_confirmacion": int(agg.get("confirmaciones", 0) or 0),
+            "msj_asignacion": int(agg.get("asignaciones", 0) or 0),
         }
 
         return Response(result)
@@ -349,7 +349,7 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
         queryset = (
             queryset.select_related(
                 "id_efe_ser_esp",
-                "plantilla_conf",
+                "plantilla_asig",
                 "plantilla_repr",
                 "plantilla_canc",
                 "plantilla_reco",

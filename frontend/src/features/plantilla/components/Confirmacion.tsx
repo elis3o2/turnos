@@ -13,7 +13,7 @@ import { updateEfectorPlantilla } from "../api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-type FieldName = "confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio";
+type FieldName = "asignacion" | "reprogramacion" | "cancelacion" | "recordatorio";
 
 type Props = {
   onSuccess: (e: EfeSerEspPlantillaExtend, field: FieldName, value: 0 | 1) => void;
@@ -48,7 +48,7 @@ const Confirmacion = ({
 
   const fieldLabel = (f: string) => {
     switch (f) {
-      case "confirmacion":
+      case "asignacion":
         return "Confirmaciones";
       case "reprogramacion":
         return "Reprogramaciones";
@@ -95,8 +95,8 @@ const Confirmacion = ({
     setBusy(true);
     try {
       const plantField =
-        field === "confirmacion"
-          ? "plantilla_conf"
+        field === "asignacion"
+          ? "plantilla_asig"
           : field === "reprogramacion"
           ? "plantilla_repr"
           : field === "cancelacion"

@@ -22,7 +22,7 @@ export const getTurnosAll = (
 export type TurnosCountResult = {
   count: number;
   msj_recordatorio: number;
-  msj_confirmacion: number;
+  msj_asignacion: number;
   msj_cancelacion: number;
   msj_reprogramacion: number;
 };
@@ -58,7 +58,7 @@ export const getTurnosCount = (
     return {
       count: Number(d.count ?? 0),
       msj_recordatorio: Number(d.msj_recordatorio ?? 0),
-      msj_confirmacion: Number(d.msj_confirmacion ?? 0),
+      msj_asignacion: Number(d.msj_asignacion ?? 0),
       msj_cancelacion: Number(d.msj_cancelacion ?? 0),
       msj_reprogramacion: Number(d.msj_reprogramacion ?? 0),
     };

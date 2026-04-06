@@ -24,8 +24,8 @@ type Props = {
   setEfecServEspecialidades: Setter<Record<number, Record<number, EfeSerEspPlantillaExtend[]>>>;
   servicioEfectorActual: Record<number, number[]>; // servicio_id -> [efector_id...]
   setServicioEfectorActual: Setter<Record<number, number[]>>;
-  confirmField: "confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio";
-  setConfirmField: Setter<"confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio">;
+  confirmField: "asignacion" | "reprogramacion" | "cancelacion" | "recordatorio";
+  setConfirmField: Setter<"asignacion" | "reprogramacion" | "cancelacion" | "recordatorio">;
   confirmValue: 0 | 1;
   setConfirmValue: Setter<0 | 1>;
   confirmEspecialidades: EfeSerEspPlantillaExtend[];

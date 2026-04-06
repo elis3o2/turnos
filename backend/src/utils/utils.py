@@ -269,6 +269,18 @@ def decode_res2(res: dict) -> (str, int, datetime, str):
     
     return (envio_id, ack, fecha, ins)
 
+
+def map_estdo_plantila (id: int) -> int :
+    if id in (1, 2, 7):
+        return 2
+    if id == 3:
+        return 1
+    if id == 8:
+        return 3
+    else:
+        return 4
+
+
     
 def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
     try:
@@ -281,9 +293,11 @@ def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
         
         # Mapear estado → tipo y campo de plantilla
         mapping = {
-            1: ("confirmacion", "plantilla_conf"),
+            3: ("asignacion", "plantilla_asig"),
+            1: ("cancelacion", "plantilla_canc"),
             2: ("cancelacion", "plantilla_canc"),
-            3: ("reprogramacion", "plantilla_repr"),
+            7: ("cancelacion", "plantilla_canc"),
+            8: ("reprogramacion", "plantilla_repr")
         }
         
         tipo, campo_plantilla = mapping.get(estado, ("recordatorio", "plantilla_reco"))
@@ -498,7 +512,7 @@ def create_Turno(id_sisr: int, id_pac: int, id_est: int,
             id_paciente=id_pac,
             id_estado_id=id_est,
             id_estado_paciente_id=0,
-            msj_confirmado=0,
+            msj_asignado=0,
             msj_reprogramado=0,
             msj_cancelado=0,
             msj_recordatorio=0,
@@ -579,7 +593,7 @@ def map_estdo(est: int) -> int:
 
 def create_flow(telefono: str, turno: Turno ) -> None:
     try:
-        res = start_flow(telefono, "confirmacion-turno")
+        res = start_flow(telefono, "asignacion-turno")
     except Exception as ex:
         print(f"[ERROR] start_flow falla para turno {id_turno}: {ex}")
         return

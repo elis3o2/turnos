@@ -20,7 +20,7 @@ import Confirmacion from "./Confirmacion";
 import SendAll from "./SendAll";
 import type { Setter, AlertSeverity } from "../../../common/types";
 
-type FieldName = "confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio";
+type FieldName = "asignacion" | "reprogramacion" | "cancelacion" | "recordatorio";
 
 type Props = {
   open: boolean;
@@ -167,7 +167,7 @@ const Especialidades = ({
                 {especialidades.map((esp) => {
                   const nombreEspecialidad = esp.especialidad.nombre;
                   const nombreEfector = efectorSeleccionado.find(e=> e.id == esp.id_efector)?.nombre
-                  const confirmOn = flagOn(esp.confirmacion);
+                  const confirmOn = flagOn(esp.asignacion);
                   const reproOn = flagOn(esp.reprogramacion);
                   const cancOn = flagOn(esp.cancelacion);
                   const recoOn = flagOn(esp.recordatorio);
@@ -209,12 +209,12 @@ const Especialidades = ({
                       {/* Botones: aplican solo a esta entrada */}
                       <Box sx={{ display: "flex", alignItems: "stretch", flex: "0 0 65%", height: "100%" }}>
                         <IconButton
-                          aria-label="confirmacion"
-                          onClick={() => handleSectionClick(esp, "confirmacion")}
+                          aria-label="asignacion"
+                          onClick={() => handleSectionClick(esp, "asignacion")}
                           onMouseEnter={(e) => {
                             if (confirmOn) {
                               setAnchorEl(e.currentTarget as HTMLElement);
-                              setHovered({ espId: esp.id, field: "confirmacion" });
+                              setHovered({ espId: esp.id, field: "asignacion" });
                             }
                           }}
                           onMouseLeave={() => {
@@ -355,8 +355,8 @@ const Especialidades = ({
                   const rep = especialidades.find(e => e.id === hovered.espId) as any;
                   if (!rep) return "";
 
-                  if (hovered.field === "confirmacion") {
-                    return rep.plantilla_conf?.contenido ?? "No hay plantilla configurada";
+                  if (hovered.field === "asignacion") {
+                    return rep.plantilla_asig?.contenido ?? "No hay plantilla configurada";
                   }
                   if (hovered.field === "recordatorio") {
                     const dias = rep.dias_antes ?? "—";

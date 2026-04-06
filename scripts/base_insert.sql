@@ -59,6 +59,14 @@ INSERT INTO estado_turno(id, nombre) VALUES
 (3, 'REPROGRAMADO'),
 (4, 'FINALIZADO');
 
+(1,	'LIBRE'),
+(2,	'SUSPENDIDO'),
+(3,	'ASIGNADO'),
+(4,	'ATENDIDO'),
+(5,	'AUSENTE'),
+(6,	'RECEPCIONADO'),
+(7,	'ELIMINADO'),
+(8,	'REPROGRAMADO');
 
 INSERT INTO estado_turno_paciente (id, nombre) VALUES
 (-5, 'SERVER ERROR'),

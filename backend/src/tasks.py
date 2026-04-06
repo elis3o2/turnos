@@ -60,8 +60,8 @@ def verificar_turnos() -> None:
                     mejor_raw = este_raw
 
                 # Mapeo de idestadoturno -> estado (restaurado al mapping esperado)
-                estado = map_estdo(idestadoturno)
-
+                # estado = map_estdo(idestadoturno)
+                estado = idestadoturno
                 # Inicializo variables que luego uso (mínimo)
                 id_efe_ser_esp = None
                 id_efector = id_servicio = id_especialidad = None
@@ -70,9 +70,9 @@ def verificar_turnos() -> None:
                 carac_tel = tel = nom_pac = ape_pac = nom_prof = ape_prof = None
                 d_fecha = d_hora = None
 
-                # Si corresponde (0 o 3) traigo detalles completos
+                # Si corresponde a un envio traigo detalles completos
                 detalles = None
-                if estado in (1, 3):
+                if estado in (3, 8):
                     try:
                         cur.execute(query_detalles_turno(1), [idturno])
                         detalles = cur.fetchone()
@@ -98,7 +98,7 @@ def verificar_turnos() -> None:
                     fecha = d_fecha.strftime("%d-%m-%Y")
                     hora = d_hora.strftime("%H:%M")
 
-                    if estado == 1:
+                    if estado == 3:
                         try:
                             t = create_Turno(idturno, idpaciente,estado,
                                 id_efe_ser_esp, d_fecha, d_hora)
@@ -113,13 +113,13 @@ def verificar_turnos() -> None:
                             print(f"[ERROR] al crear Turno id={idturno}: {ex}")
                             continue
 
-                if estado in (2, 3, 4):
+                if estado != 3:
                     t = update_estado_Turno(idturno, idpaciente, estado)
                     
                     if t == None:
                         continue
                     # Si estado == 2 (suspendido) 
-                    if estado == 2:
+                    if estado in (1,2,7):
                             
                         try:
                             # obtener datos persona de forma segura
@@ -180,7 +180,7 @@ def verificar_turnos() -> None:
                             print(f"[ERROR] al procesar estado 2 para idturno={idturno}: {ex}")
                             continue
 
-                if estado == 4:
+                if estado in (4,5,6):
                     continue
 
                 telefono = None
@@ -229,8 +229,9 @@ def verificar_turnos() -> None:
                     if ack >= 0:  # actualizar flags en Turno
                         try:
                             if estado == 1:
-                                t.msj_confirmado = 1
-                                t.save(update_fields=["msj_confirmado"])
+                                t.msj_asignado = 1
+                                t.save(update_fields=["msj_asignado"])
+                                #create_flow(telefono, t, ins)
                             elif estado == 2:
                                 t.msj_cancelado = 1
                                 t.save(update_fields=["msj_cancelado"])
@@ -467,6 +468,9 @@ def send_reminder_task(
                     raise self.retry(eta=eta)
                 return
 
+
+            token = signing.dumps(turno.id)
+            url = token_url(token)
             datos_plantilla = {
                 "nompac": nom_pac or "",
                 "apepac": ape_pac or "",
@@ -476,6 +480,15 @@ def send_reminder_task(
                 "apeprof": ape_prof or "",
                 "especialidad": nombre_especialidad or "",
                 "efector": nombre_efector or "",
+                "servicio": nombre_servicio or "",
+                "calle": calle or "",
+                "altura": altura or "",
+                "letra": letra or "",
+                "coordx": coordx or "",
+                "coordy": coordy or "",
+                "tel_efe": tel_efe or "",
+                "calle_nom": calle_nom or "",
+                "url": url
             }
 
             mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
@@ -495,18 +508,8 @@ def send_reminder_task(
 
             if ack >= 0:
                 turno.msj_recordatorio = 1
-                turno.save(update_fields=["msj_recordatorio"])
-
-        # if ack >= 0 and not need_retry:
-            # create_flow(telefono, turno)
-
-        # si marcamos reintento, lo hacemos **fuera** del atomic y usando el mecanismo de Celery
-        if need_retry:
-            try:
-                # self.retry lanzará una excepción especial que marca el task como reintentado
-                raise self.retry(exc=Exception("Flow activo, reintentando más tarde"))
-            except self.MaxRetriesExceededError:
-                print(f"[WARN] Max retries excedidos para turno {id_turno}. No se enviará recordatorio.")
+                turno.id_estado_paciente_id = -4
+                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente"])
                 return
 
             if ack == -5:

@@ -6,7 +6,7 @@ export interface Turno {
     id_estado: EstadoMsj;
     fecha: string | null;
     hora: string;
-    msj_confirmado: number;
+    msj_asignado: number;
     msj_reprogramado: number;
     msj_cancelado: number;
     msj_recordatorio: number;
@@ -55,7 +55,7 @@ export interface TurnoExtend {
     fecha_estado_paciente: string;
     fecha: string;
     hora: string;
-    msj_confirmado: number;
+    msj_asignado: number;
     msj_reprogramado: number;
     msj_cancelado: number;
     msj_recordatorio: number;

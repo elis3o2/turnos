@@ -139,7 +139,7 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
     id_servicio = serializers.SerializerMethodField()
 
     # HACEMOS LOS CAMPOS ESCRIBIBLES POR PK (aceptan un entero en el request)
-    plantilla_conf = serializers.PrimaryKeyRelatedField(
+    plantilla_asig = serializers.PrimaryKeyRelatedField(
         queryset=Plantilla.objects.all(), required=False, allow_null=True)
     plantilla_repr = serializers.PrimaryKeyRelatedField(
         queryset=Plantilla.objects.all(), required=False, allow_null=True)
@@ -156,8 +156,8 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
             "id_efector",
             "id_servicio",
             "especialidad",
-            "confirmacion",
-            "plantilla_conf",
+            "asignacion",
+            "plantilla_asig",
             "reprogramacion",
             "plantilla_repr",
             "cancelacion",
@@ -181,8 +181,8 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
 
         # reemplazamos los PKs por la representación anidada si existe
-        rep["plantilla_conf"] = (
-            PlantillaSerializer(instance.plantilla_conf).data if instance.plantilla_conf else None)
+        rep["plantilla_asig"] = (
+            PlantillaSerializer(instance.plantilla_asig).data if instance.plantilla_asig else None)
         rep["plantilla_repr"] = (
             PlantillaSerializer(instance.plantilla_repr).data if instance.plantilla_repr else None)
         rep["plantilla_canc"] = (
@@ -392,7 +392,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     efe_ser_esp  = EfeSerEspCompletoSerializer(source="id_efe_ser_esp", read_only=True)
 
     msj_recordatorio = serializers.IntegerField(read_only=True, allow_null=True)
-    msj_confirmado = serializers.IntegerField(read_only=True, allow_null=True)
+    msj_asignado = serializers.IntegerField(read_only=True, allow_null=True)
     msj_cancelado = serializers.IntegerField(read_only=True, allow_null=True)
     msj_reprogramado = serializers.IntegerField(read_only=True, allow_null=True)
     fecha_estado_paciente = serializers.SerializerMethodField()
@@ -411,8 +411,8 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Turno
         fields = [
-            "id","fecha", "hora", "estado", "estado_paciente", "fecha_estado_paciente",
-            "msj_recordatorio", "msj_confirmado", "msj_cancelado", "msj_reprogramado",
+            "id","id_sisr","fecha", "hora", "estado", "estado_paciente", "fecha_estado_paciente",
+            "msj_recordatorio", "msj_asignado", "msj_cancelado", "msj_reprogramado",
             "efe_ser_esp",
             "paciente_nombre", "paciente_apellido", "paciente_dni",
             "profesional_nombre", "profesional_apellido",
