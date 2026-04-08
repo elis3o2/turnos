@@ -50,6 +50,7 @@ export interface EstadoMsj {
 
 export interface TurnoExtend {
     id: number;
+    id_sisr: number;
     estado: EstadoTurno;
     estado_paciente: EstadoTurnoPaciente;
     fecha_estado_paciente: string;
