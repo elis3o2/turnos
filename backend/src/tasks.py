@@ -14,7 +14,7 @@ from src.models import (Turno, Plantilla, Mensaje, LastMod,
 from src.utils.utils import enviar_whatsapp2, check_turno, format_plantilla, start_flow
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
-from src.utils.parse import parse_date, parse_time
+from src.utils.parse import parse_date, parse_time, normalizar_telefono
 from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res2, sacar_Turno_Espera, create_flow, get_session
 from rest_framework.response import Response
 from django.core import signing
