@@ -1,7 +1,7 @@
 import requests
 import emoji
 from decouple import config
-from src.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow, Turno, Plantilla, TurnoEspera
+from src.models import EfeSerEspPlantilla, Mensaje, Flow, TurnoFlow, Turno, Plantilla, TurnoEspera, PlantillaFlow
 import re
 import logging
 logger = logging.getLogger(__name__)
@@ -13,9 +13,10 @@ from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
 from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
 from zoneinfo import ZoneInfo
+from django.core import signing
+
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
-
 
 def update_msg_state(mensaje: Mensaje) -> Mensaje:
     """
@@ -197,13 +198,11 @@ def enviar_whatsapp2(numero: str, mensaje: str) -> Response:
     return _enviar_whatsapp2(numero, mensaje, sesion)
 
 
-
 def _enviar_whatsapp2(numero: str, mensaje: str, sesion: str | None) -> Response:
-    """
-    Envía el mensaje al número usando la sesión indicada.
-    """
-
     api_url = config('API_WHATSAPP')
+
+    session_req = requests.Session()
+    session_req.trust_env = False  # 🔥 clave
 
     payload = {
         "numero": numero,
@@ -215,11 +214,11 @@ def _enviar_whatsapp2(numero: str, mensaje: str, sesion: str | None) -> Response
 
     headers = {
         "Content-Type": "application/json",
-        "Accept": "application/json"
+        "Accept": "application/json",
     }
 
     try:
-        response = requests.post(
+        response = session_req.post(   # 👈 usar la session
             api_url,
             json=payload,
             headers=headers,
@@ -247,6 +246,7 @@ def _enviar_whatsapp2(numero: str, mensaje: str, sesion: str | None) -> Response
 
 def decode_res2(res: dict) -> (str, int, datetime, str):
     response_data = getattr(res, "data", {}) 
+    print(response_data)
     code = response_data.get("code", {})
     envio_id = None
     ins = None
@@ -283,6 +283,10 @@ def map_estdo_plantila (id: int) -> int :
 
     
 def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
+    """
+    Revisa si el efe_ser_esp tiene la bandera del estado encendida y si es asi
+    devuelve la Plantilla asociada
+    """
     try:
         turno = EfeSerEspPlantilla.objects.filter(
             id_efe_ser_esp=efe_ser_esp,
@@ -403,43 +407,54 @@ def fetch_profesional(id_prof=None, id_efector=None, nombre=None, apellido=None)
         raise
 
 
-def start_flow(numero: str, flowName: str) -> Response:
+def start_flow(numero: str, flowName: str, id_ses: int) -> Response:
     api_url = config('API_WHATSAPP_FLOW') 
     
     port = config('LISTEN_PORT')
     api = config('API_LISTEN')
     endpoint = f"http://localhost:{port}/{api}"
-    # Preparar datos para la API externa (form-data)
-    payload = {
-        "numero": numero,
-        "flowName": flowName,
-        "endpoint": endpoint
-    }
+
+    session = requests.Session()
+    session.trust_env = False  # ← clave
 
     try:
-        # Realizar solicitud a la API externa
-        response = requests.post(api_url, data=payload)
-        
-        # Devolver la respuesta directa del servidor externo
-        # Incluyendo el código de estado y el contenido
-        return Response(
-            data=response.json(),
-            status=response.status_code
+        response = session.post(
+            api_url,
+            json={
+            "numero": numero,
+            "flowName": flowName,
+            "endpoint": endpoint,
+            "session": id_ses
+            },
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            timeout=15
         )
-        
-    except requests.exceptions.RequestException as e:
-        # En caso de error de conexión
+
+        content_type = response.headers.get("Content-Type", "")
+
+        if "application/json" in content_type:
+            return Response(response.json(), status=response.status_code)
+
         return Response(
-            {"error": f"No se pudo conectar con el servicio de WhatsApp: {str(e)}"},
-            status=status.HTTP_503_SERVICE_UNAVAILABLE
-        )
-    except ValueError as e:
-        # En caso de que la respuesta no sea JSON válido
-        return Response(
-            {"error": f"Respuesta inválida del servidor: {str(e)}", "raw_response": response.text},
+            {
+                "error": "Respuesta no JSON desde la API WhatsApp",
+                "status_code": response.status_code,
+                "raw_response": response.text[:500]
+            },
             status=status.HTTP_502_BAD_GATEWAY
         )
-    
+
+    except requests.exceptions.RequestException as e:
+        return Response(
+            {"error": "No se pudo conectar con la API WhatsApp", "detail": str(e)},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+
+
 
 
 def update_estado_Turno(id_sisr: int, id_pac: int, id_est: int) -> Turno | None: 
@@ -591,7 +606,7 @@ def map_estdo(est: int) -> int:
 #
 
 
-def create_flow(telefono: str, turno: Turno ) -> None:
+def create_flow(telefono: str, turno: Turno, id_ses: int ) -> None:
     try:
         res = start_flow(telefono, "asignacion-turno")
     except Exception as ex:
@@ -603,14 +618,14 @@ def create_flow(telefono: str, turno: Turno ) -> None:
     if status_code == 200 and isinstance(body, dict):
         flow_pk = body.get("id")
         plantilla_flow = PlantillaFlow.objects.get(pk=1)
-        sesion=body.get("id", None)
+        sesion=body.get("session", None)
         if flow_pk:
             f, created = Flow.objects.get_or_create(
                 pk=flow_pk,
                 defaults={
                     "id_plantilla_flow": plantilla_flow,
                     "numero": telefono,
-                    "sesion_id": sesion,
+                    "id_sesion_id": sesion,
                     "id_estado_id": 0,
                     "fecha_inicio": timezone.now()
                 },
