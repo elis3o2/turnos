@@ -15,12 +15,12 @@ from src.utils.utils import enviar_whatsapp2, check_turno, format_plantilla, sta
 import random
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
 from src.utils.parse import parse_date, parse_time, normalizar_telefono
-from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res2, sacar_Turno_Espera, create_flow, get_session
+from src.utils.utils import (create_Turno, token_url, update_estado_Turno, create_Mensaje, map_estdo, decode_res2,
+                             sacar_Turno_Espera, create_flow, get_session, ajustar_horario_envio, calcular_proximo_retry)
 from rest_framework.response import Response
 from django.core import signing
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
-
 
 @shared_task
 def verificar_turnos() -> None:
