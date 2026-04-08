@@ -8,7 +8,8 @@ from src.views import (
     EfeSerEspPlantillaViewSet, CustomTokenObtainPairView, ServicioViwSet,
     SendWSP, TurnosMergedAllAPIView, HistoricoPaciente,
     GetPacienteAPIView, GetProfesionalAPIView,TurnoEsperaViewSet, DerivaViewSet,
-    EfeSerEspViewSet, EstudioRequeridoViewSet, TurnosAlertasAPIView, GetIncorrectoAPIView
+    EfeSerEspViewSet, EstudioRequeridoViewSet, TurnosAlertasAPIView, GetIncorrectoAPIView,
+    TurnoPacienteView
 )
 
 router = DefaultRouter()
