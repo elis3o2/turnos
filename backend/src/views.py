@@ -29,12 +29,8 @@ from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
 import logging
 logger = logging.getLogger(__name__)
-from django.shortcuts import render
-
-
-def frontend(request):
-    return render(request, "index.html")
-
+import urllib.parse
+from django.core import signing
 
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
@@ -317,6 +313,7 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
     queryset = EfeSerEspPlantilla.objects.all()
     serializer_class = EfeSerEspPlantillaDetailSerializer
+    permission_classes = [OnlyAdmCreatetUpdatePermission]
 
     @action(detail=False, methods=["get"], url_path="buscar")
     def search(self, request) -> Response:
@@ -384,6 +381,7 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 
+
     @action(detail=False, methods=["get"], url_path="deriva")
     def search_deriva(self, request) -> Response:
         id_efector = request.query_params.get("id_efector")
@@ -401,6 +399,7 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
 
 
     @action(detail=False, methods=["get"], url_path="paciente")
@@ -967,15 +966,15 @@ class TurnosAlertasAPIView(APIView):
 
                 # ------- Grupo A: estado=1 y estado_paciente=2 -------
                 if tipo == 'cancelados':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=2)
+                    qs = qs.filter(id_estado__id=3, id_estado_paciente__id=2)
 
                 # ------- Grupo B: estado=1 y estado_paciente=3 -------
                 if tipo == 'incorrectos':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=3)
+                    qs = qs.filter(id_estado__id=3, id_estado_paciente__id=3)
 
                 # ------- Grupo C: estado=1 y existe TurnoFlow -> Flow.id_plantilla_flow = 1 y Flow.id_estado = 0 -------
                 if tipo == 'sin_respuesta':
-                    qs = qs.filter(id_estado__id=1, id_estado_paciente__id=4)
+                    qs = qs.filter(id_estado__id=3, id_estado_paciente__id=4)
                
                 # calcular total antes del slicing (útil para paginación)
                 total = qs.count()
@@ -1054,3 +1053,89 @@ class TurnosAlertasAPIView(APIView):
         except Exception:
             logger.exception("Error en turnos_agrupados_view")
             return Response({"detail": "Error interno al obtener grupos de turnos."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class TurnoPacienteView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        encoded_id = request.query_params.get("id")
+        if not encoded_id:
+            return Response(
+                {"error": "Falta el id"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            turno_id = signing.loads(encoded_id)
+            print("TURNO ID")
+            print(turno_id)
+        except Exception:
+            return Response(
+                {"error": "ID inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            turno = Turno.objects.get(pk=turno_id)
+            print(turno)
+        except Turno.DoesNotExist:
+            return Response(
+                {"error": "Turno no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        resultado = fetch_paciente(turno.id_paciente)
+        pac = resultado[0] if resultado else None
+
+        return Response(
+            {
+                "nombre": str(pac['nombre']) if pac else None,
+                "apellido": str(pac['apellido']) if pac else None,
+                "fecha": turno.fecha,
+                "hora": turno.hora,
+                "efector": turno.id_efe_ser_esp.id_efector.nombre,
+                "servicio": turno.id_efe_ser_esp.id_ser_esp.id_servicio.nombre,
+                "especialidad": turno.id_efe_ser_esp.id_ser_esp.id_especialidad.nombre,
+                "estado": turno.id_estado_paciente_id
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+    def put(self, request):
+        encoded_id = request.data.get('id')
+        estado = request.data.get('estado')
+        if not encoded_id or not estado:
+            return Response(
+                {"error": "Faltan parámetros"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            turno_id = signing.loads(encoded_id)
+            turno = Turno.objects.get(pk=turno_id)
+
+            turno.id_estado_paciente_id = estado
+            turno.fecha_estado_paciente = timezone.now()
+
+            turno.save()
+
+            return Response(
+                {"message": "Turno actualizado correctamente"},
+                status=status.HTTP_200_OK
+            )
+
+        except (ValueError):
+            return Response(
+                {"error": "ID inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Turno.DoesNotExist:
+            return Response(
+                {"error": "Turno no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+

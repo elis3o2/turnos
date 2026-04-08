@@ -17,6 +17,7 @@ from src.utils.querys_informix import query_detalles_turno, query_efector, query
 from src.utils.parse import parse_date, parse_time
 from src.utils.utils import create_Turno, update_estado_Turno, create_Mensaje, map_estdo, decode_res2, sacar_Turno_Espera, create_flow, get_session
 from rest_framework.response import Response
+from django.core import signing
 
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
 
@@ -51,7 +52,10 @@ def verificar_turnos() -> None:
 
             mejor_raw = None
 
-            for r in cur.fetchall():
+
+            rows = list(cur.fetchall())
+            rows.sort(key=lambda r: (r[3], r[0]))
+            for r in rows:
                 print(f"[DEBUG] notificacion raw: {r}")
                 idturno, idpaciente, idestadoturno, last_modf_val = r
 
@@ -260,6 +264,7 @@ def verificar_turnos() -> None:
 
 
 SEND_TIME = time(10, 30)
+SEND_TIME = time(14, 16)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
 @shared_task
@@ -267,7 +272,7 @@ def programar_recordatorios() -> None:
     print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")
 
     try:
-        hoy = datetime.now().date()
+        hoy = datetime.now(TZ).date()
 
         efp_qs = (
             EfeSerEspPlantilla.objects
@@ -281,7 +286,7 @@ def programar_recordatorios() -> None:
 
         turnos_qs = (
             Turno.objects
-            .filter(id_estado=1, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
+            .filter(id_estado=3, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
             .annotate(
                 efp_exists=Exists(efp_qs),
                 plantilla_reco=Subquery(efp_qs.values('plantilla_reco')[:1]),
@@ -305,6 +310,7 @@ def programar_recordatorios() -> None:
         for t in turnos:
             fecha: date = t['fecha']
             dias_antes = int(t['dias_antes'] or 0)
+
             if fecha - timedelta(days=dias_antes) == hoy:
                 candidatos.append(t)
 
@@ -317,6 +323,7 @@ def programar_recordatorios() -> None:
 
         conn = connections['informix']
         resultados = []
+
         if turnos_ids:
             with conn.cursor() as cur:
                 cur.execute(query_detalles_turno(len(turnos_ids)), turnos_ids)
@@ -326,10 +333,9 @@ def programar_recordatorios() -> None:
             print("No se obtuvieron resultados desde Informix para los turnos solicitados.")
             return
 
-        # distribuimos envíos para turnos en días futuros: evitar picos
+
         per_day_counter = defaultdict(int)
-        per_day_batches = {}  # nuevo: guarda offsets por (target_date, batch_index)
-        tz = timezone.get_current_timezone()
+        per_day_batches = {}
 
         for r in resultados:
             try:
@@ -353,55 +359,69 @@ def programar_recordatorios() -> None:
             telefono = normalizar_telefono(carac_tel, tel)
             if not telefono:
                 print(f"[DEBUG] Teléfono inválido para turno {id_turno}")
-
-                try:
-                    turno_obj = Turno.objects.get(id=t_local["id"])
-                    send_flag, plantilla = check_turno(id_efe_ser_esp, 4)
-                    if plantilla:
-                        create_Mensaje(turno=turno_obj, plantilla=plantilla, estado=-3)
-                except Exception as ex:
-                    print(f"[ERROR] creando mensaje inválido {id_turno}: {ex}")
-
                 continue
 
             fecha_turno = t_local["fecha"]
             dias_antes = int(t_local.get("dias_antes") or 0)
-            id = t_local["id"]
+            id_local = t_local["id"]
 
             # fecha objetivo para el envío (la que determinó el candidato)
             target_date = fecha_turno - timedelta(days=dias_antes)
 
             base_naive = datetime.combine(target_date, SEND_TIME)
-            try:
-                send_dt = make_aware(base_naive, tz)
-            except Exception:
-                send_dt = base_naive.replace(tzinfo=tz)
+            send_dt = make_aware(base_naive, TZ)
+
+            idx = per_day_counter[target_date]
+            batch_index = idx // BATCH_SIZE
+            pos_in_batch = idx % BATCH_SIZE
+            batch_key = (target_date, batch_index)
+
+            if batch_key not in per_day_batches:
+                try:
+                    offsets = sorted(random.sample(range(BATCH_WINDOW_SECONDS), k=BATCH_SIZE))
+                except ValueError:
+                    offsets = sorted(
+                        random.randint(0, BATCH_WINDOW_SECONDS - 1)
+                        for _ in range(BATCH_SIZE)
+                    )
+                per_day_batches[batch_key] = offsets
+
+            offset = per_day_batches[batch_key][pos_in_batch]
+
+            send_dt = send_dt + timedelta(
+                seconds=(batch_index * BATCH_WINDOW_SECONDS + offset)
+            )
+
+            per_day_counter[target_date] += 1
+
+            if timezone.is_naive(send_dt):
+                send_dt = make_aware(send_dt, TZ)
 
             send_dt = ajustar_horario_envio(send_dt)
 
-            now = timezone.now()
-            if getattr(now, "tzinfo", None) is None:
-                try:
-                    now = make_aware(now, tz)
-                except Exception:
-                    pass
+            if timezone.is_naive(send_dt):
+                send_dt = make_aware(send_dt, TZ)
 
-            if send_dt <= now:
-                eta = now + timedelta(seconds=5)
-            else:
-                eta = send_dt
+            now = datetime.now(TZ)
+
+            eta = send_dt if send_dt > now else now + timedelta(seconds=5)
+
             try:
                 args = list(map(str, r))
-                args.append(str(id))
+                args.append(str(id_local))
+
                 send_reminder_task.apply_async(args=args, eta=eta)
-                print(f"Programado reminder para id_turno={id_turno} en {eta.isoformat()}")
+
+                print(f"Programado turno {id_turno} en {eta.isoformat()}")
+
             except Exception as ex:
                 print(f"[ERROR] al programar send_reminder_task para id_turno={id_turno}: {ex}")
 
         print("Procesamiento de recordatorios completado")
 
     except Exception as e:
-        print(f"Error en recordatorios: {str(e)}")
+        print(f"Error en recordatorios: {e}")
+
 
 
 @shared_task(bind=True, max_retries=100)
@@ -421,21 +441,11 @@ def send_reminder_task(
     need_retry = False  # bandera para reintentar después del commit
 
     try:
+
         with transaction.atomic():
-            # 🔒 LOCK del turno (FOR UPDATE)
-            turno = (
-                Turno.objects
-                .select_for_update()
-                .get(id=id)
-            )
+            turno = Turno.objects.select_for_update().get(id=id)
 
-            if not turno:
-                print(f"[WARN] Turno {id_turno} no existe.")
-                return
-
-            # Si el turno cambió de estado o ya tiene recordatorio, no enviamos
-            if turno.id_estado_id != 1 or turno.msj_recordatorio == 1:
-                print(f"Cambio de estado o ya enviado para turno {id_turno}, abortando envío.")
+            if turno.id_estado_id != 3 or turno.msj_recordatorio == 1:
                 return
 
             # comprobar si aún corresponde (ej: chequeos de configuración dinámica)
@@ -454,9 +464,9 @@ def send_reminder_task(
 
             d_fecha = parse_date(fecha_turno)
             d_hora = parse_time(hora_turno)
-            turno_dt = make_aware(datetime.combine(d_fecha, d_hora), tz)
+            turno_dt = make_aware(datetime.combine(d_fecha, d_hora), TZ)
 
-            now = timezone.now()
+            now = datetime.now(TZ)
 
             if now >= turno_dt:
                 print(f"[INFO] Turno vencido {id_turno}")
@@ -468,9 +478,8 @@ def send_reminder_task(
                     raise self.retry(eta=eta)
                 return
 
-
-            token = signing.dumps(turno.id)
-            url = token_url(token)
+            url = token_url(turno.id)
+            # 📩 armar mensaje
             datos_plantilla = {
                 "nompac": nom_pac or "",
                 "apepac": ape_pac or "",
@@ -488,7 +497,7 @@ def send_reminder_task(
                 "coordy": coordy or "",
                 "tel_efe": tel_efe or "",
                 "calle_nom": calle_nom or "",
-                "url": url
+                # "url": url
             }
 
             mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
@@ -505,11 +514,12 @@ def send_reminder_task(
                 fecha=fecha,
                 sesion=ins
             )
-
+            nown = datetime.now()
             if ack >= 0:
                 turno.msj_recordatorio = 1
-                turno.id_estado_paciente_id = -4
-                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente"])
+                turno.id_estado_paciente_id = 4
+                turno.fecha_estado_paciente = nown
+                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente", "fecha_estado_paciente"])
                 return
 
             if ack == -5:

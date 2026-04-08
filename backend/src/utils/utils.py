@@ -641,19 +641,24 @@ def token_url(id: int) -> str :
     return url
 
 
-HORA_INICIO = time(9, 0)
+HORA_INICIO = time(8, 16)
 HORA_FIN = time(20, 0)
 def ajustar_horario_envio(dt):
-    t = dt.time()
+    if timezone.is_naive(dt):
+        dt = make_aware(dt, TZ)          
+
+    dt_local = dt.astimezone(TZ)
+    t = dt_local.time()
 
     if t < HORA_INICIO:
-        return dt.replace(hour=HORA_INICIO.hour, minute=0, second=0, microsecond=0)
+        naive = datetime.combine(dt_local.date(), time(HORA_INICIO.hour, 0, 0))
+        return make_aware(naive, TZ)
+    elif t > HORA_FIN:
+        next_day = (dt_local + timedelta(days=1)).date()
+        naive = datetime.combine(next_day, time(HORA_INICIO.hour, 0, 0))
+        return make_aware(naive, TZ)
 
-    if t > HORA_FIN:
-        next_day = dt + timedelta(days=1)
-        return next_day.replace(hour=HORA_INICIO.hour, minute=0, second=0, microsecond=0)
-
-    return dt
+    return dt_local
 
 
 def calcular_proximo_retry(now):

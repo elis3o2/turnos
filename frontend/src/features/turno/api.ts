@@ -1,5 +1,5 @@
 import http from '../../common/api/client'
-import type { Turno, TurnoEspera, TurnoExtend, EstadoMsj, EstudioRequerido } from './types';
+import type { Turno, TurnoEspera, TurnoExtend, EstadoMsj, EstudioRequerido, TurnoPacienteResp } from './types';
 
 export const getTurnosAll = (
   id_servicio?: number,
@@ -185,3 +185,12 @@ export const getEstudioRequeridoAll = () => {
 export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number }> => {
   return http.post<{ ok: boolean; actualizados: number }>(`turno_espera/${idTurno}/marcar-estudios/`,{ estudios }).then(res => res.data);
 };
+
+
+export const getTurnoPaciente = (id: string): Promise<TurnoPacienteResp> => {
+  return http.get(`turno-paciente/`,{params: {id }}).then(res => res.data)
+}
+
+export const putTurnoPaciente = (id: string, estado:number) => {
+  return http.put(`turno-paciente/`, { id, estado} )
+} 

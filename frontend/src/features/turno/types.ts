@@ -78,3 +78,15 @@ export interface EstudioRequerido {
     usuario_cierre: number,
     id_turno_espera: number
 }
+
+
+export interface TurnoPacienteResp {
+    nombre: string
+    apellido: string
+    fecha: string
+    hora: string
+    efector: string
+    servicio: string
+    especialidad: string
+    estado:number
+}

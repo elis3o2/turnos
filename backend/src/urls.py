@@ -29,6 +29,7 @@ router.register('derivaciones', DerivaViewSet, basename='deriva')
 # src/urls.py
 urlpatterns = [
     path('', include(router.urls)),
+    path('turno-paciente/', TurnoPacienteView.as_view(), name='turno-paciente'),
     path('turnos-merged-all-list/', TurnosMergedAllAPIView.as_view(), name='turnos-merged-all'),
     path('turnos-merged-alerta/', TurnosAlertasAPIView.as_view(), name='turnos-merged-alerta'), 
     path('turnos-merged-error/', GetIncorrectoAPIView.as_view(), name='turnos-merged-error'), 

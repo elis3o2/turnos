@@ -312,7 +312,7 @@ export default function TurnosPage() {
     { key: 'prof_nombre', label: 'Nombre profesional' },
     { key: 'prof_apellido', label: 'Apellido profesional' },
     { key: 'estado', label: 'Estado' },
-    { key: 'asignacion', label: 'Confirmacion' },
+    { key: 'asignacion', label: 'Asignacion' },
     { key: 'cancelacion', label: 'Cancelacion' },
     { key: 'reprogramacion', label: 'Reprogramacion' },
     { key: 'recordatorio', label: 'Recordatorio' },
