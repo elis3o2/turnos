@@ -131,7 +131,7 @@ export default function TurnosEsperaDashboard(): React.ReactElement {
       setRows([]);
     } finally {
       setLoading(false);
-      // reseteamos el estado de finish para permitir nuevas confirmaciones posteriores
+      // reseteamos el estado de finish para permitir nuevas asignaciones posteriores
       //setFinishPaciente(false);
     }
   };

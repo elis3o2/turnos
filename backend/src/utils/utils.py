@@ -269,6 +269,18 @@ def decode_res2(res: dict) -> (str, int, datetime, str):
     
     return (envio_id, ack, fecha, ins)
 
+
+def map_estdo_plantila (id: int) -> int :
+    if id in (1, 2, 7):
+        return 2
+    if id == 3:
+        return 1
+    if id == 8:
+        return 3
+    else:
+        return 4
+
+
     
 def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
     try:
@@ -281,9 +293,11 @@ def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
         
         # Mapear estado → tipo y campo de plantilla
         mapping = {
-            1: ("confirmacion", "plantilla_conf"),
+            3: ("asignacion", "plantilla_asig"),
+            1: ("cancelacion", "plantilla_canc"),
             2: ("cancelacion", "plantilla_canc"),
-            3: ("reprogramacion", "plantilla_repr"),
+            7: ("cancelacion", "plantilla_canc"),
+            8: ("reprogramacion", "plantilla_repr")
         }
         
         tipo, campo_plantilla = mapping.get(estado, ("recordatorio", "plantilla_reco"))
@@ -498,7 +512,7 @@ def create_Turno(id_sisr: int, id_pac: int, id_est: int,
             id_paciente=id_pac,
             id_estado_id=id_est,
             id_estado_paciente_id=0,
-            msj_confirmado=0,
+            msj_asignado=0,
             msj_reprogramado=0,
             msj_cancelado=0,
             msj_recordatorio=0,
@@ -579,7 +593,7 @@ def map_estdo(est: int) -> int:
 
 def create_flow(telefono: str, turno: Turno ) -> None:
     try:
-        res = start_flow(telefono, "confirmacion-turno")
+        res = start_flow(telefono, "asignacion-turno")
     except Exception as ex:
         print(f"[ERROR] start_flow falla para turno {id_turno}: {ex}")
         return
@@ -617,3 +631,36 @@ def create_flow(telefono: str, turno: Turno ) -> None:
         if ack < 0:
             turno.id_estado_paciente_id = ack
             turno.save(update_fields=["id_estado_paciente"])
+
+
+
+
+def token_url(id: int) -> str :
+    token =signing.dumps(id)
+    url = f'{config("DOMAIN")}/confirma/?id={token}'
+    return url
+
+
+HORA_INICIO = time(8, 16)
+HORA_FIN = time(20, 0)
+def ajustar_horario_envio(dt):
+    if timezone.is_naive(dt):
+        dt = make_aware(dt, TZ)          
+
+    dt_local = dt.astimezone(TZ)
+    t = dt_local.time()
+
+    if t < HORA_INICIO:
+        naive = datetime.combine(dt_local.date(), time(HORA_INICIO.hour, 0, 0))
+        return make_aware(naive, TZ)
+    elif t > HORA_FIN:
+        next_day = (dt_local + timedelta(days=1)).date()
+        naive = datetime.combine(next_day, time(HORA_INICIO.hour, 0, 0))
+        return make_aware(naive, TZ)
+
+    return dt_local
+
+
+def calcular_proximo_retry(now):
+    eta = now + timedelta(minutes=15)
+    return ajustar_horario_envio(eta)

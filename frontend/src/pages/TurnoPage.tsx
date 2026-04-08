@@ -313,7 +313,7 @@ export default function TurnosPage() {
     { key: 'prof_nombre', label: 'Nombre profesional' },
     { key: 'prof_apellido', label: 'Apellido profesional' },
     { key: 'estado', label: 'Estado' },
-    { key: 'confirmacion', label: 'Confirmacion' },
+    { key: 'asignacion', label: 'Asignacion' },
     { key: 'cancelacion', label: 'Cancelacion' },
     { key: 'reprogramacion', label: 'Reprogramacion' },
     { key: 'recordatorio', label: 'Recordatorio' },
@@ -449,18 +449,18 @@ export default function TurnosPage() {
     const n = t.estado_paciente?.nombre ?? '';
     if (n === 'SIN DATOS') return 'info';
     if (n === 'CONFIRMADO') return 'success';
-    if (n === 'CANCELADO') return 'error';
-    if (n === 'PERSONA INCORRECTA') return 'warning';
+    if (n === 'RECHAZADO') return 'error';
+    if (n === 'INCORRECTO') return 'warning';
     if (n === 'SIN RESPUESTA') return 'warning';
     return 'default';
   }
   function estadoChipLabel(t: TurnoExtend) { return t.estado?.nombre ?? '—'; }
   function estadoChipColor(t: TurnoExtend) {
     const n = t.estado?.nombre ?? '';
-    if (n === 'ASIGNADO') return 'success';
-    if (n === 'SUSPENDIDO') return 'error';
+    if (n === 'ASIGNADO' || n == 'ATENDIDO') return 'success';
+    if (n === 'SUSPENDIDO' || n == 'LIBRE' || n == 'AUSENTE' || n == 'ELIMINADO') return 'error';
     if (n === 'REPROGRAMADO') return 'warning';
-    if (n === 'FINALIZADO') return 'info';
+    if (n === 'RECEPCIONADO') return 'info';
     return 'default';
   }
 
@@ -488,7 +488,7 @@ export default function TurnosPage() {
             <Chip size="small" label={estadoChipLabel(t)} color={estadoChipColor(t) as any} variant="outlined" />
           </TableCell>
         );
-      case 'confirmacion': {
+      case 'asignacion': {
         const mensaje = getMsj(1, t.mensaje_asociado);
         const tooltipTitle = mensaje?.plantilla?.contenido ? (<span style={{ whiteSpace: 'pre-wrap' }}>{mensaje.plantilla.contenido}</span>) : '';
         return (

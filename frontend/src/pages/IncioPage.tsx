@@ -143,10 +143,10 @@ function InitPage() {
       );
 
       // adaptarse a la forma que devuelve tu API; se asume:
-      // { count: number, msj_recordatorio: number, msj_confirmacion: number, ... }
+      // { count: number, msj_recordatorio: number, msj_asignacion: number, ... }
       setTurnos(res.count);
       setMsjRecordatorioCount(res.msj_recordatorio);
-      setMsjConfirmacionCount(res.msj_confirmacion);
+      setMsjConfirmacionCount(res.msj_asignacion);
     } catch (err) {
       console.error("Error obteniendo conteo de turnos:", err);
       setTurnos(0);

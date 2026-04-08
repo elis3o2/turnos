@@ -3,7 +3,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from .models import EfeSerEspPlantilla, RegistroBanderas
 
-BANDERA_CONFIRMACION = 1
+BANDERA_asignacion = 1
 BANDERA_CANCELACION = 2
 BANDERA_REPROGRAMACION = 3
 BANDERA_RECORDATORIO = 4
@@ -26,12 +26,12 @@ def auditar_cambios(sender, instance, **kwargs):
     # compara campo por campo y crea el registro correspondiente
     cambios = []
 
-    # confirmacion
-    if old.confirmacion != instance.confirmacion:
+    # asignacion
+    if old.asignacion != instance.asignacion:
         cambios.append({
-            "bandera_id": BANDERA_CONFIRMACION,
-            "valor_set": instance.confirmacion,
-            "plantilla": getattr(instance, "plantilla_conf", None),
+            "bandera_id": BANDERA_asignacion,
+            "valor_set": instance.asignacion,
+            "plantilla": getattr(instance, "plantilla_asig", None),
             "dias_antes": None
         })
 

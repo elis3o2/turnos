@@ -10,8 +10,8 @@ export interface Plantilla {
 export interface EfeSerEspPlantilla {
     id: number;
     efe_ser_esp: EfeSerEsp;
-    confirmacion: number;
-    plantilla_conf?: number;
+    asignacion: number;
+    plantilla_asig?: number;
     reprogramacion: number;
     plantilla_repr?: number;
     cancelacion: number;
@@ -28,8 +28,8 @@ export interface EfeSerEspPlantillaExtend {
     id_efector: number;
     id_servicio: number;
     especialidad: Especialidad;
-    confirmacion: number;
-    plantilla_conf?: Plantilla;
+    asignacion: number;
+    plantilla_asig?: Plantilla;
     reprogramacion: number;
     plantilla_repr?: Plantilla;
     cancelacion: number;
