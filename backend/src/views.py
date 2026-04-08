@@ -32,6 +32,12 @@ import logging
 logger = logging.getLogger(__name__)
 import urllib.parse
 from django.core import signing
+from django.shortcuts import render
+from rest_framework.permissions import AllowAny
+
+def frontend(request):
+    return render(request, "index.html")
+
 
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
