@@ -264,7 +264,6 @@ def verificar_turnos() -> None:
 
 
 SEND_TIME = time(10, 30)
-SEND_TIME = time(14, 16)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720
 @shared_task
@@ -333,7 +332,6 @@ def programar_recordatorios() -> None:
             print("No se obtuvieron resultados desde Informix para los turnos solicitados.")
             return
 
-
         per_day_counter = defaultdict(int)
         per_day_batches = {}
 
@@ -356,14 +354,34 @@ def programar_recordatorios() -> None:
                 print(f"[WARN] No se encontró turno local para id_turno={id_turno}")
                 continue
 
+            # Definir variables del turno al inicio, antes de cualquier guardia
+            id_local = t_local["id"]
+            fecha_turno = t_local["fecha"]
+            dias_antes = int(t_local.get("dias_antes") or 0)
+            id_efe_ser_esp_local = t_local["id_efe_ser_esp"]
+
             telefono = normalizar_telefono(carac_tel, tel)
             if not telefono:
                 print(f"[DEBUG] Teléfono inválido para turno {id_turno}")
-                continue
 
-            fecha_turno = t_local["fecha"]
-            dias_antes = int(t_local.get("dias_antes") or 0)
-            id_local = t_local["id"]
+                turno_db = Turno.objects.filter(id=id_local).first()
+                if turno_db:
+                    # Obtener la plantilla asociada al tipo recordatorio (tipo=4)
+                    _, plantilla = check_turno(id_efe_ser_esp_local, 4)
+
+                    create_Mensaje(
+                        id=None,
+                        turno=turno_db,
+                        numero=None,
+                        plantilla=plantilla,  # puede ser None si no se encuentra
+                        estado=-3,
+                        fecha=timezone.now(),
+                        sesion=None,
+                    )
+                    turno_db.msj_recordatorio = 1
+                    turno_db.save(update_fields=["msj_recordatorio"])
+
+                continue
 
             # fecha objetivo para el envío (la que determinó el candidato)
             target_date = fecha_turno - timedelta(days=dias_antes)
@@ -504,16 +522,17 @@ def send_reminder_task(
 
             res = enviar_whatsapp2(telefono, mensaje)
             (envio_id, ack, fecha, ins) = decode_res2(res)
-
-            create_Mensaje(
-                id=envio_id,
-                turno=turno,
-                numero=telefono,
-                plantilla=plantilla,
-                estado=ack,
-                fecha=fecha,
-                sesion=ins
-            )
+            
+            if ack != -5:
+                create_Mensaje(
+                    id=envio_id,
+                    turno=turno,
+                    numero=telefono,
+                    plantilla=plantilla,
+                    estado=ack,
+                    fecha=fecha,
+                    sesion=ins
+                )
             nown = datetime.now()
             if ack >= 0:
                 turno.msj_recordatorio = 1
@@ -527,6 +546,15 @@ def send_reminder_task(
                 if eta < turno_dt:
                     print(f"[RETRY] turno {id_turno} en {eta}")
                     raise self.retry(eta=eta)
+                create_Mensaje(
+                    id=envio_id,
+                    turno=turno,
+                    numero=telefono,
+                    plantilla=plantilla,
+                    estado=ack,
+                    fecha=fecha,
+                    sesion=ins
+                )
                 print(f"[STOP] se alcanzó la fecha/hora del turno {id_turno}")
                 return
 

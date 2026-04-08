@@ -420,7 +420,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         ]
     @staticmethod
     def procesar_mensaje(m: Mensaje):
-        if  m.id_estado_id in (1,2,3,7,8):
+        if 0 <= m.id_estado_id < 3:
             update_msg_state(m)
 
         return {
