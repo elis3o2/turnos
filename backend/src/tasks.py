@@ -518,8 +518,8 @@ def send_reminder_task(
             if ack >= 0:
                 turno.msj_recordatorio = 1
                 turno.id_estado_paciente_id = 4
-                turno.fecha_estado_paciente = nown
-                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente", "fecha_estado_paciente"])
+                #turno.fecha_estado_paciente = nown
+                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente"  ]) #, "fecha_estado_paciente"])
                 return
 
             if ack == -5:
