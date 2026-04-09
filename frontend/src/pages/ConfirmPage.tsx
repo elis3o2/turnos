@@ -16,7 +16,7 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-export default function ConfirmacionTurno() {
+export default function ConfirmPage() {
   const [datos, setDatos] = useState<TurnoPacienteResp | null>(null);
   const [respuesta, setRespuesta] = useState<string | null>(null);
   const [estado, setEstado] = useState<number | null>(null);
@@ -31,12 +31,12 @@ export default function ConfirmacionTurno() {
 
       try {
         const data = await getTurnoPaciente(encodedId);
-        setEstado(data.estado);
+        setEstado(data.estado_pac);
         setDatos(data);
 
-        if (data.estado === 1) setRespuesta("confirmado");
-        if (data.estado === 2) setRespuesta("cancelado");
-        if (data.estado === 3) setRespuesta("desconocido");
+        if (data.estado_pac === 1) setRespuesta("confirmado");
+        if (data.estado_pac === 2) setRespuesta("cancelado");
+        if (data.estado_pac === 3) setRespuesta("desconocido");
       } catch (e) {
         console.error(e);
       } finally {
@@ -76,26 +76,12 @@ export default function ConfirmacionTurno() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        padding: 16,
-      }}
-    >
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", backgroundColor: "#f5f5f5", padding: 16 }}>
       {datos && (
         <Card sx={{ width: "100%", maxWidth: 520, borderRadius: 3, overflow: "hidden" }}>
-          <Box
-            sx={{
-              backgroundColor: "#E1F5EE",
-              px: 3,
-              py: 2,
-              borderBottom: "1px solid #9FE1CB",
-            }}
-          >
+
+          {/* Header verde */}
+          <Box sx={{ backgroundColor: "#E1F5EE", px: 3, py: 2, borderBottom: "1px solid #9FE1CB" }}>
             <Typography sx={{ fontSize: 16, fontWeight: 500, color: "#085041" }}>
               Confirmación de turno
             </Typography>
@@ -220,8 +206,18 @@ export default function ConfirmacionTurno() {
               </Typography>
             )}
           </Box>
-        </Card>
-      )}
-    </div>
-  );
+      
+
+      <Box sx={{ mt: 3, px: 2, py: 1.5, borderRadius: 2, backgroundColor: "#E1F5EE", border: "1px solid #9FE1CB", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Typography sx={{ fontSize: 12, color: "#0F6E56", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 500 }}>
+          Estado del turno
+        </Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 600, color: "#085041" }}>
+          {datos?.estado ?? "-"}
+        </Typography>
+      </Box>
+      </Card>
+    )}
+  </div>)
+
 }

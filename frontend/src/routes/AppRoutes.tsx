@@ -10,13 +10,14 @@ import ListaEspera from '../pages/ListaEsperaPage';
 import AddEspera from '../pages/AddEsperaPage';
 import TurnosEsperaDashboard from '../pages/EsperaHistoricoPage';
 import Plantillas from '../pages/PlantillasPage';
+import ConfirmPage from '../pages/ConfirmPage';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Ruta pública */}
       <Route path="/login" element={<LoginPage />} />
-
+      <Route path="/confirma" element={<ConfirmPage />} />
       {/* Rutas privadas con Layout */}
       <Route
         element={

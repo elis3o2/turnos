@@ -89,5 +89,6 @@ export interface TurnoPacienteResp {
     efector: string
     servicio: string
     especialidad: string
-    estado:number
+    estado_pac:number
+    estado: string
 }

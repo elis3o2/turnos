@@ -494,7 +494,7 @@ def send_reminder_task(
                     raise self.retry(eta=eta)
                 return
 
-            url = token_url(turno.id)
+            #url = token_url(turno.id)
             # 📩 armar mensaje
             datos_plantilla = {
                 "nompac": nom_pac or "",
