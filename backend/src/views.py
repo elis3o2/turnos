@@ -1076,8 +1076,6 @@ class TurnoPacienteView(APIView):
 
         try:
             turno_id = signing.loads(encoded_id)
-            print("TURNO ID")
-            print(turno_id)
         except Exception:
             return Response(
                 {"error": "ID inválido"},
@@ -1086,7 +1084,6 @@ class TurnoPacienteView(APIView):
 
         try:
             turno = Turno.objects.get(pk=turno_id)
-            print(turno)
         except Turno.DoesNotExist:
             return Response(
                 {"error": "Turno no encontrado"},
@@ -1105,7 +1102,8 @@ class TurnoPacienteView(APIView):
                 "efector": turno.id_efe_ser_esp.id_efector.nombre,
                 "servicio": turno.id_efe_ser_esp.id_ser_esp.id_servicio.nombre,
                 "especialidad": turno.id_efe_ser_esp.id_ser_esp.id_especialidad.nombre,
-                "estado": turno.id_estado_paciente_id
+                "estado_pac": turno.id_estado_paciente_id,
+                "estado": turno.id_estado.nombre
             },
             status=status.HTTP_200_OK
         )
