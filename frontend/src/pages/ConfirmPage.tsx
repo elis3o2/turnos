@@ -16,7 +16,7 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-export default function ConfirmacionTurno() {
+export default function ConfirmPage() {
   const [datos, setDatos] = useState<TurnoPacienteResp | null>(null);
   const [respuesta, setRespuesta] = useState<string | null>(null);
   const [estado, setEstado] = useState<number | null>(null);
