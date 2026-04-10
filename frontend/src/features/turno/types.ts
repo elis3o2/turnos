@@ -81,7 +81,6 @@ export interface TurnoMergedFilters  {
   cantidad: number;
   offset: number;
   tipo?: "rechazados" | "incorrectos" | "sin_respuesta";
-  csv?: number;
 };
 
 export interface TurnoMergedResp {

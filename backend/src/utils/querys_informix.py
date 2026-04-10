@@ -192,7 +192,7 @@ def query_paciente_from_id(n: int) -> str:
             per.id_persona AS id,
             per.nro_doc,
             TRIM(per.nombre_per) AS nombre,
-            TRIM(per.apellido)   AS apellido,
+            TRIM(per.apellido)   AS apellido
         FROM v_personas per
         {where_clause} 
     """

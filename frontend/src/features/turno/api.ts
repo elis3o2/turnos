@@ -117,6 +117,7 @@ export const getTurnosMerged = (filters: TurnoMergedFilters): Promise<TurnoMerge
 };
 
 
+
 // Obtener todos los turnos con un límite de cantidad
 export const getTurnosMergedError = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
   return http.get<TurnoMergedResp>('informix/turnos-merged-error/', { params: filters}).then(res => res.data);
@@ -128,6 +129,25 @@ export const getTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<Turn
   return http.get<TurnoMergedResp>('informix/turnos-merged-alerta/', { params: filters }).then(res => res.data);
 };
 
+
+
+export const downloadTurnosMerged = (filters: TurnoMergedFilters): Promise<Blob> =>
+  http.get<Blob>('informix/turnos-merged-all-list/', {
+    params: { ...filters, csv: 1 },
+    responseType: 'blob',
+  }).then(res => res.data);
+
+export const downloadTurnosMergedError = (filters: TurnoMergedFilters): Promise<Blob> =>
+  http.get<Blob>('informix/turnos-merged-error/', {
+    params: { ...filters, csv: 1 },
+    responseType: 'blob',
+  }).then(res => res.data);
+
+export const downloadTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<Blob> =>
+  http.get<Blob>('informix/turnos-merged-alerta/', {
+    params: { ...filters, csv: 1 },
+    responseType: 'blob',
+  }).then(res => res.data);
 
 
 

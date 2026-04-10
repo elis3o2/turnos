@@ -13,9 +13,8 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
-from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
+from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente_from_dni, query_paciente_from_id
 from zoneinfo import ZoneInfo
-from __future__ import annotations
 from typing import Any
 
 

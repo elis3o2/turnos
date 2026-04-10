@@ -21,7 +21,7 @@ from .utils import (safe_int, get_params ,parse_int_list, asig_dic, setear_pac, 
 from .services import procesar_mensaje
 logger = logging.getLogger(__name__)
 
-
+TIPOS_MENSAJE = ("ASIGNACION", "CANCELACION", "REPROGRAMACION", "RECORDATORIO")
 
 
 
@@ -116,33 +116,52 @@ class BaseTurnosMerged(GenericAPIView):
     def wants_csv(self, request) -> bool:
         return str(request.query_params.get("csv", "")) == "1"
 
-    def _csv_value(self, value):
+    def _csv_value(self, value: Any) -> str:
         if value is None:
             return ""
         if isinstance(value, (dict, list, tuple)):
-            return json.dumps(value, ensure_ascii=False)
+            return json.dumps(value, ensure_ascii=False, default=str)  
         return str(value)
 
-    def _build_csv_response(self, data: list[dict[str, Any]], filename: str = "turnos.csv") -> HttpResponse:
+    
+    def _flatten_row(self, row: dict[str, Any]) -> dict[str, Any]:
+        """Descompone mensaje_asociado en columnas planas."""
+        flat = {k: v for k, v in row.items() if k != "mensaje_asociado"}
+
+        msg = row.get("mensaje_asociado") or {}
+        for tipo in TIPOS_MENSAJE:
+            data = msg.get(tipo) or {}
+            prefix = tipo.lower()
+            flat[f"{prefix}_estado"]      = data.get("estado")      if data else None
+            flat[f"{prefix}_fecha_envio"] = data.get("fecha_envio") if data else None
+
+        return flat
+
+    def _build_csv_response(
+        self, data: list[dict[str, Any]], filename: str = "turnos.csv"
+    ) -> HttpResponse:
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
-        response.write("\ufeff")  
+        response.write("\ufeff")
 
         if not data:
             return response
 
+        # aplanar todas las filas primero
+        flat_data = [self._flatten_row(row) for row in data]
+
+        # recolectar fieldnames preservando orden
         fieldnames: list[str] = []
         seen: set[str] = set()
-        for row in data:
-            for key in row.keys():
+        for row in flat_data:
+            for key in row:
                 if key not in seen:
                     seen.add(key)
                     fieldnames.append(key)
 
         writer = csv.DictWriter(response, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
-
-        for row in data:
+        for row in flat_data:
             writer.writerow({k: self._csv_value(row.get(k)) for k in fieldnames})
 
         return response
@@ -463,11 +482,11 @@ class TurnosAlertasAPIView(BaseTurnosMerged):
             )
 
             if tipo == "rechazados":
-                qs = qs.filter(estado__id=1, estado_paciente__id=2)
+                qs = qs.filter(estado__id=3, estado_paciente__id=2)
             elif tipo == "incorrectos":
-                qs = qs.filter(estado__id=1, estado_paciente__id=3)
+                qs = qs.filter(estado__id=3, estado_paciente__id=3)
             elif tipo == "sin_respuesta":
-                qs = qs.filter(estado__id=1, estado_paciente__id=4)
+                qs = qs.filter(estado__id=3, estado_paciente__id=4)
 
             return qs
 

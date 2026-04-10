@@ -22,7 +22,9 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 import { AuthContext } from "../common/contex";
 import { getServiciosByEfector } from "../features/efector/api";
-import { getTurnosMerged, getTurnosMergedAlerta, getTurnosMergedError } from "../features/turno/api";
+import { getTurnosMerged, getTurnosMergedAlerta, getTurnosMergedError,  downloadTurnosMerged,
+  downloadTurnosMergedError,
+  downloadTurnosMergedAlerta,} from "../features/turno/api";
 
 import type { TurnoMerged, TurnoMergedFilters } from "../features/turno/types";
 import type { KeyNLabel } from "../common/types";
@@ -70,10 +72,14 @@ function estadoRespChipColor(t: TurnoMerged) {
 
 function estadoChipColor(t: TurnoMerged) {
   const map: Record<string, "success" | "error" | "warning" | "info"> = {
-    "ASIGNADO": "success",
+    "LIBRE": "error",
     "SUSPENDIDO": "error",
+    "ASIGNADO": "success",
+    "ATENDIDO": "success",
+    "AUSENTE": "error",
+    "RECEPCIONADO": "info",
+    "ELIMINADO": "error",
     "REPROGRAMADO": "warning",
-    "FINALIZADO": "info",
   };
   return map[t.estado ?? ""] ?? "default";
 }
@@ -204,31 +210,31 @@ export default function TurnosPage() {
 
   // ── descarga CSV ───────────────────────────────────────────────────────────
 
+  function resolveDownloadEndpoint(mode: { errorMode: boolean; alertMode: boolean }) {
+    if (mode.alertMode)  return downloadTurnosMergedAlerta;
+    if (mode.errorMode)  return downloadTurnosMergedError;
+    return downloadTurnosMerged;
+  }
+
   async function handleDescargar() {
     if (!appliedFilters || !appliedFilters.ids_efec?.length) return;
-
     setDownloading(true);
     try {
-      const requestFilters: TurnoMergedFilters = {
+      const blob = await resolveDownloadEndpoint({ errorMode, alertMode })({
         ...appliedFilters,
-        // Sin paginación para traer todos los registros
-        csv: 1,
         ...(alertMode ? { tipo: activeAlertCategory } : {}),
-      };
+      });
 
-      const endpoint = resolveEndpoint({ errorMode, alertMode });
-      const blob: Blob = await endpoint(requestFilters);
-
-      const url = URL.createObjectURL(blob);
+      const url    = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
-      anchor.href = url;
+      anchor.href     = url;
       anchor.download = `turnos_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error("Error descargando turnos CSV", e);
+      console.error("Error descargando CSV", e);
     } finally {
       setDownloading(false);
     }
