@@ -35,7 +35,7 @@ export default function ConfirmPage() {
         setDatos(data);
 
         if (data.estado_pac === 1) setRespuesta("confirmado");
-        if (data.estado_pac === 2) setRespuesta("cancelado");
+        if (data.estado_pac === 2) setRespuesta("rechazado");
         if (data.estado_pac === 3) setRespuesta("desconocido");
       } catch (e) {
         console.error(e);
@@ -172,7 +172,7 @@ export default function ConfirmPage() {
                   fullWidth
                   variant="contained"
                   color="error"
-                  onClick={() => actualizarEstado(2, "cancelado")}
+                  onClick={() => actualizarEstado(2, "rechazado")}
                 >
                   Cancelar
                 </Button>
@@ -194,9 +194,9 @@ export default function ConfirmPage() {
               </Typography>
             )}
 
-            {respuesta === "cancelado" && (
+            {respuesta === "rechazado" && (
               <Typography sx={{ mt: 3, color: "error.main", fontWeight: 500 }}>
-                Su turno ha sido cancelado
+                Su turno ha sido rechazado
               </Typography>
             )}
 
