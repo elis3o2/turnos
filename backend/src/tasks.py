@@ -109,9 +109,9 @@ def verificar_turnos() -> None:
                             
                             print(f"[INFO] Creado Turno id={idturno} fecha={fecha} hora={hora}")
 
-                            # b = sacar_Turno_Espera(idpaciente, id_efe_ser_esp)
-                            # if b:
-                            #     print(f"[INFO] Turno en Lista de Espera asignado idpaciente={idpaciente}")
+                            b = sacar_Turno_Espera(idpaciente, id_efe_ser_esp, idturno)
+                            if b:
+                                print(f"[INFO] Turno en Lista de Espera asignado idpaciente={idpaciente}")
 
                         except Exception as ex:
                             print(f"[ERROR] al crear Turno id={idturno}: {ex}")

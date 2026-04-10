@@ -234,3 +234,12 @@ def query_profesional_from_nombre (id_efe: str, nombre: str | None, apellido: st
 
     sql += " ORDER BY apellido, nombre"
     return sql
+
+
+def query_turno_fecha():
+    return """
+    SELECT fechaultmdf 
+    FROM turnos
+    WHERE idturno = ?
+    AND idestadoturno = 3
+    """

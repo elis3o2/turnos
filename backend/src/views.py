@@ -26,7 +26,7 @@ from src.serializers import(PlantillaSerializer, EstadoMsjSerializer, EstadoTurn
 from src.permissions import ReadOnly, OnlyAdmCreatetUpdatePermission
 from django.utils import timezone
 from typing import List
-from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional
+from src.utils.utils import enviar_whatsapp, fetch_paciente, fetch_profesional, lista_espera_look
 from src.utils.querys_informix import query_turno_historico_paciente, query_turnos, query_eliminado
 import logging
 logger = logging.getLogger(__name__)
@@ -1127,6 +1127,10 @@ class TurnoPacienteView(APIView):
             turno.fecha_estado_paciente = timezone.now()
 
             turno.save()
+
+            if estado == 2:
+                print("entro")
+                lista_espera_look(turno)
 
             return Response(
                 {"message": "Turno actualizado correctamente"},

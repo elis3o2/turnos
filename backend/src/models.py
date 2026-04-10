@@ -207,6 +207,7 @@ class TurnoEspera(models.Model):
         through='TurnoEsperaEstudio',
     )
     diagnostico = models.CharField(max_length=256,null=True,blank=True)
+    id_sisr = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'turno_espera'

@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
-from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
+from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente, query_turno_fecha
 from zoneinfo import ZoneInfo
 from django.core import signing
 
@@ -562,12 +562,23 @@ def create_Mensaje(
 
 
 
-def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int) -> bool:
-    updated = TurnoEspera.objects.filter(
-        id_paciente=id_pac,
-        id_efe_ser_esp=id_efe_ser_esp,
-        id_estado_id=0
-    ).update(id_estado_id=1, fecha_hora_cierre=now())
+def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_sisr: int) -> bool:
+    subquery = (
+        TurnoEspera.objects
+        .filter(
+            id_paciente=id_pac,
+            id_efe_ser_esp=id_efe_ser_esp,
+            id_estado_id=0
+        )
+        .order_by('fecha_hora_creacion')
+        .values('id')[:1]
+    )
+
+    updated = TurnoEspera.objects.filter(id__in=subquery).update(
+        id_estado_id=1,
+        id_sisr=id_sisr,
+        fecha_hora_cierre=now()
+    )
 
     return updated > 0
 
@@ -679,3 +690,34 @@ def ajustar_horario_envio(dt):
 def calcular_proximo_retry(now):
     eta = now + timedelta(minutes=15)
     return ajustar_horario_envio(eta)
+
+
+
+
+def lista_espera_look(turno: Turno):
+    with connections['informix'].cursor() as cur:
+        cur.execute(query_turno_fecha(), (turno.id_sisr,))
+        row = cur.fetchone()
+
+    if not row:
+        return  # no hay fecha
+
+    fecha_str = row[0]
+
+    # convertir string → datetime
+    fecha = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M:%S")
+
+    inicio_dia = fecha.replace(hour=0, minute=0, second=0, microsecond=0)
+    fin_dia = inicio_dia + timedelta(days=1)
+
+    a = TurnoEspera.objects.filter(
+        fecha_hora_cierre__gte=inicio_dia,
+        fecha_hora_cierre__lt=fin_dia,
+        id_paciente=turno.id_paciente,
+        id_efe_ser_esp=turno.id_efe_ser_esp,
+        id_estado=1
+    ).update(
+        id_estado=0,
+        fecha_hora_cierre=None
+    )
+    print(a)
