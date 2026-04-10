@@ -77,14 +77,14 @@ export default function TurnosPage() {
   const [alertData, setAlertData] = useState<null | {
     count_total: number,
     grupos: {
-      cancelados: TurnoExtend[],
+      rechazados: TurnoExtend[],
       incorrectos: TurnoExtend[],
       sin_respuesta: TurnoExtend[]
     }
   }>(null);
   const [alertLoading, setAlertLoading] = useState(false);
   const [alertMode, setAlertMode] = useState(false);
-  const [activeAlertCategory, setActiveAlertCategory] = useState<'cancelados' | 'incorrectos' | 'sin_respuesta'>('cancelados');
+  const [activeAlertCategory, setActiveAlertCategory] = useState<'rechazados' | 'incorrectos' | 'sin_respuesta'>('rechazados');
 
   const navigate = useNavigate();
 
@@ -219,13 +219,13 @@ export default function TurnosPage() {
         const pageLimit = pageSize;
         const offset = 0;
         const [resCancel, resIncorrect, resSinResp] = await Promise.all([
-          getTurnosAlerta('cancelados', pageLimit, offset, efIds, [], null, null),
+          getTurnosAlerta('rechazados', pageLimit, offset, efIds, [], null, null),
           getTurnosAlerta('incorrectos', pageLimit, offset, efIds, [], null, null),
           getTurnosAlerta('sin_respuesta', pageLimit, offset, efIds, [], null, null),
         ]);
 
         const grupos = {
-          cancelados: resCancel.response ?? [],
+          rechazados: resCancel.response ?? [],
           incorrectos: resIncorrect.response ?? [],
           sin_respuesta: resSinResp.response ?? [],
         };
@@ -575,7 +575,7 @@ export default function TurnosPage() {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Button size="small" variant={activeAlertCategory === 'cancelados' ? 'contained' : 'outlined'} onClick={() => setActiveAlertCategory('cancelados')}>CANCELADOS {alertData ? `(${alertData.grupos.cancelados.length})` : ''}</Button>
+            <Button size="small" variant={activeAlertCategory === 'rechazados' ? 'contained' : 'outlined'} onClick={() => setActiveAlertCategory('rechazados')}>RECHAZADOS {alertData ? `(${alertData.grupos.rechazados.length})` : ''}</Button>
             <Button size="small" variant={activeAlertCategory === 'incorrectos' ? 'contained' : 'outlined'} onClick={() => setActiveAlertCategory('incorrectos')}>INCORRECTOS {alertData ? `(${alertData.grupos.incorrectos.length})` : ''}</Button>
             <Button size="small" variant={activeAlertCategory === 'sin_respuesta' ? 'contained' : 'outlined'} onClick={() => setActiveAlertCategory('sin_respuesta')}>SIN RESPUESTA {alertData ? `(${alertData.grupos.sin_respuesta.length})` : ''}</Button>
           </Box>

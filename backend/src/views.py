@@ -973,7 +973,7 @@ class TurnosAlertasAPIView(APIView):
                 )
 
                 # ------- Grupo A: estado=1 y estado_paciente=2 -------
-                if tipo == 'cancelados':
+                if tipo == 'rechazados':
                     qs = qs.filter(id_estado__id=3, id_estado_paciente__id=2)
 
                 # ------- Grupo B: estado=1 y estado_paciente=3 -------
