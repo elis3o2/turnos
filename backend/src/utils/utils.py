@@ -15,6 +15,11 @@ from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
 from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente
 from zoneinfo import ZoneInfo
+from __future__ import annotations
+from typing import Any
+
+
+Row = dict[str, Any]
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
 
 
@@ -286,7 +291,7 @@ def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
         
         # Mapear estado → tipo y campo de plantilla
         mapping = {
-            1: ("confirmacion", "plantilla_conf"),
+            1: ("confirmacion", "plantilla_asig"),
             2: ("cancelacion", "plantilla_canc"),
             3: ("reprogramacion", "plantilla_repr"),
         }
@@ -322,76 +327,82 @@ def format_plantilla(contenido: str, valores) -> str:
     return re.sub(r'{(\w+)}', replace_match, contenido)
 
 
-def fetch_paciente(id_persona=None, dni=None):
-    """
-    Retorna lista de dicts con pacientes (posiblemente vacía).
-    """
-    if not id_persona and not dni:
+# ─── helpers ──────────────────────────────────────────────────────────────────
+
+def _rows_to_dicts(cur) -> list[Row]:
+    rows = cur.fetchall()
+    if not rows:
         return []
-    id: bool
-    if id_persona:
-        id = True
-        params = (id_persona,)
-    else:
-        id = False
+    cols = [str(c[0]).lower() for c in (cur.description or [])]
+    return [{cols[i]: r[i] for i in range(len(r))} for r in rows]
+
+
+
+
+# ─── fetch_paciente ───────────────────────────────────────────────────────────
+
+def fetch_paciente(
+    ids: list[int] | None = None,
+    dni: str | None = None,
+) -> list[Row]:
+    if ids is not None:
+        if not ids:
+            return []
+        query  = query_paciente_from_id(len(ids))
+        params = tuple(ids)
+
+    elif dni is not None:
+        query  = query_paciente_from_dni()
         params = (dni,)
 
-
-    try:
-        with connections['informix'].cursor() as cur:
-            cur.execute(query_paciente(id), params)
-            rows = cur.fetchall()
-            if not rows:
-                return []
-
-            desc = cur.description or []
-            cols = [str(c[0]).lower() for c in desc]
-            result = []
-            for r in rows:
-                result.append({ cols[i]: r[i] for i in range(len(r)) })
-            return result
-
-    except DatabaseError:
-        logger.exception("Error consultando Informix (paciente list)")
-        raise
-
-
-def fetch_profesional(id_prof=None, id_efector=None, nombre=None, apellido=None):
-    """
-    Retorna lista de dicts con profesionales que coincidan (posiblemente vacía).
-    Si id_prof está provisto busca por idpersonal; si no, usa id_efector + filtros.
-    """
-    params = []
-    if id_prof:
-        sql = query_profesional_from_id()
-        params = [id_prof]
     else:
-        if not id_efector:
-            return []
-        sql = query_profesional_from_nombre(id_efector, nombre, apellido)
-        params = [id_efector]
-        if nombre:
-            params.append(nombre.strip().upper() + '%')
-        if apellido:
-            params.append(apellido.strip().upper() + '%')
+        return []
 
     try:
-        with connections['informix'].cursor() as cur:
-            cur.execute(sql, tuple(params))
-            rows = cur.fetchall()
-            if not rows:
-                return []
-
-            desc = cur.description or []
-            cols = [str(c[0]).lower() for c in desc]
-            result = []
-            for r in rows:
-                result.append({ cols[i]: r[i] for i in range(len(r)) })
-            return result
-
+        with connections["informix"].cursor() as cur:
+            cur.execute(query, params)
+            return _rows_to_dicts(cur)
     except DatabaseError:
-        logger.exception("Error consultando Informix (profesional list)")
+        logger.exception("Error consultando Informix (paciente)")
         raise
+
+
+
+
+# ─── fetch_profesional ────────────────────────────────────────────────────────
+
+def fetch_profesional(
+    ids: list[int] | None = None,
+    id_efector: int | None = None,
+    nombre: str | None = None,
+    apellido: str | None = None,
+) -> list[Row]:
+    if ids is not None:
+        if not ids:
+            return []
+        query  = query_profesional_from_id(len(ids))
+        params = tuple(ids)
+
+    elif id_efector is not None:
+        query        = query_profesional_from_nombre(id_efector, nombre, apellido)
+        params_list  = [id_efector]
+        if nombre:
+            params_list.append(nombre.strip().upper() + "%")
+        if apellido:
+            params_list.append(apellido.strip().upper() + "%")
+        params = tuple(params_list)
+
+    else:
+        return []
+
+    try:
+        with connections["informix"].cursor() as cur:
+            cur.execute(query, params)
+            return _rows_to_dicts(cur)
+    except DatabaseError:
+        logger.exception("Error consultando Informix (profesional)")
+        raise
+
 
 
 def start_flow(numero: str, flowName: str) -> Response:
@@ -513,7 +524,7 @@ def create_Turno(id_sisr: int, id_pac: int, id_est: int,
             id_paciente=id_pac,
             estado_id=id_est,
             id_estado_paciente_id=0,
-            msj_confirmado=0,
+            msj_asignado=0,
             msj_reprogramado=0,
             msj_cancelado=0,
             msj_recordatorio=0,

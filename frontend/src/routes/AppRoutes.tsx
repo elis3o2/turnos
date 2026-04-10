@@ -34,7 +34,7 @@ const AppRoutes = () => {
         <Route path="/espera" element={<ListaEspera />}/>
         <Route path="/add-espera" element={<AddEspera />}/>
         <Route path="/espera-paciente" element={<TurnosEsperaDashboard />}/>
-       {/* <Route path='*' element={<Navigate to="/home" replace />} /> */}
+        <Route path='*' element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>
   );

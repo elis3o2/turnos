@@ -36,12 +36,12 @@ class EfeSerEspPlantilla(models.Model):
     id = models.AutoField(primary_key=True)
     id_efe_ser_esp = models.ForeignKey(
         EfeSerEsp, models.DO_NOTHING, db_column='id_efe_ser_esp')
-    confirmacion = models.IntegerField()
+    asignacion = models.IntegerField()
     reprogramacion = models.IntegerField()
     cancelacion = models.IntegerField()
     recordatorio = models.IntegerField()
-    plantilla_conf = models.ForeignKey(
-        Plantilla, models.DO_NOTHING, db_column='plantilla_conf',related_name="plantillas_conf", null=True, blank=True)
+    plantilla_asig = models.ForeignKey(
+        Plantilla, models.DO_NOTHING, db_column='plantilla_asig',related_name="plantillas_conf", null=True, blank=True)
     plantilla_repr = models.ForeignKey(
         Plantilla, models.DO_NOTHING, db_column='plantilla_repr',related_name="plantillas_repr", null=True, blank=True)
     plantilla_canc = models.ForeignKey(

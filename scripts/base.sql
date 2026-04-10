@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS turno(
     id_paciente INT NOT NULL,
     id_estado INT NOT NULL,
     id_estado_paciente INT NOT NULL,
-    msj_confirmado TINYINT NOT NULL,
+    msj_asignado TINYINT NOT NULL,
     msj_reprogramado TINYINT NOT NULL,
     msj_cancelado TINYINT NOT NULL,
     msj_recordatorio TINYINT NOT NULL,
@@ -114,8 +114,8 @@ CREATE TABLE IF NOT EXISTS mensaje (
 CREATE TABLE IF NOT EXISTS efe_ser_esp_plantilla(
     id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     id_efe_ser_esp  INT NOT NULL,
-    confirmacion TINYINT NOT NULL,
-    plantilla_conf INT NULL,
+    asignacion TINYINT NOT NULL,
+    plantilla_asig INT NULL,
     reprogramacion TINYINT NOT NULL,
     plantilla_repr INT NULL,
     cancelacion TINYINT NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS efe_ser_esp_plantilla(
     plantilla_reco INT NULL,
     dias_antes INT NULL,
     FOREIGN KEY (id_efe_ser_esp) REFERENCES efe_ser_esp(id),
-    FOREIGN KEY (plantilla_conf) REFERENCES plantilla(id),
+    FOREIGN KEY (plantilla_asig) REFERENCES plantilla(id),
     FOREIGN KEY (plantilla_repr) REFERENCES plantilla(id),
     FOREIGN KEY (plantilla_canc) REFERENCES plantilla(id),
     FOREIGN KEY (plantilla_reco) REFERENCES plantilla(id)

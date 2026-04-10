@@ -30,7 +30,7 @@ function ListaPage() {
   // Estado del diálogo / confirmación y selección global para SendAll
   const [open, setOpen] = useState<boolean>(false);
   const [confirmEspecialidades, setConfirmEspecialidades] = useState<EfeSerEspPlantillaExtend[]>([]);
-  const [confirmField, setConfirmField] = useState<"confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio">("confirmacion");
+  const [confirmField, setConfirmField] = useState<"asignacion" | "reprogramacion" | "cancelacion" | "recordatorio">("asignacion");
   const [confirmValue, setConfirmValue] = useState<0 | 1>(1);
 
   // alertas

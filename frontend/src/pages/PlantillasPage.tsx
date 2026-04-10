@@ -26,35 +26,35 @@ type StateShape = {
 type AlertSeverity = "error" | "warning" | "info" | "success";
 
 const tipoToId: Record<string, number> = {
-  confirmacion: 1,
+  asignacion: 1,
   cancelacion: 2,
   reprogramacion: 3,
   recordatorio: 4,
 };
 
 const idToTipoKey: Record<number, string> = {
-  1: "confirmacion",
+  1: "asignacion",
   2: "cancelacion",
   3: "reprogramacion",
   4: "recordatorio",
 };
 
 const tipoToCampo: Record<string, string> = {
-  confirmacion: "plantilla_conf",
+  asignacion: "plantilla_asig",
   cancelacion: "plantilla_canc",
   reprogramacion: "plantilla_repr",
   recordatorio: "plantilla_reco",
 };
 
 const tipoToLabel: Record<string, string> = {
-  confirmacion: "Confirmación",
+  asignacion: "Confirmación",
   reprogramacion: "Reprogramación",
   cancelacion: "Cancelación",
   recordatorio: "Recordatorio",
 };
 
 const tipoToColor: Record<string, string> = {
-  confirmacion: "#4caf50", // verde
+  asignacion: "#4caf50", // verde
   reprogramacion: "#1976d2", // azul
   cancelacion: "#e53935", // rojo
   recordatorio: "#fbc02d", // amarillo
@@ -112,7 +112,7 @@ const Plantillas: React.FC = () => {
 
   const groupByType = () => {
     const groups: Record<string, Plantilla[]> = {
-      confirmacion: [],
+      asignacion: [],
       reprogramacion: [],
       cancelacion: [],
       recordatorio: [],

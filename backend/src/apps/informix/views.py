@@ -8,6 +8,7 @@ from django.db.models import OuterRef, Q, QuerySet, Subquery
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+import json
 
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
@@ -24,32 +25,17 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
 # ---------- API para búsquedas NO por id (retorna listas) ----------
 class GetPacienteAPIView(APIView):
-    """
-    GET /api/pacientes/?dni=...&nombre=...&apellido=...
-    Si se pasa 'id' devuelve solo un objeto (como mejora; pero preferimos usar GetPacienteDetail para id).
-    Aquí se usa para búsquedas por filtros (no-id).
-    """
     def get(self, request) -> Response:
-        id_persona = request.query_params.get('id')
-        dni = request.query_params.get('dni')
+        dni        = request.query_params.get("dni")
 
         try:
-            if id_persona:
-                # si se pasa id devolvemos UN solo objeto
-                paciente = fetch_paciente(id_persona=int(id_persona))
-                if not paciente:
-                    return Response({}, status=status.HTTP_404_NOT_FOUND)
-                ser = PacienteSerializer(instance=paciente)
-                return Response(ser.data, status=status.HTTP_200_OK)
-
-            # búsqueda por filtros (al menos uno requerido)
-            if not (dni):
-                return Response({"detail": "Al menos uno de los parámetros (dni, nombre, apellido) es requerido para la búsqueda."},
-                                status=status.HTTP_400_BAD_REQUEST)
+            if not dni:
+                return Response(
+                    {"detail": "Parámetro 'dni' requerido."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             pacientes = fetch_paciente(dni=dni)
             ser = PacienteSerializer(instance=pacientes, many=True)
@@ -57,50 +43,40 @@ class GetPacienteAPIView(APIView):
 
         except DatabaseError:
             logger.exception("Error consultando pacientes")
-            return Response({"detail": "Error al consultar la base de datos."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Error al consultar la base de datos."}, status=500)
         except Exception:
             logger.exception("Error inesperado en GetPacienteAPIView")
-            return Response({"detail": "Error interno."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Error interno."}, status=500)
 
 
 
 class GetProfesionalAPIView(APIView):
-    """
-    GET /api/profesionales/?id=...  OR ?id_efe=...&nombre=...&apellido=...
-    Si se pasa id devuelve un único profesional; si no, devuelve todos los que coincidan con id_efe y filtros.
-    """
     def get(self, request) -> Response:
+        id_efector = request.query_params.get("id_efector")
+        nombre     = request.query_params.get("nombre")
+        apellido   = request.query_params.get("apellido")
+
         try:
-            id_prof: str | None = request.query_params.get('id')
-            id_efector: str | None = request.query_params.get('id_efector')
-            nombre: str | None = request.query_params.get('nombre')
-            apellido = request.query_params.get('apellido')
-
-            if id_prof:
-                prof = fetch_profesional(id_prof=int(id_prof))
-                if not prof:
-                    return Response({}, status=status.HTTP_404_NOT_FOUND)
-                ser = ProfesionalSerializer(instance=prof)
-                return Response(ser.data, status=status.HTTP_200_OK)
-
-            # búsqueda por efector (requerido si no hay id)
             if not id_efector:
-                return Response({"detail": "Parámetro 'id_efe' requerido para búsqueda sin id."},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Parámetro 'id_efector' requerido."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            profs = fetch_profesional(id_efector=int(id_efector), nombre=nombre, apellido=apellido)
+            profs = fetch_profesional(
+                id_efector=int(id_efector),
+                nombre=nombre,
+                apellido=apellido,
+            )
             ser = ProfesionalSerializer(instance=profs, many=True)
             return Response(ser.data, status=status.HTTP_200_OK)
 
         except DatabaseError:
             logger.exception("Error consultando profesionales")
-            return Response({"detail": "Error al consultar la base de datos."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"detail": "Error al consultar la base de datos."}, status=500)
         except Exception:
             logger.exception("Error inesperado en GetProfesionalAPIView")
-            return Response({"detail": "Error interno."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+            return Response({"detail": "Error interno."}, status=500)
 
 
 
@@ -138,7 +114,7 @@ class BaseTurnosMerged(GenericAPIView):
         return context
 
     def wants_csv(self, request) -> bool:
-        return str(request.query_params.get("csv", "")).lower() in {"1", "true", "si", "yes"}
+        return str(request.query_params.get("csv", "")) == "1"
 
     def _csv_value(self, value):
         if value is None:
@@ -234,8 +210,6 @@ class BaseTurnosMerged(GenericAPIView):
         self._mensajes_map = self.build_mensajes_map(local_list)
 
         serializer = self.get_serializer(local_list, many=True)
-        print("AAAAA")
-        print(serializer.data)
         return {
             "data": serializer.data,
             "count": total,
@@ -406,34 +380,33 @@ class BaseTurnosMerged(GenericAPIView):
             setattr(turno, "paciente_dni", pac.get("nro_doc"))
 
     def fetch_pacientes_bulk(self, ids: list[Any]):
-        return fetch_pacientes(ids)
+        return fetch_paciente(ids)
 
     def normalize_patient_payload(self, payload: Any) -> dict[Any, dict[str, Any]]:
         result: dict[Any, dict[str, Any]] = {}
-
         if not payload:
             return result
 
-        if isinstance(payload, dict):
-            key = payload.get("id_persona") or payload.get("id") or payload.get("pk")
-            if key is not None:
-                result[key] = payload
-            return result
+        items = [payload] if isinstance(payload, dict) else payload
 
-        for item in payload:
+        for item in items:
             if isinstance(item, dict):
-                key = item.get("id_persona") or item.get("id") or item.get("pk")
-                if key is not None:
-                    result[key] = item
+                key = item.get("id") or item.get("id_persona") or item.get("pk")
             else:
-                key = getattr(item, "id_persona", None) or getattr(item, "id", None) or getattr(item, "pk", None)
-                if key is not None:
-                    result[key] = {
-                        "nombre": getattr(item, "nombre", None),
-                        "apellido": getattr(item, "apellido", None),
-                        "nro_doc": getattr(item, "nro_doc", None),
-                        "id_persona": key,
-                    }
+                key = (
+                    getattr(item, "id", None)
+                    or getattr(item, "id_persona", None)
+                    or getattr(item, "pk", None)
+                )
+                item = {
+                    "id":        key,
+                    "nombre":    getattr(item, "nombre",   None),
+                    "apellido":  getattr(item, "apellido", None),
+                    "nro_doc":   getattr(item, "nro_doc",  None),
+                }
+
+            if key is not None:
+                result[key] = item
 
         return result
 

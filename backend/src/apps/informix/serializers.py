@@ -45,7 +45,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     profesional_apellido = serializers.CharField(read_only=True)
 
     msj_recordatorio = serializers.IntegerField(read_only=True)
-    msj_confirmado = serializers.IntegerField(read_only=True)
+    msj_asignado = serializers.IntegerField(read_only=True)
     msj_cancelado = serializers.IntegerField(read_only=True)
     msj_reprogramado = serializers.IntegerField(read_only=True)
 
@@ -54,7 +54,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         fields = [
             "id", "id_sisr", "fecha", "hora",
             "estado", "estado_paciente", "fecha_estado_paciente",
-            "msj_recordatorio", "msj_confirmado", "msj_cancelado", "msj_reprogramado",
+            "msj_recordatorio", "msj_asignado", "msj_cancelado", "msj_reprogramado",
             "efector", "servicio", "especialidad",
             "paciente_nombre", "paciente_apellido", "paciente_dni",
             "profesional_nombre", "profesional_apellido",

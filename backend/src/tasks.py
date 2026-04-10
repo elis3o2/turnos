@@ -230,8 +230,8 @@ def verificar_turnos() -> None:
                     if ack >= 0:  # actualizar flags en Turno
                         try:
                             if estado == 1:
-                                t.msj_confirmado = 1
-                                t.save(update_fields=["msj_confirmado"])
+                                t.msj_asignado = 1
+                                t.save(update_fields=["msj_asignado"])
                                 #create_flow(telefono, t, ins)
                             elif estado == 2:
                                 t.msj_cancelado = 1

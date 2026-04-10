@@ -35,7 +35,7 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
     id_efector = serializers.SerializerMethodField()
     id_servicio = serializers.SerializerMethodField()
     # HACEMOS LOS CAMPOS ESCRIBIBLES POR PK (aceptan un entero en el request)
-    plantilla_conf = serializers.PrimaryKeyRelatedField(
+    plantilla_asig = serializers.PrimaryKeyRelatedField(
         queryset=Plantilla.objects.all(), required=False, allow_null=True)
     plantilla_repr = serializers.PrimaryKeyRelatedField(
         queryset=Plantilla.objects.all(), required=False, allow_null=True)
@@ -52,8 +52,8 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
             "id_efector",
             "id_servicio",
             "especialidad",
-            "confirmacion",
-            "plantilla_conf",
+            "asignacion",
+            "plantilla_asig",
             "reprogramacion",
             "plantilla_repr",
             "cancelacion",
@@ -77,8 +77,8 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
 
         # reemplazamos los PKs por la representación anidada si existe
-        rep["plantilla_conf"] = (
-            PlantillaSerializer(instance.plantilla_conf).data if instance.plantilla_conf else None)
+        rep["plantilla_asig"] = (
+            PlantillaSerializer(instance.plantilla_asig).data if instance.plantilla_asig else None)
         rep["plantilla_repr"] = (
             PlantillaSerializer(instance.plantilla_repr).data if instance.plantilla_repr else None)
         rep["plantilla_canc"] = (

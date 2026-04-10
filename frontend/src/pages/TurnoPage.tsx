@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -27,13 +27,14 @@ import { getTurnosMerged, getTurnosMergedAlerta, getTurnosMergedError } from "..
 import type { TurnoMerged, TurnoMergedFilters } from "../features/turno/types";
 import type { KeyNLabel } from "../common/types";
 import { AlertaComponent } from "../features/turno/components/AlertComponent";
-import { TableComponent } from "../common/components/TableComponent"
-import {ColumnSelector } from "../common/components/ColumnSelector"
+import { TableComponent } from "../common/components/TableComponent";
+import { ColumnSelector } from "../common/components/ColumnSelector";
 import { EfectorForm } from "../features/efector/components/EfectorForm";
 import type { Mensaje } from "../features/mensaje/types";
-import { DateTimeStack} from "../common/components/DateTimeStack";
+import { DateTimeStack } from "../common/components/DateTimeStack";
 import { DateStack } from "../common/components/DateStack";
 import { ServicioForm } from "../features/efector/components/ServicioForm";
+
 type AlertCategory = "rechazados" | "incorrectos" | "sin_respuesta";
 
 type AlertData = {
@@ -45,15 +46,48 @@ type AlertData = {
   };
 };
 
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+/** Elige el endpoint correcto según el modo activo. */
+function resolveEndpoint(
+  mode: { errorMode: boolean; alertMode: boolean }
+): typeof getTurnosMerged {
+  if (mode.alertMode) return getTurnosMergedAlerta;
+  if (mode.errorMode) return getTurnosMergedError;
+  return getTurnosMerged;
+}
+
+function estadoRespChipColor(t: TurnoMerged) {
+  const map: Record<string, "info" | "success" | "error" | "warning"> = {
+    "SIN DATOS": "info",
+    "CONFIRMADO": "success",
+    "RECHAZADO": "error",
+    "INCORRECTO": "warning",
+    "SIN RESPUESTA": "warning",
+  };
+  return map[t.estado_paciente ?? ""] ?? "default";
+}
+
+function estadoChipColor(t: TurnoMerged) {
+  const map: Record<string, "success" | "error" | "warning" | "info"> = {
+    "ASIGNADO": "success",
+    "SUSPENDIDO": "error",
+    "REPROGRAMADO": "warning",
+    "FINALIZADO": "info",
+  };
+  return map[t.estado ?? ""] ?? "default";
+}
+
+// ─── component ──────────────────────────────────────────────────────────────
+
 export default function TurnosPage() {
   const navigate = useNavigate();
 
-  const { efectores } = useContext(AuthContext) as {
-    efectores?: KeyNLabel[];
-  };
+  const { efectores } = useContext(AuthContext) as { efectores?: KeyNLabel[] };
 
   const [turnos, setTurnos] = useState<TurnoMerged[]>([]);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const [servicios, setServicios] = useState<KeyNLabel[]>([]);
   const [selectedEfectores, setSelectedEfectores] = useState<number[]>([]);
@@ -72,8 +106,7 @@ export default function TurnosPage() {
 
   const [errorMode, setErrorMode] = useState(false);
   const [alertMode, setAlertMode] = useState(false);
-  const [activeAlertCategory, setActiveAlertCategory] =
-    useState<AlertCategory>("rechazados");
+  const [activeAlertCategory, setActiveAlertCategory] = useState<AlertCategory>("rechazados");
 
   const [alertData, setAlertData] = useState<AlertData | null>(null);
   const [alertLoading, setAlertLoading] = useState(false);
@@ -101,34 +134,35 @@ export default function TurnosPage() {
     []
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(
-      ["respuesta","dni","efector","servicio","especialidad","estado",
-        "asignacion","cancelacion","reprogramacion","recordatorio","fecha","hora"]);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([
+    "respuesta", "dni", "efector", "servicio", "especialidad", "estado",
+    "asignacion", "cancelacion", "reprogramacion", "recordatorio", "fecha", "hora",
+  ]);
 
+  // ── servicios ──────────────────────────────────────────────────────────────
 
-  async function loadServicios() {
+  const loadServicios = useCallback(async () => {
     if (selectedEfectores.length === 0) {
       setServicios([]);
       setSelectedServicios([]);
       return;
     }
-
     try {
       const data = await getServiciosByEfector(selectedEfectores);
       setServicios(data);
-      setSelectedServicios((prev) =>
-        prev.filter((id) => data.some((s) => s.key === id))
-      );
+      setSelectedServicios((prev) => prev.filter((id) => data.some((s) => s.key === id)));
     } catch (err) {
       console.error("Error cargando servicios", err);
       setServicios([]);
       setSelectedServicios([]);
     }
-  }
+  }, [selectedEfectores]);
 
   useEffect(() => {
     loadServicios();
-  }, [selectedEfectores]);
+  }, [loadServicios]);
+
+  // ── paginación ─────────────────────────────────────────────────────────────
 
   async function loadPage(params: {
     pageToLoad: number;
@@ -155,15 +189,8 @@ export default function TurnosPage() {
         ...(alertMode ? { tipo: activeAlertCategory } : {}),
       };
 
-      let data;
-      if (alertMode) {
-        data = await getTurnosMergedAlerta(requestFilters);
-      } else if (errorMode) {
-        data = await getTurnosMergedError(requestFilters);
-      } else {
-        data = await getTurnosMerged(requestFilters);
-      }
-      console.log("DATA", data)
+      const endpoint = resolveEndpoint({ errorMode, alertMode });
+      const data = await endpoint(requestFilters);
       setTurnos(data.data ?? []);
       setTotal(data.count ?? 0);
     } catch (e) {
@@ -174,7 +201,40 @@ export default function TurnosPage() {
       setLoading(false);
     }
   }
-  console.log("turnos",turnos)
+
+  // ── descarga CSV ───────────────────────────────────────────────────────────
+
+  async function handleDescargar() {
+    if (!appliedFilters || !appliedFilters.ids_efec?.length) return;
+
+    setDownloading(true);
+    try {
+      const requestFilters: TurnoMergedFilters = {
+        ...appliedFilters,
+        // Sin paginación para traer todos los registros
+        csv: 1,
+        ...(alertMode ? { tipo: activeAlertCategory } : {}),
+      };
+
+      const endpoint = resolveEndpoint({ errorMode, alertMode });
+      const blob: Blob = await endpoint(requestFilters);
+
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `turnos_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Error descargando turnos CSV", e);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  // ── filtros y búsqueda ─────────────────────────────────────────────────────
 
   function buildAppliedFilters(): TurnoMergedFilters {
     const fallbackEfectores =
@@ -216,6 +276,8 @@ export default function TurnosPage() {
     });
   }
 
+  // ── modos ──────────────────────────────────────────────────────────────────
+
   function handleToggleErrorMode() {
     const next = !errorMode;
     if (next && alertMode) setAlertMode(false);
@@ -228,6 +290,8 @@ export default function TurnosPage() {
     setAlertMode(next);
   }
 
+  // ── carga inicial de alertas ───────────────────────────────────────────────
+
   useEffect(() => {
     const efIds = efectores?.map((e) => Number(e.key)) ?? [];
     if (efIds.length === 0) return;
@@ -235,7 +299,7 @@ export default function TurnosPage() {
     (async () => {
       setAlertLoading(true);
       try {
-        const baseFilters = {
+        const baseFilters: TurnoMergedFilters = {
           cantidad: pageSize,
           offset: 0,
           ids_efec: efIds,
@@ -250,30 +314,30 @@ export default function TurnosPage() {
           getTurnosMergedAlerta({ ...baseFilters, tipo: "sin_respuesta" }),
         ]);
 
-        const grupos = {
-          rechazados: resRechaz.response ?? [],
-          incorrectos: resIncorrect.response ?? [],
-          sin_respuesta: resSinResp.response ?? [],
-        };
-
-        const count_total =
-          (resRechaz.count ?? 0) +
-          (resIncorrect.count ?? 0) +
-          (resSinResp.count ?? 0);
-          setAlertData({ count_total, grupos });
+        setAlertData({
+          count_total:
+            (resRechaz.count ?? 0) +
+            (resIncorrect.count ?? 0) +
+            (resSinResp.count ?? 0),
+          grupos: {
+            rechazados: resRechaz.data ?? [],
+            incorrectos: resIncorrect.data ?? [],
+            sin_respuesta: resSinResp.data ?? [],
+          },
+        });
       } catch (err) {
         console.error("Error cargando turnos alerta", err);
         setAlertData(null);
       } finally {
-
         setAlertLoading(false);
       }
     })();
   }, [efectores]);
 
+  // ── paginación ─────────────────────────────────────────────────────────────
+
   function handleChangePage(_: React.ChangeEvent<unknown>, value: number) {
     setPage(value);
-
     if (!hasSearched || !appliedFilters) return;
 
     loadPage({
@@ -286,56 +350,28 @@ export default function TurnosPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  console.log(turnos)
-  function estadoRespChipColor(t: TurnoMerged) {
-    const n = t.estado_paciente ?? "";
-    if (n === "SIN DATOS") return "info";
-    if (n === "CONFIRMADO") return "success";
-    if (n === "RECHAZADO") return "error";
-    if (n === "INCORRECTO") return "warning";
-    if (n === "SIN RESPUESTA") return "warning";
-    return "default";
-  }
 
-  function estadoChipColor(t: TurnoMerged) {
-    const n = t.estado ?? "";
-    if (n === "ASIGNADO") return "success";
-    if (n === "SUSPENDIDO") return "error";
-    if (n === "REPROGRAMADO") return "warning";
-    if (n === "FINALIZADO") return "info";
-    return "default";
-  }
+  // ── render de celdas ───────────────────────────────────────────────────────
 
-
-  function mensajeChip(m?: Mensaje | null): JSX.Element | null {
-    if (!m) return "—";
+  function mensajeChip(m?: Mensaje | null): JSX.Element {
+    if (!m) return <Typography variant="body2">—</Typography>;
 
     return (
-       <Box sx={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: 0.5,
-          maxWidth: 120, 
-          }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 120 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="body2">{m.estado}</Typography>
-           {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
+          {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
         </Box>
-    </Box>
+      </Box>
     );
   }
 
-  function renderCell(columnKey: string, t: TurnoMerged) {
+  function renderCell(columnKey: string, t: TurnoMerged): React.ReactNode {
     switch (columnKey) {
-      case "id": return t.id_sisr;
+      case "id":           return t.id_sisr;
       case "respuesta":
         return (
-          <Box sx={{ 
-            display: "flex", 
-            flexDirection: "column", 
-            gap: 0.5,
-            width: "fit-content",
-          }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, width: "fit-content" }}>
             <Chip
               size="small"
               label={t.estado_paciente ?? "-"}
@@ -345,26 +381,34 @@ export default function TurnosPage() {
             {t.fecha_estado_paciente ? <DateTimeStack value={t.fecha_estado_paciente} /> : null}
           </Box>
         );
-      case "dni": return t.paciente_dni;
-      case "nombre": return t.paciente_nombre;
-      case "apellido": return t.paciente_apellido;
-      case "efector": return t.efector;
-      case "servicio": return t.servicio;
-      case "especialidad": return t.especialidad;
-      case "prof_nombre": return t.profesional_nombre;
+      case "dni":           return t.paciente_dni;
+      case "nombre":        return t.paciente_nombre;
+      case "apellido":      return t.paciente_apellido;
+      case "efector":       return t.efector;
+      case "servicio":      return t.servicio;
+      case "especialidad":  return t.especialidad;
+      case "prof_nombre":   return t.profesional_nombre;
       case "prof_apellido": return t.profesional_apellido;
-      case "estado": return (<Chip size="small" label={t.estado} color={estadoChipColor(t) as any} variant="outlined"/>)
-      case "fecha": return <DateStack value={t.fecha}  />;
-      case "hora": return t.hora ?? "—";
-      case "asignacion": return mensajeChip(t.mensaje_asociado.ASIGNACION)
-      case "cancelacion": return mensajeChip(t.mensaje_asociado.CANCELACION)
-      case "reprogramacion": return mensajeChip(t.mensaje_asociado.REPROGRAMACION)
-      case "recordatorio": return mensajeChip(t.mensaje_asociado.RECORDATORIO)
-
-
-      default: return "—";
+      case "estado":
+        return (
+          <Chip
+            size="small"
+            label={t.estado}
+            color={estadoChipColor(t) as any}
+            variant="outlined"
+          />
+        );
+      case "fecha":          return <DateStack value={t.fecha} />;
+      case "hora":           return t.hora ?? "—";
+      case "asignacion":     return mensajeChip(t.mensaje_asociado.ASIGNACION);
+      case "cancelacion":    return mensajeChip(t.mensaje_asociado.CANCELACION);
+      case "reprogramacion": return mensajeChip(t.mensaje_asociado.REPROGRAMACION);
+      case "recordatorio":   return mensajeChip(t.mensaje_asociado.RECORDATORIO);
+      default:               return "—";
     }
   }
+
+  // ── JSX ────────────────────────────────────────────────────────────────────
 
   return (
     <Box sx={{ p: 2 }}>
@@ -380,13 +424,15 @@ export default function TurnosPage() {
       <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            {efectores? 
-            <EfectorForm 
-            efectores={efectores}
-            selectedEfectores={selectedEfectores}
-            setSelectedEfectores={setSelectedEfectores}/>
-            : "-"}
+            {efectores ? (
+              <EfectorForm
+                efectores={efectores}
+                selectedEfectores={selectedEfectores}
+                setSelectedEfectores={setSelectedEfectores}
+              />
+            ) : "-"}
           </Grid>
+
           <Grid item xs={12} md={4}>
             <ServicioForm
               servicios={servicios}
@@ -394,6 +440,7 @@ export default function TurnosPage() {
               setSelectedServicios={setSelectedServicios}
             />
           </Grid>
+
           <Grid item xs={12} md={2}>
             <TextField
               size="small"
@@ -401,7 +448,7 @@ export default function TurnosPage() {
               type="date"
               InputLabelProps={{ shrink: true }}
               value={fechaDesde ?? ""}
-              onChange={(e) => setFechaDesde(e.target.value ? e.target.value : null)}
+              onChange={(e) => setFechaDesde(e.target.value || null)}
               fullWidth
             />
           </Grid>
@@ -413,7 +460,7 @@ export default function TurnosPage() {
               type="date"
               InputLabelProps={{ shrink: true }}
               value={fechaHasta ?? ""}
-              onChange={(e) =>setFechaHasta(e.target.value ? e.target.value : null)}
+              onChange={(e) => setFechaHasta(e.target.value || null)}
               fullWidth
             />
           </Grid>
@@ -440,10 +487,12 @@ export default function TurnosPage() {
               >
                 Error mensajes
               </Button>
+
               <Button
-                startIcon={<GetAppIcon />}
+                startIcon={downloading ? <CircularProgress size={16} /> : <GetAppIcon />}
                 variant="contained"
-                disabled={loading || turnos.length === 0}
+                onClick={handleDescargar}
+                disabled={loading || downloading || !hasSearched || turnos.length === 0}
                 size="small"
               >
                 Descargar
@@ -485,9 +534,7 @@ export default function TurnosPage() {
         renderCell={renderCell}
       />
 
-      <Box
-        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Pagination
             count={totalPages}

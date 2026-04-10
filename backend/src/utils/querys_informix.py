@@ -181,13 +181,24 @@ def query_eliminado(n: int) -> str:
     """
 
 
-
-def query_paciente(id: bool) -> str:
-    if id:
-        where = "WHERE per.id_persona = ?"
+def query_paciente_from_id(n: int) -> str:
+    if n == 1:
+        where_clause = "WHERE per.id_persona = ?"
     else:
-        where = "WHERE per.nro_doc = ?"
+        placeholders = ",".join(["?"] * n)
+        where_clause = f"WHERE per.id_persona IN ({placeholders})"
+    return f"""
+        SELECT
+            per.id_persona AS id,
+            per.nro_doc,
+            TRIM(per.nombre_per) AS nombre,
+            TRIM(per.apellido)   AS apellido,
+        FROM v_personas per
+        {where_clause} 
+    """
 
+
+def query_paciente_from_dni() -> str:
     return f"""
         SELECT
             per.id_persona AS id,
@@ -202,11 +213,16 @@ def query_paciente(id: bool) -> str:
             per.numero_dec AS numero_calle
         FROM v_personas per
         LEFT JOIN v_calles calle ON calle.cod_calle = per.cod_calle_dec
-        {where}
+        WHERE per.nro_doc = ?
     """
 
 
 def query_profesional_from_id () -> str:
+    if n == 1:
+        where_clause = "WHERE p.idpersonal = ?"
+    else:
+        placeholders = ",".join(["?"] * n)
+        where_clause = f"WHERE p.idpersonal IN ({placeholders})"
     return """
     SELECT DISTINCT
         p.idpersonal AS id,

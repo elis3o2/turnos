@@ -13,7 +13,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import type { Setter, AlertSeverity } from "../../../common/types";
 import Confirmacion from "./Confirmacion";
 
-type FieldName = "confirmacion" | "reprogramacion" | "cancelacion" | "recordatorio";
+type FieldName = "asignacion" | "reprogramacion" | "cancelacion" | "recordatorio";
 
 type Props = {
   open: boolean;
@@ -158,8 +158,8 @@ const updateCache = (esp: EfeSerEspPlantillaExtend, field: FieldName, value: 0 |
         <Tooltip title="Prender confirmación (todas)">
           <span>
             <IconButton
-              aria-label="prender-confirmacion"
-              onClick={() => handleFieldToggleAll("confirmacion", 1)}
+              aria-label="prender-asignacion"
+              onClick={() => handleFieldToggleAll("asignacion", 1)}
               disabled={loadingField !== null}
             >
               <CheckCircleIcon sx={{ color: "success.main" }} />
@@ -169,8 +169,8 @@ const updateCache = (esp: EfeSerEspPlantillaExtend, field: FieldName, value: 0 |
         <Tooltip title="Apagar confirmación (todas)">
           <span>
             <IconButton
-              aria-label="apagar-confirmacion"
-              onClick={() => handleFieldToggleAll("confirmacion", 0)}
+              aria-label="apagar-asignacion"
+              onClick={() => handleFieldToggleAll("asignacion", 0)}
               disabled={loadingField !== null}
             >
               <CheckCircleIcon sx={{ color: "grey.500" }} />

@@ -1116,7 +1116,7 @@ INSERT INTO efe_ser_esp(id, id_efector, id_servicio, id_especialidad) VALUES
 (1390,       231,    9,        10);
 
 
-INSERT INTO efe_ser_esp_plantilla (id_efe_ser_esp, confirmacion,
+INSERT INTO efe_ser_esp_plantilla (id_efe_ser_esp, asignacion,
 reprogramacion, cancelacion, recordatorio) VALUES
 (1456, 0, 0, 0, 0),
 (1474, 0, 0, 0, 0),

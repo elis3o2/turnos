@@ -68,7 +68,7 @@ class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
         queryset = (
             queryset.select_related(
                 "efe_ser_esp",
-                "plantilla_conf",
+                "plantilla_asig",
                 "plantilla_repr",
                 "plantilla_canc",
                 "plantilla_reco",

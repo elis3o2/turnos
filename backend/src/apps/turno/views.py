@@ -83,7 +83,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
             recordatorios=Coalesce(Sum('msj_recordatorio'), 0),
             cancelaciones=Coalesce(Sum('msj_cancelado'), 0),
             reprogramaciones=Coalesce(Sum('msj_reprogramado'), 0),
-            confirmaciones=Coalesce(Sum('msj_confirmado'), 0),
+            confirmaciones=Coalesce(Sum('msj_asignado'), 0),
         )
 
         # Asegurarnos de devolver enteros (Coalesce ya lo hace, pero por seguridad)
