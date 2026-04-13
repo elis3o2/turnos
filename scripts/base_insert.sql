@@ -76,7 +76,7 @@ INSERT INTO estado_turno_paciente (id, nombre) VALUES
 (-1, 'FALLIDO'),
 (0, 'SIN DATOS'),
 (1, 'CONFIRMADO'),
-(2, 'CANCELADO'),
+(2, 'RECHAZADO'),
 (3, 'PERSONA INCORRECTA'),
 (4, 'SIN RESPUESTA');
 
