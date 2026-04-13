@@ -17,12 +17,4 @@ def crear_usuario(username, password, dni, efector_id):
     return user
 
 
-crear_usuario('bazet', 'bazet', '4vaff', 39)
-crear_usuario('flores', 'flores', 'fllo', 33)
-crear_usuario('lepratti', 'lepratti', 'adsvds', 93)
-crear_usuario('parquesur', 'parquesur', 'bfdcas', 42)
-crear_usuario('sanmartina', 'sanmartina', 'dsvscx', 43)
-crear_usuario('20dejunio', '20dejunio', 'dxcd', 40)
-crear_usuario('mangrullo', 'mangrullo', 'vdc', 48)
-crear_usuario('naranjo', 'naranjo', 'vsdc', 36)
-crear_usuario('matheu', 'matheu', 'vsdfdfc', 37)
+crear_usuario('staffieri', 'staffieri',9674474, 21 )

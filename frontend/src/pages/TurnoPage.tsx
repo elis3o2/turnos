@@ -31,7 +31,7 @@ import type { KeyNLabel } from "../common/types";
 import { AlertaComponent } from "../features/turno/components/AlertComponent";
 import { TableComponent } from "../common/components/TableComponent";
 import { ColumnSelector } from "../common/components/ColumnSelector";
-import { EfectorForm } from "../features/efector/components/EfectorForm";
+import { EfectorListForm } from "../features/efector/components/EfectorListForm";
 import type { Mensaje } from "../features/mensaje/types";
 import { DateTimeStack } from "../common/components/DateTimeStack";
 import { DateStack } from "../common/components/DateStack";
@@ -431,7 +431,7 @@ export default function TurnosPage() {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
             {efectores ? (
-              <EfectorForm
+              <EfectorListForm
                 efectores={efectores}
                 selectedEfectores={selectedEfectores}
                 setSelectedEfectores={setSelectedEfectores}
