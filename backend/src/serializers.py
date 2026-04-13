@@ -395,7 +395,7 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
     msj_asignado = serializers.IntegerField(read_only=True, allow_null=True)
     msj_cancelado = serializers.IntegerField(read_only=True, allow_null=True)
     msj_reprogramado = serializers.IntegerField(read_only=True, allow_null=True)
-    fecha_estado_paciente = serializers.SerializerMethodField()
+
     # Campos extra desde Informix
     paciente_nombre = serializers.CharField(read_only=True, allow_null=True)
     paciente_apellido = serializers.CharField(read_only=True, allow_null=True)
@@ -460,29 +460,6 @@ class TurnoMergedSerializer(serializers.ModelSerializer):
         with ThreadPoolExecutor(max_workers=10) as executor:
             dic = list(executor.map(self.procesar_mensaje, mensajes))
         return dic
-    
-    def get_fecha_estado_paciente(self, obj):
-        flow_ids = TurnoFlow.objects.filter(id_turno=obj.id).values_list("id_flow", flat=True)
-
-        # usar obj.id_estado_id (atributo del modelo Turno)
-        if obj.id_estado_id in (1, 2):
-            flow = (
-                Flow.objects.filter(id__in=flow_ids, id_plantilla_flow=1)
-                .order_by("fecha_cierre")
-                .first()
-            )
-            return flow.fecha_cierre if flow else None
-
-        flow = (
-            Flow.objects.filter(id__in=flow_ids, id_plantilla_flow=1)
-            .order_by("fecha_inicio")
-            .first()
-        )
-        return flow.fecha_inicio if flow else None
-
-
-
-
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
