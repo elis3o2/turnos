@@ -1,5 +1,5 @@
 import http from '../../common/api/client'
-import type { Turno, TurnoExtend, TurnoMergedFilters, TurnoMergedResp} from './types';
+import type { Turno} from './types';
 import type { EstadoMsj } from '../mensaje/types';
 
 export const getTurnosAll = (
@@ -92,85 +92,3 @@ export const getTurnosByCombinations = async (
 };
 
 
-
-
-
-
-
-
-
-// Mantengo las funciones originales
-export const getTurnosMergedAll = (ids?: Array<string | number>): Promise<TurnoExtend[]> => {
-  if (ids && ids.length === 0) return Promise.resolve([]);
-  const url = 'turnos-merged-all-list/';
-  if (!ids) return http.get<TurnoExtend[]>(url).then(res => res.data);
-
-  const idsCsv = ids.map(String).map(encodeURIComponent).join(',');
-  return http.get<TurnoExtend[]>(url, { params: { ids: idsCsv } }).then(res => res.data);
-};
-
-
-
-// Obtener todos los turnos con un límite de cantidad
-export const getTurnosMerged = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
-  return http.get<TurnoMergedResp>('informix/turnos-merged-all-list/', { params: filters}).then(res => res.data);
-};
-
-
-
-// Obtener todos los turnos con un límite de cantidad
-export const getTurnosMergedError = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
-  return http.get<TurnoMergedResp>('informix/turnos-merged-error/', { params: filters}).then(res => res.data);
-};
-
-
-
-export const getTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
-  return http.get<TurnoMergedResp>('informix/turnos-merged-alerta/', { params: filters }).then(res => res.data);
-};
-
-
-
-export const downloadTurnosMerged = (filters: TurnoMergedFilters): Promise<Blob> =>
-  http.get<Blob>('informix/turnos-merged-all-list/', {
-    params: { ...filters, csv: 1 },
-    responseType: 'blob',
-  }).then(res => res.data);
-
-export const downloadTurnosMergedError = (filters: TurnoMergedFilters): Promise<Blob> =>
-  http.get<Blob>('informix/turnos-merged-error/', {
-    params: { ...filters, csv: 1 },
-    responseType: 'blob',
-  }).then(res => res.data);
-
-export const downloadTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<Blob> =>
-  http.get<Blob>('informix/turnos-merged-alerta/', {
-    params: { ...filters, csv: 1 },
-    responseType: 'blob',
-  }).then(res => res.data);
-
-
-
-export const getTurnosByIds = (ids: Array<string | number>): Promise<TurnoExtend[]> => {
-  return getTurnosMergedAll(ids);
-};
-
-
-
-
-export const getHistoricoTurno = (id:number) => {
-  return http.get(`turno/get_historico/?id=${id}`).then(res => res.data);
-}
-
-
-
-
-
-
-
-export const getEstadomsj = (id: number, id_mensaje: string, numero: string) => {
-  return http.post('turno/get_last_ack/', { id, id_mensaje, numero });
-};
-export const getSignificado = async (id: number): Promise<EstadoMsj> => {
-  return await http.get<EstadoMsj>(`turno/turno/estado_msj/${id}/`).then(res => res.data);
-};

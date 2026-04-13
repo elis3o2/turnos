@@ -156,6 +156,7 @@ function LookPaciente({ paciente, setPaciente,  setFinishPaciente }: LookPacient
                     sx={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
                   >
                     <ListItemText
+                      disableTypography
                       primary={
                         <Box sx={{ display: "flex", gap: 1, alignItems: "baseline", flexWrap: "wrap" }}>
                           <Typography variant="subtitle2">

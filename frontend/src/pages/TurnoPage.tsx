@@ -24,9 +24,9 @@ import { AuthContext } from "../common/contex";
 import { getServiciosByEfector } from "../features/efector/api";
 import { getTurnosMerged, getTurnosMergedAlerta, getTurnosMergedError,  downloadTurnosMerged,
   downloadTurnosMergedError,
-  downloadTurnosMergedAlerta,} from "../features/turno/api";
+  downloadTurnosMergedAlerta,} from "../features/informix/api";
 
-import type { TurnoMerged, TurnoMergedFilters } from "../features/turno/types";
+import type { TurnoMerged, TurnoMergedFilters } from "../features/informix/types";
 import type { KeyNLabel } from "../common/types";
 import { AlertaComponent } from "../features/turno/components/AlertComponent";
 import { TableComponent } from "../common/components/TableComponent";

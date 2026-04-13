@@ -12,9 +12,9 @@ import json
 
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
-from .serializers import TurnoMergedSerializer
+from .serializers import TurnoMergedSerializer, HistoricoPacienteSerializer, PacienteSerializer
 from src.permissions import ReadOnly, EfectorPermission
-from src.utils.querys_informix import query_turnos, query_eliminado
+from src.utils.querys_informix import query_turnos, query_eliminado, query_turno_historico_paciente
 from src.utils.utils import fetch_paciente
 from rest_framework.views import APIView
 from .utils import (safe_int, get_params ,parse_int_list, asig_dic, setear_pac, setear_prof)
@@ -28,7 +28,7 @@ TIPOS_MENSAJE = ("ASIGNACION", "CANCELACION", "REPROGRAMACION", "RECORDATORIO")
 # ---------- API para búsquedas NO por id (retorna listas) ----------
 class GetPacienteAPIView(APIView):
     def get(self, request) -> Response:
-        dni        = request.query_params.get("dni")
+        dni = request.query_params.get("dni")
 
         try:
             if not dni:
@@ -87,7 +87,7 @@ class GetProfesionalAPIView(APIView):
 
 class BaseTurnosMerged(GenericAPIView):
     serializer_class = TurnoMergedSerializer
-    permission_classes = [ReadOnly, EfectorPermission]
+    permission_classes = [EfectorPermission]
 
     efector_field = "efe_ser_esp__efector"
 
@@ -491,6 +491,8 @@ class TurnosAlertasAPIView(BaseTurnosMerged):
             return qs
 
         return self.run_pipeline(request, build_qs, csv_filename=f"turnos_alertas_{tipo}.csv")
+
+
 
 
 

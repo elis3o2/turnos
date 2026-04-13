@@ -10,6 +10,6 @@ urlpatterns = [
     path('turnos-merged-error/', GetIncorrectoAPIView.as_view(), name='turnos-merged-error'), 
     path('get_paciente/', GetPacienteAPIView.as_view(), name='get_paciente'),
     path('get_profesional/', GetProfesionalAPIView.as_view(), name='get_profesional'),
-    path('get_historico/', HistoricoPaciente.as_view(), name='get_historico')
+    path('get_historico/', HistoricoPaciente.as_view(), name='get_historico'),
 ]    
     
