@@ -265,7 +265,7 @@ def verificar_turnos() -> None:
 
 SEND_TIME = time(10, 30)
 BATCH_SIZE = 5
-BATCH_WINDOW_SECONDS = 720
+BATCH_WINDOW_SECONDS = 900
 @shared_task
 def programar_recordatorios() -> None:
     print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")
@@ -494,7 +494,7 @@ def send_reminder_task(
                     raise self.retry(eta=eta)
                 return
 
-            #url = token_url(turno.id)
+            url = token_url(turno.id)
             # 📩 armar mensaje
             datos_plantilla = {
                 "nompac": nom_pac or "",
@@ -513,7 +513,7 @@ def send_reminder_task(
                 "coordy": coordy or "",
                 "tel_efe": tel_efe or "",
                 "calle_nom": calle_nom or "",
-                # "url": url
+                "url": url
             }
 
             mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
@@ -531,12 +531,17 @@ def send_reminder_task(
                     fecha=fecha,
                     sesion=ins
                 )
-            nown = datetime.now()
+            
             if ack >= 0:
                 turno.msj_recordatorio = 1
-                # turno.id_estado_paciente_id = 4
-                #turno.fecha_estado_paciente = nown
-                turno.save(update_fields=["msj_recordatorio", "id_estado_paciente"  ]) #, "fecha_estado_paciente"])
+                turno.save(update_fields=["msj_recordatorio" ]) 
+
+                # CIRUGIA GENERAL
+                if int(id_efector) == 1 and int(id_servicio) == 85 and int(id_servicio) == 112:
+                    nown = datetime.now()
+                    turno.id_estado_paciente_id = 4
+                    turno.fecha_estado_paciente = nown
+                    turno.save(update_fields=["id_estado_paciente", "fecha_estado_paciente"])
                 return
 
             if ack == -5:
