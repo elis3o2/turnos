@@ -359,7 +359,7 @@ export default function TurnosPage() {
 
   // ── render de celdas ───────────────────────────────────────────────────────
 
-  function mensajeChip(m?: Mensaje | null): JSX.Element {
+  function mensajeChip(m?: Mensaje | null) {
     if (!m) return <Typography variant="body2">—</Typography>;
 
     return (

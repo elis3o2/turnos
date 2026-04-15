@@ -194,20 +194,13 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
                 )
 
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
 
 
         instance = serializer.save(
             usuario_creacion=request.user,
             fecha_hora_creacion=timezone.now(),
+            estado_id=0
         )
-
-        serializer = self.get_serializer(data=request.data)
-
-        if not serializer.is_valid():
-            print("DATA:", request.data)
-            print("ERRORS:", serializer.errors)
-            return Response(serializer.errors, status=400)
 
         return Response(
             self.get_serializer(instance).data,

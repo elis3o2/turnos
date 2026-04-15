@@ -8,13 +8,13 @@ import {
   TextField,
   Button,
   Chip,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import { getPlantillas, getPlantillaByTipo } from "../features/mensaje/api";
 import type { Plantilla } from "../features/mensaje/types";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { updateEfectorPlantilla } from "../features/mensaje/api";
+import { AlertMessage } from "../common/components";
+import PlantillaComponent from "../features/mensaje/components/PlantillaComponent";
 
 type StateShape = {
   especialidades?: number[]; // <-- siempre IDs
@@ -47,20 +47,15 @@ const tipoToCampo: Record<string, string> = {
 };
 
 const tipoToLabel: Record<string, string> = {
-  asignacion: "Confirmación",
+  asignacion: "Asignación",
   reprogramacion: "Reprogramación",
   cancelacion: "Cancelación",
   recordatorio: "Recordatorio",
 };
 
-const tipoToColor: Record<string, string> = {
-  asignacion: "#4caf50", // verde
-  reprogramacion: "#1976d2", // azul
-  cancelacion: "#e53935", // rojo
-  recordatorio: "#fbc02d", // amarillo
-};
 
-const Plantillas: React.FC = () => {
+
+export default function Plantillas(): React.ReactElement {
   const location = useLocation();
   const state = (location.state as StateShape) ?? {};
   const especialidadesIds = state.especialidades ?? [];
@@ -251,80 +246,21 @@ const Plantillas: React.FC = () => {
         </>
       ) : (
         <>
-
           <Grid container spacing={2}>
-            {tipoKeys.map((t) => {
-              const items = grouped[t] ?? [];
-
-              return (
-                <Grid item xs={12} sm={6} md={3} key={t}>
-                  <Box sx={{ mb: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Chip
-                      label={tipoToLabel[t]}
-                      sx={{
-                        backgroundColor: tipoToColor[t],
-                        color: t === "recordatorio" ? "rgba(0,0,0,0.87)" : "#fff",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        px: 2,
-                      }}
-                    />
-
-                  </Box>
-
-                  <Grid container spacing={2}>
-                    {items.length === 0 ? (
-                      <Grid item xs={12}>
-                        <Typography variant="body2">No hay plantillas para {tipoToLabel[t]}</Typography>
-                      </Grid>
-                    ) : (
-                      items.map((plantilla: any) => (
-                        <Grid item xs={12} key={plantilla.id || plantilla.id_msj}>
-                          <Card
-                            sx={{
-                              borderRadius: 3,
-                              border: "2px solid rgba(0,0,0,0.12)",
-                              boxShadow: 3,
-                              display: "flex",
-                              p: 2,
-                              minHeight: 120,
-                              justifyContent: "center",
-                              alignItems: "center",
-                              transition: "transform 0.2s",
-                              "&:hover": { transform: "scale(1.02)", boxShadow: 6 },
-                              flexDirection: "column",
-                            }}
-                          >
-                            <CardContent>
-                              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
-                                {plantilla.contenido}
-                              </Typography>
-                            </CardContent>
-                          </Card>
-                        </Grid>
-                      ))
-                    )}
-                  </Grid>
-                </Grid>
-              );
-            })}
+          {tipoKeys.map((t) => (
+            <PlantillaComponent key={t} items={grouped[t] ?? []} />
+          ))}
           </Grid>
         </>
       )}
 
-      {/* Snackbar + Alert para notificaciones */}
-      <Snackbar
+      <AlertMessage
         open={alertOpen}
-        autoHideDuration={4000}
-        onClose={() => setAlertOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setAlertOpen(false)} severity={alertSeverity} sx={{ width: "100%" }}>
-          {alertMsg}
-        </Alert>
-      </Snackbar>
+        handleClose={() => setAlertOpen(false)}
+        message={alertMsg}
+        severity={alertSeverity}
+        />
     </Box>
   );
 };
 
-export default Plantillas;

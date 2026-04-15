@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {Box, Typography, Button, CircularProgress, Divider, Paper, 
       IconButton, Stack, FormControl, FormLabel, RadioGroup,
-       FormControlLabel, Radio, Chip, Snackbar, Alert } from "@mui/material";
+       FormControlLabel, Radio, Chip } from "@mui/material";
 import { postTurnoEspera } from "../features/turno_espera/api";
 
 import type { Efector, EfeSerEspCompleto } from "../features/efector/types";
@@ -14,6 +14,7 @@ import LookEfeSerEsp from "../features/turno_espera/components/LookEfeSerEsp";
 import LookEstudioRequerido from "../features/turno_espera/components/LookEstudioRequerido";
 import type { EstudioRequerido } from "../features/turno_espera/types";
 import CloseIcon from "@mui/icons-material/Close";
+import { AlertMessage } from "../common/components";
 
 type AlertSeverity = "success" | "info" | "warning" | "error";
 
@@ -53,7 +54,6 @@ export default function AddEspera(): React.ReactElement {
   const [alertMsg, setAlertMsg] = useState<string>("");
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>("info");
 
-  // NUEVO: estado para bloquear el botón y evitar doble click
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -420,16 +420,12 @@ export default function AddEspera(): React.ReactElement {
       )}
 
       {/* Snackbar / Alert global */}
-      <Snackbar
+      <AlertMessage
         open={alertOpen}
-        autoHideDuration={4000}
-        onClose={() => setAlertOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={() => setAlertOpen(false)} severity={alertSeverity} sx={{ width: "100%" }}>
-          {alertMsg}
-        </Alert>
-      </Snackbar>
+        handleClose={() => setAlertOpen(false)}
+        message={alertMsg}
+        severity={alertSeverity}
+        />
     </Box>
   );
 }

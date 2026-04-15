@@ -37,9 +37,9 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
 
     paciente = serializers.SerializerMethodField()
     profesional_solicitante = serializers.SerializerMethodField()
-
+    fecha_hora_creacion = serializers.DateTimeField(read_only=True)
     # ---------- ESCRITURA ----------
-    id_estado = serializers.PrimaryKeyRelatedField(source="estado", queryset=EstadoTurnoEspera.objects.all(), write_only=True)
+    id_estado = serializers.PrimaryKeyRelatedField(source="estado", required=False, queryset=EstadoTurnoEspera.objects.all(), write_only=True)
     id_efector_solicitante = serializers.PrimaryKeyRelatedField(source="efector_solicitante", queryset=Efector.objects.all(), write_only=True)
     id_efe_ser_esp = serializers.PrimaryKeyRelatedField(source="efe_ser_esp", queryset=EfeSerEsp.objects.all(), write_only=True)
     ids_estudios_requerido = serializers.PrimaryKeyRelatedField(many=True, queryset=EstudioRequerido.objects.all(), source="estudios_requerido", write_only=True, required=False)
