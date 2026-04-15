@@ -40,7 +40,7 @@ class EfeSerEspEfectorSerializer(serializers.ModelSerializer):
 
 class EfeSerEspDetailSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
-    efector = EfectorSerializer(source='efector', read_only=True)
+    efector = EfectorSerializer(read_only=True)
     servicio = ServicioSerializer(source='ser_esp.servicio', read_only=True)
     especialidad = EspecialidadSerializer(source='ser_esp.especialidad', read_only=True)
     class Meta:

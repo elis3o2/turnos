@@ -11,24 +11,25 @@ import {
 } from "../features/turno_espera/api";
 import {
   Box, Select, MenuItem, FormControl, InputLabel, CircularProgress,
-  Typography, Paper, Stack, Button, GridLegacy as Grid, Tooltip, Chip,
+  Typography, Paper, Stack, Button, GridLegacy as Grid
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { AlertMessage } from "../common/components";
-import DetalleTurnoDialog from "../features/turno_espera/components/DetalleTurnoDialog"; // ajustá el path
+import DetalleTurno from "../features/turno_espera/components/DetalleTurno"
+import { EfectorForm } from "../features/efector/components/EfectorForm";
 import type { KeyNLabel } from "../common/types";
-
+import ListaEsperaComponent from "../features/turno_espera/components/ListaEsperaComponent"
+import type { SelectChangeEvent } from "@mui/material";
 type SortBy = "priority" | "dias";
 type AlertSeverity = "success" | "info" | "warning" | "error";
 
 export default function ListaEspera(): React.ReactElement {
-  const { efectores } = useContext(AuthContext) as { efectores?: KeyNLabel[] };
+  const { efectores } = useContext(AuthContext) as { efectores: KeyNLabel[] };
   const [selectedEfector, setSelectedEfector] = useState<Efector | null>(null);
   const [selectedEspecialidad, setSelectedEspecialidad] = useState<number | null>(null);
 
   const [turnos, setTurnos] = useState<TurnoEspera[]>([]);
   const [loading, setLoading] = useState(false);
-  const [_, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const [derivaciones, setDerivaciones] = useState<Efector[]>([]);
   const [selectedDerivacion, setSelectedDerivacion] = useState<Efector | null>(null);
@@ -114,46 +115,6 @@ export default function ListaEspera(): React.ReactElement {
   const isRemoving = (id?: number | null) =>
     id != null && removingIds.includes(id);
 
-  const priorityColor = (p: number) => {
-    if (p === 0) return "#EF4444";
-    if (p === 1) return "#F59E0B";
-    if (p === 2) return "#0baf26ff";
-  };
-
-  const diasEnEsperaNumber = (t: TurnoEspera): number => {
-    try {
-      const fecha = new Date(t.fecha_hora_creacion);
-      const fechaMid = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()).getTime();
-      const today = new Date();
-      const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-      const days = Math.floor((todayMid - fechaMid) / (1000 * 60 * 60 * 24));
-      return days >= 0 ? days : 0;
-    } catch {
-      return 0;
-    }
-  };
-
-  const diasEnEsperaLabel = (t: TurnoEspera) => `${diasEnEsperaNumber(t)} días`;
-
-  const pacienteLabel = (t: TurnoEspera) => {
-    const p = t.paciente;
-    const apellido = p?.apellido ?? "";
-    const nombre = p?.nombre ?? "";
-    const dni = p?.nro_doc ?? null;
-    if (apellido || nombre) {
-      const base = `${apellido}${apellido && nombre ? ", " : ""}${nombre}`;
-      return dni ? `${base} · DNI: ${dni}` : base;
-    }
-    return dni ? `Paciente · DNI: ${dni}` : "Paciente sin datos";
-  };
-
-  const medicoSolicitanteLabel = (t: TurnoEspera) => {
-    const apellido = t.profesional_solicitante?.apellido ?? "";
-    const nombre = t.profesional_solicitante?.nombre ?? "";
-    if (apellido || nombre)
-      return `${apellido}${apellido && nombre ? ", " : ""}${nombre}`;
-    return "No registrado";
-  };
 
   // ── acciones ───────────────────────────────────────────────────────────────
 
@@ -255,46 +216,35 @@ export default function ListaEspera(): React.ReactElement {
 
   const visibleTurnos = useMemo(() => {
     let arr = [...turnos];
+
     if (selectedEspecialidad !== null) {
       arr = arr.filter((t) => t.especialidad.id === selectedEspecialidad);
     }
+
     if (sortBy === "priority") {
       arr.sort((a, b) => {
-        const pa = a.prioridad ?? 99, pb = b.prioridad ?? 99;
+        const pa = a.prioridad ?? 99;
+        const pb = b.prioridad ?? 99;
+
         if (pa !== pb) return pa - pb;
-        return Number(a.fecha_hora_creacion) - Number(b.fecha_hora_creacion);
+
+        // desempate por fecha (más viejo primero)
+        return a.fecha_hora_creacion.localeCompare(b.fecha_hora_creacion);
       });
     } else {
       arr.sort((a, b) => {
-        const da = diasEnEsperaNumber(a), db = diasEnEsperaNumber(b);
-        if (db !== da) return db - da;
+        // más viejo primero = más días en espera
+        if (a.fecha_hora_creacion !== b.fecha_hora_creacion) {
+          return a.fecha_hora_creacion.localeCompare(b.fecha_hora_creacion);
+        }
+
+        // desempate por prioridad
         return (a.prioridad ?? 99) - (b.prioridad ?? 99);
       });
     }
+
     return arr;
   }, [turnos, selectedEspecialidad, sortBy]);
-
-  // ── tooltip ────────────────────────────────────────────────────────────────
-
-  const tooltipContent = (t: TurnoEspera) => {
-    const p = t.paciente ?? {};
-    return (
-      <Box sx={{ maxWidth: 320 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          {p.apellido ?? ""}{p.apellido && p.nombre ? ", " : ""}{p.nombre ?? ""}
-        </Typography>
-        <Typography variant="caption" display="block">DNI: {p.nro_doc ?? "-"}</Typography>
-        <Typography variant="caption" display="block">Servicio: {t.servicio.nombre}</Typography>
-        <Typography variant="caption" display="block">Especialidad: {t.especialidad.nombre}</Typography>
-        <Typography variant="caption" display="block">Solicitado por: {medicoSolicitanteLabel(t)}</Typography>
-        <Typography variant="caption" display="block">Desde: {t.efector_solicitante.nombre}</Typography>
-        {t.cupo && (
-          <Typography variant="caption" display="block">A: {t.efector.nombre}</Typography>
-        )}
-      </Box>
-    );
-  };
-
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -315,38 +265,23 @@ export default function ListaEspera(): React.ReactElement {
           </Button>
         </Box>
       </Box>
-
       {/* Filtros */}
       <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
         <Grid item xs={12} sm={4} md={3}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>Efector</InputLabel>
-            <Select
-              value={selectedEfector?.id ?? ""}
-              label="Efector"
-              onChange={(e) => {
-                const ef = efectores?.find((x) => x.key === Number(e.target.value)) ?? null;
-                setSelectedEfector(ef);
-              }}
-            >
-              {efectores?.length ? (
-                efectores.map((ef) => (
-                  <MenuItem key={ef.key} value={ef.key}>{ef.label ?? `Efector ${ef.key}`}</MenuItem>
-                ))
-              ) : (
-                <MenuItem value="">(sin efectores)</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          <EfectorForm
+            efectores={efectores}
+            selectedEfector={selectedEfector}
+            setSelectedEfector={setSelectedEfector}>
+          </EfectorForm>
         </Grid>
 
         <Grid item xs={12} sm={4} md={3}>
           <FormControl size="small" fullWidth>
             <InputLabel>Especialidad</InputLabel>
             <Select
-              value={selectedEspecialidad ?? ""}
+              value={selectedEspecialidad ? String(selectedEspecialidad) : ""}
               label="Especialidad"
-              onChange={(e) =>
+              onChange={(e: SelectChangeEvent) =>
                 setSelectedEspecialidad(e.target.value === "" ? null : Number(e.target.value))
               }
             >
@@ -376,9 +311,9 @@ export default function ListaEspera(): React.ReactElement {
           <FormControl size="small" fullWidth>
             <InputLabel>Derivación</InputLabel>
             <Select
-              value={selectedDerivacion?.id ?? ""}
+              value={selectedDerivacion ? String(selectedDerivacion.id) : ""}
               label="Derivación"
-              onChange={(e) => {
+              onChange={(e: SelectChangeEvent) => {
                 const val = e.target.value;
                 setSelectedDerivacion(
                   val === "" ? null : derivaciones.find((x) => x.id === Number(val)) ?? null
@@ -402,7 +337,7 @@ export default function ListaEspera(): React.ReactElement {
             <Typography variant="body2">Cargando...</Typography>
           </Stack>
         ) : selectedEfector ? (
-          <Typography variant="body2">{visibleTurnos.length} turno(s) visibles</Typography>
+          <Typography variant="body2">{visibleTurnos.length} turnos visibles</Typography>
         ) : (
           <Typography variant="body2" color="text.secondary">Seleccione un efector</Typography>
         )}
@@ -417,57 +352,13 @@ export default function ListaEspera(): React.ReactElement {
         <Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
           <Typography color="text.secondary">No hay turnos que coincidan con los filtros.</Typography>
         </Paper>
-      ) : (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {visibleTurnos.map((t) => {
-            const bg = priorityColor(t.prioridad ?? 0);
-            return (
-              <Tooltip key={t.id} title={tooltipContent(t)} placement="top" arrow>
-                <Paper
-                  variant="outlined"
-                  sx={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-                    overflow: "hidden", px: 1.5, height: 72, cursor: "pointer" }}
-                  onClick={() => handleOpenDialog(t)}
-                  role="button" tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenDialog(t); }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center", width: "100%", gap: 2 }}>
-                    <Box sx={{ width: 10, height: 52, backgroundColor: bg, borderRadius: 1,
-                      flexShrink: 0, boxShadow: "0 1px 2px rgba(0,0,0,0.08)" }} aria-hidden />
-                    <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                      <Typography variant="body2"
-                        sx={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {pacienteLabel(t)}
-                      </Typography>
-                      <Typography variant="caption"
-                        sx={{ color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {t.servicio.nombre} · {t.especialidad.nombre}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ ml: 2, textAlign: "right", minWidth: 88, display: "flex",
-                    flexDirection: "column", alignItems: "flex-end", gap: 0.5 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      {t.cupo && (
-                        <Chip label="CUPO" size="small"
-                          sx={{ fontWeight: 700, height: 20, lineHeight: "20px", px: 0.7 }} />
-                      )}
-                      <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
-                        {diasEnEsperaLabel(t)}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" sx={{ color: "text.secondary" }}>Espera</Typography>
-                  </Box>
-                </Paper>
-              </Tooltip>
-            );
-          })}
-        </Box>
-      )}
+      ) : <ListaEsperaComponent
+          visibleTurnos={visibleTurnos}
+          handleOpenDialog={handleOpenDialog}
+        />}
 
       {/* Dialog modularizado */}
-      <DetalleTurnoDialog
+      <DetalleTurno
         activeTurno={activeTurno}
         openDialog={openDialog}
         handleCloseDialog={handleCloseDialog}

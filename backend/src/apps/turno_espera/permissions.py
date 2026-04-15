@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission,  SAFE_METHODS
 from src.permissions import is_administrativo
 
 class TurnoEsperaCreateUpdatePermission(BasePermission):
@@ -14,15 +14,16 @@ class TurnoEsperaCreateUpdatePermission(BasePermission):
         if request.method != "POST":
             return True
 
-        if not is_administrativo(self.user):
+        if not is_administrativo(request.user):
             return False
 
-        efector_solicitante = request.data.get("efector_solicitante")
+        id_efector_solicitante = request.data.get("id_efector_solicitante")
+        print("EFECTOR SOLICITANTE:", id_efector_solicitante)
 
-        if not efector_solicitante:
+        if not id_efector_solicitante:
             return False
 
-        return int(efector_solicitante) in self._efectores_usuario(request)
+        return int(id_efector_solicitante) in self._efectores_usuario(request)
 
     def has_object_permission(self, request, view, obj):
 

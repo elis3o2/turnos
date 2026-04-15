@@ -13,10 +13,10 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.db import connections, DatabaseError
 from datetime import timedelta, datetime, date, time
-from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente_from_dni, query_paciente_from_id
+from .querys_informix import query_profesional_from_id,query_profesional_from_nombre, query_paciente_from_dni, query_paciente_from_id, query_paciente_from_id_extend
 from zoneinfo import ZoneInfo
 from typing import Any
-
+from decimal import Decimal
 
 Row = dict[str, Any]
 TZ = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -328,12 +328,28 @@ def format_plantilla(contenido: str, valores) -> str:
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
 
-def _rows_to_dicts(cur) -> list[Row]:
-    rows = cur.fetchall()
-    if not rows:
-        return []
-    cols = [str(c[0]).lower() for c in (cur.description or [])]
-    return [{cols[i]: r[i] for i in range(len(r))} for r in rows]
+def normalize(val):
+    if val is None:
+        return None
+    if isinstance(val, (int, float, bool)):
+        return val
+    if isinstance(val, Decimal):
+        return float(val)
+    if isinstance(val, (date, datetime)):
+        return val.isoformat()
+    return str(val)  
+
+def _rows_to_dicts(cursor):
+    columns = [str(col[0]).lower() for col in cursor.description]
+
+    results = []
+    for row in cursor.fetchall():
+        item = {}
+        for col, val in zip(columns, row):
+            item[col] = normalize(val)
+        results.append(item)
+    
+    return results
 
 
 
@@ -343,11 +359,15 @@ def _rows_to_dicts(cur) -> list[Row]:
 def fetch_paciente(
     ids: list[int] | None = None,
     dni: str | None = None,
+    ext: bool = False
 ) -> list[Row]:
     if ids is not None:
         if not ids:
             return []
-        query  = query_paciente_from_id(len(ids))
+        if ext:
+            query = query_paciente_from_id_extend(len(ids))
+        else:
+            query  = query_paciente_from_id(len(ids))
         params = tuple(ids)
 
     elif dni is not None:

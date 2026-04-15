@@ -12,10 +12,10 @@ import json
 
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
-from .serializers import TurnoMergedSerializer, HistoricoPacienteSerializer, PacienteSerializer
+from .serializers import TurnoMergedSerializer, HistoricoPacienteSerializer, PacienteSerializer, ProfesionalSerializer
 from src.permissions import ReadOnly, EfectorPermission
 from src.utils.querys_informix import query_turnos, query_eliminado, query_turno_historico_paciente
-from src.utils.utils import fetch_paciente
+from src.utils.utils import fetch_paciente, fetch_profesional
 from rest_framework.views import APIView
 from .utils import (safe_int, get_params ,parse_int_list, asig_dic, setear_pac, setear_prof)
 from .services import procesar_mensaje

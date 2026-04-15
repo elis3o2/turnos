@@ -197,6 +197,30 @@ def query_paciente_from_id(n: int) -> str:
         {where_clause} 
     """
 
+def query_paciente_from_id_extend(n: int) -> str:
+    if n == 1:
+        where_clause = "WHERE per.id_persona = ?"
+    else:
+        placeholders = ",".join(["?"] * n)
+        where_clause = f"WHERE per.id_persona IN ({placeholders})"
+    return f"""
+        SELECT
+            per.id_persona AS id,
+            per.nro_doc,
+            TRIM(per.nombre_per) AS nombre,
+            TRIM(per.apellido)   AS apellido,
+            per.carac_telef,
+            per.nro_telef,
+            per.fe_naci AS fecha_nacimiento,
+            per.sexo,
+            TRIM(calle.nom_calle) AS nombre_calle,
+            per.numero_dec AS numero_calle
+        FROM v_personas per
+        LEFT JOIN v_calles calle ON calle.cod_calle = per.cod_calle_dec
+        {where_clause} 
+    """
+
+
 
 def query_paciente_from_dni() -> str:
     return f"""
@@ -204,7 +228,7 @@ def query_paciente_from_dni() -> str:
             per.id_persona AS id,
             per.nro_doc,
             TRIM(per.nombre_per) AS nombre,
-            TRIM(per.apellido)    AS apellido,
+            TRIM(per.apellido)   AS apellido,
             per.carac_telef,
             per.nro_telef,
             per.fe_naci AS fecha_nacimiento,
@@ -217,19 +241,19 @@ def query_paciente_from_dni() -> str:
     """
 
 
-def query_profesional_from_id () -> str:
+def query_profesional_from_id (n: int) -> str:
     if n == 1:
         where_clause = "WHERE p.idpersonal = ?"
     else:
         placeholders = ",".join(["?"] * n)
         where_clause = f"WHERE p.idpersonal IN ({placeholders})"
-    return """
+    return f"""
     SELECT DISTINCT
         p.idpersonal AS id,
         TRIM(p.apellido) AS apellido,
         TRIM(p.nombre)   AS nombre
     FROM personal p
-    WHERE p.idpersonal = ?
+    {where_clause} 
     """
 
 def query_profesional_from_nombre (id_efe: str, nombre: str | None, apellido: str | None) -> str:

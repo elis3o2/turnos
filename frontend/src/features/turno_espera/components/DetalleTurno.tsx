@@ -95,7 +95,7 @@ function diasEnEsperaNumber(t: TurnoEspera): number {
 
 // ── componente ───────────────────────────────────────────────────────────────
 
-export default function DetalleTurnoDialog({
+export default function DetalleTurno({
   activeTurno,
   openDialog,
   handleCloseDialog,

@@ -8,6 +8,7 @@ from .serializers import (DerivaSerializer, EstudioRequeridoSerializer,
                         TurnoEsperaSerializer)
 from src.permissions import ReadOnly
 from .permissions import TurnoEsperaCreateUpdatePermission, TurnoEsperaReadPermission
+from src.utils.utils import fetch_paciente, fetch_profesional
 
 class DerivaViewSet(viewsets.ModelViewSet):
     serializer_class = DerivaSerializer
@@ -42,11 +43,12 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
     ).prefetch_related(
         "estudios_requerido"
     )
-    permission_classes = [
-        TurnoEsperaCreateUpdatePermission,
-        TurnoEsperaReadPermission,
-    ]
 
+
+    def get_permissions(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return [TurnoEsperaCreateUpdatePermission()]
+        return [TurnoEsperaReadPermission()]
     # ----------------------------------------------------
     # LISTA ESPERA
     # ----------------------------------------------------
@@ -58,13 +60,30 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
 
         if id_efector:
             queryset = queryset.filter(
-                Q(efe_ser_esp__id_efector=id_efector, cupo=False)
-                | Q(efector_solicitante=id_efector, cupo=True)
+                Q(efe_ser_esp__efector_id=id_efector, cupo=False) |
+                Q(efector_solicitante_id=id_efector, cupo=True)
             )
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        # ---- batch ids ----
+        ids_prof = list({t.id_profesional_solicitante for t in queryset if t.id_profesional_solicitante})
+        ids_pac  = list({t.id_paciente for t in queryset if t.id_paciente})
 
+        profesionales = fetch_profesional(ids=ids_prof) if ids_prof else []
+        pacientes     = fetch_paciente(ids=ids_pac, ext=True) if ids_pac else []
+
+        prof_map = {p["id"]: p for p in profesionales}
+        pac_map  = {p["id"]: p for p in pacientes}
+
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={
+                "prof_map": prof_map,
+                "pac_map": pac_map,
+            },
+        )
+
+        return Response(serializer.data)
     # ----------------------------------------------------
     # DERIVACIONES
     # ----------------------------------------------------
@@ -75,18 +94,32 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         id_deriva = request.query_params.get("id_deriva")
 
         if not id_efector or not id_deriva:
-            return Response(
-                {"detail": "Faltan datos"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "Faltan datos"}, status=400)
 
         queryset = self.get_queryset().filter(
             estado_id=0,
-            efe_ser_esp__efector=id_efector,
-            efector_solicitante=id_deriva,
+            efe_ser_esp__efector_id=id_efector,
+            efector_solicitante_id=id_deriva,
         )
 
-        serializer = self.get_serializer(queryset, many=True)
+        ids_prof = list({t.id_profesional_solicitante for t in queryset if t.id_profesional_solicitante})
+        ids_pac  = list({t.id_paciente for t in queryset if t.id_paciente})
+
+        profesionales = fetch_profesional(ids=ids_prof) if ids_prof else []
+        pacientes     = fetch_paciente(ids=ids_pac, ext=True) if ids_pac else []
+
+        prof_map = {p["id"]: p for p in profesionales}
+        pac_map  = {p["id"]: p for p in pacientes}
+
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={
+                "prof_map": prof_map,
+                "pac_map": pac_map,
+            },
+        )
+
         return Response(serializer.data)
 
     # ----------------------------------------------------
@@ -147,7 +180,7 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
 
         paciente = request.data.get("id_paciente")
-        efe_ser_esp = request.data.get("efe_ser_esp_id")
+        efe_ser_esp = request.data.get("id_efe_ser_esp")
 
         if paciente and efe_ser_esp:
             if TurnoEspera.objects.filter(
@@ -163,10 +196,18 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+
         instance = serializer.save(
             usuario_creacion=request.user,
             fecha_hora_creacion=timezone.now(),
         )
+
+        serializer = self.get_serializer(data=request.data)
+
+        if not serializer.is_valid():
+            print("DATA:", request.data)
+            print("ERRORS:", serializer.errors)
+            return Response(serializer.errors, status=400)
 
         return Response(
             self.get_serializer(instance).data,

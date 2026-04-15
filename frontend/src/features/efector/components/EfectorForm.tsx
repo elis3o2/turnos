@@ -1,40 +1,54 @@
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  ListItemText
-} from "@mui/material";
+import React from "react";
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
+import type { Efector } from "../types";
 import type { KeyNLabel } from "../../../common/types";
 
 type Props = {
   efectores: KeyNLabel[];
-  selectedEfector: number;
-  setSelectedEfector: React.Dispatch<React.SetStateAction<number[]>>;
+  selectedEfector: Efector | null;
+  setSelectedEfector: React.Dispatch<React.SetStateAction<Efector | null>>;
 };
 
-export const EfectorListForm = ({efectores, selectedEfector, setSelectedEfector}: Props) => {
+
+
+export const EfectorForm = ({
+  efectores,
+  selectedEfector,
+  setSelectedEfector,
+}: Props) => {
+  const handleChange = (e: SelectChangeEvent) => {
+    const value = e.target.value;
+    console.log(efectores)
+    if (value === "") {
+      setSelectedEfector(null);
+      return;
+    }
+
+    const ef = efectores.find((x) => x.key === Number(value)) ?? null;
+
+    setSelectedEfector(ef ? { id: ef.key, nombre: ef.label } : null);
+  };
+
   return (
-        <Grid item xs={12} sm={4} md={3}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>Efector</InputLabel>
-            <Select
-              value={selectedEfector?.id ?? ""}
-              label="Efector"
-              onChange={(e) => {
-                const ef = efectores?.find((x) => x.key === Number(e.target.value)) ?? null;
-                setSelectedEfector(ef);
-              }}
-            >
-              {efectores?.length ? (
-                efectores.map((ef) => (
-                  <MenuItem key={ef.key} value={ef.key}>{ef.label ?? `Efector ${ef.key}`}</MenuItem>
-                ))
-              ) : (
-                <MenuItem value="">(sin efectores)</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-        </Grid>
-    ;
+    <FormControl size="small" fullWidth>
+      <InputLabel id="efector-label">Efector</InputLabel>
+      <Select
+        labelId="efector-label"
+        label="Efector"
+        value={selectedEfector?.id ? String(selectedEfector.id) : ""}
+        onChange={handleChange}
+      >
+        <MenuItem value="">
+          <em>Seleccioná un efector</em>
+        </MenuItem>
+
+        {efectores.map((ef) => (
+          <MenuItem key={ef.key} value={String(ef.key)}>
+            {ef.label}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+};

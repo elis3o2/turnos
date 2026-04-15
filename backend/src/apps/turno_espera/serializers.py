@@ -28,12 +28,13 @@ class EstudioRequeridoSerializer(serializers.ModelSerializer):
 
 class TurnoEsperaSerializer(serializers.ModelSerializer):
     # ---------- LECTURA ----------
-    estado = EstadoTurnoEsperaSerializer(source="estado", read_only=True)
+    estado = EstadoTurnoEsperaSerializer(read_only=True)
     efector = EfectorSerializer(source="efe_ser_esp.efector", read_only=True)
     servicio = ServicioSerializer(source="efe_ser_esp.ser_esp.servicio", read_only=True)
     especialidad = EspecialidadSerializer(source="efe_ser_esp.ser_esp.especialidad", read_only=True)
-    efector_solicitante = EfectorSerializer(source="efector_solicitante", read_only=True)
+    efector_solicitante = EfectorSerializer(read_only=True)
     estudio_requerido = EstudioRequeridoSerializer(many=True, read_only=True)
+
     paciente = serializers.SerializerMethodField()
     profesional_solicitante = serializers.SerializerMethodField()
 
@@ -44,27 +45,43 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
     ids_estudios_requerido = serializers.PrimaryKeyRelatedField(many=True, queryset=EstudioRequerido.objects.all(), source="estudios_requerido", write_only=True, required=False)
 
     id_paciente = serializers.IntegerField(write_only=True)
-    id_profesional_solicitante = serializers.IntegerField(write_only=True,)
+    id_profesional_solicitante = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = TurnoEspera
-        fields = "__all__"
+        fields = [
+            # escritura
+            "id_estado",
+            "id_efector_solicitante",
+            "id_efe_ser_esp",
+            "ids_estudios_requerido",
+            "id_paciente",
+            "id_profesional_solicitante",
+            "prioridad",
+            "cupo",
+
+            # lectura
+            "estado",
+            "efector",
+            "servicio",
+            "especialidad",
+            "efector_solicitante",
+            "estudio_requerido",
+            "paciente",
+            "profesional_solicitante",
+
+            "id",
+            "fecha_hora_creacion",
+            "fecha_hora_cierre",
+        ]
 
     def get_paciente(self, obj):
-        return {
-            "id": obj.id_paciente.id,
-            "nombre": obj.id_paciente.nombre,
-            "apellido": obj.id_paciente.apellido,
-        }
+        pac_map = self.context.get("pac_map", {})
+        return pac_map.get(obj.id_paciente)
 
     def get_profesional_solicitante(self, obj):
-        if not obj.id_profesional_solicitante:
-            return None
-        return {
-            "id": obj.id_profesional_solicitante.id,
-            "nombre": obj.id_profesional_solicitante.nombre,
-        }
-
+        prof_map = self.context.get("prof_map", {})
+        return prof_map.get(obj.id_profesional_solicitante)
 
 
 class EstudioRequeridoSerializer(serializers.ModelSerializer):
