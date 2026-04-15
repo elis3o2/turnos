@@ -537,7 +537,7 @@ def send_reminder_task(
                 turno.save(update_fields=["msj_recordatorio" ]) 
 
                 # CIRUGIA GENERAL
-                if int(id_efector) == 1 and int(id_servicio) == 85 and int(id_servicio) == 112:
+                if int(id_efector) == 1 and int(id_servicio) == 85 and int(id_especialidad) == 112:
                     nown = datetime.now()
                     turno.id_estado_paciente_id = 4
                     turno.fecha_estado_paciente = nown
