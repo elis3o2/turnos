@@ -562,8 +562,8 @@ def create_Mensaje(
 
 
 
-def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_sisr: int) -> bool:
-    subquery = (
+def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_turno: int) -> bool:
+    turno = (
         TurnoEspera.objects
         .filter(
             id_paciente=id_pac,
@@ -571,16 +571,17 @@ def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_sisr: int) -> bool:
             id_estado_id=0
         )
         .order_by('fecha_hora_creacion')
-        .values('id')[:1]
+        .first()
     )
 
-    updated = TurnoEspera.objects.filter(id__in=subquery).update(
-        id_estado_id=1,
-        id_sisr=id_sisr,
-        fecha_hora_cierre=now()
-    )
+    if not turno:
+        return False
 
-    return updated > 0
+    turno.id_estado_id = 1  # o el estado que corresponda
+    turno.id_turno_asignado = id_turno
+    turno.save(update_fields=["id_estado_id", "id_turno_asignado"])
+
+    return True
 
 
 
