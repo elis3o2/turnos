@@ -7,9 +7,11 @@ import ListaPage from '../pages/EfectoresPage';
 import TurnosPage from '../pages/TurnoPage';
 import HistoricoPage from '../pages/HistoricoPage';
 import ListaEspera from '../pages/ListaEsperaPage';
-import AddEspera from '../pages/AddEsperaPage';
+
+
 import TurnosEsperaDashboard from '../pages/EsperaHistoricoPage';
 import Plantillas from '../pages/PlantillasPage';
+import AddEspera from '../pages/AddEsperaPage/AddEsperaPage';
 
 const AppRoutes = () => {
   return (

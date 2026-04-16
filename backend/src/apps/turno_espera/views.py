@@ -177,25 +177,25 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
     # CREATE
     # ----------------------------------------------------
 
-    def create(self, request, *args, **kwargs):
+def create(self, request, *args, **kwargs):
 
-        paciente = request.data.get("id_paciente")
-        efe_ser_esp = request.data.get("id_efe_ser_esp")
+    paciente = request.data.get("id_paciente")
+    efe_ser_esp = request.data.get("id_efe_ser_esp")
 
-        if paciente and efe_ser_esp:
-            if TurnoEspera.objects.filter(
-                id_paciente=paciente,
-                efe_ser_esp_id=efe_ser_esp,
-                estado_id=0,
-            ).exists():
-                return Response(
-                    {"detail": "Ya se encuentra el mismo turno en la lista"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+    if paciente and efe_ser_esp:
+        if TurnoEspera.objects.filter(
+            id_paciente=paciente,
+            efe_ser_esp_id=efe_ser_esp,
+            estado_id=0,
+        ).exists():
+            return Response(
+                {"detail": "Ya se encuentra el mismo turno en la lista"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        serializer = self.get_serializer(data=request.data)
+    serializer = self.get_serializer(data=request.data)
 
-
+    if serializer.is_valid():
         instance = serializer.save(
             usuario_creacion=request.user,
             fecha_hora_creacion=timezone.now(),
@@ -206,6 +206,8 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             self.get_serializer(instance).data,
             status=status.HTTP_201_CREATED,
         )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # ----------------------------------------------------
     # CERRAR TURNO
