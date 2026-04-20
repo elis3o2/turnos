@@ -721,4 +721,42 @@ def lista_espera_look(turno: Turno):
         id_estado=0,
         fecha_hora_cierre=None
     )
-    print(a)
+
+
+
+
+def liberar_turno(id: int) -> bool:
+    api_url = config('URL_LIBERAR_TURNO')
+
+    session_req = requests.Session()
+    session_req.trust_env = False  
+
+    payload = {
+        "idturno": id,
+        "clave": config('CLAVE_LIBERAR_TURNO'),
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+
+    try:
+        response = session_req.post(
+            api_url,
+            json=payload,
+            headers=headers,
+            timeout=15
+        )
+
+        # Si la API responde (aunque sea error HTTP)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("success", False)
+
+        # Si devuelve 403, 500, etc → lo tomamos como False
+        return False
+
+    except requests.RequestException:
+        # Error de red, timeout, conexión, etc
+        return False
