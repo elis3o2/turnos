@@ -1,5 +1,5 @@
 import http from '../../common/api/client'
-import type { TurnoEspera, Deriva } from './types';
+import type { TurnoEspera } from './types';
 import type { EstudioRequerido } from './types';
 
 export const getTurnoEsperaAbierto = (id: number) :Promise<TurnoEspera[]> =>{
@@ -35,5 +35,3 @@ export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Pr
 };
 
 
-export const getDerivaByEfector = (id: number) : Promise<Deriva[]> =>
-  http.get<Deriva[]>(`turno_espera/derivaciones/?id_efector=${id}`).then(res=> res.data)

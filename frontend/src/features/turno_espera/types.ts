@@ -31,11 +31,3 @@ export interface EstudioRequerido {
     id_turno_espera: number
 }
 
-export interface Deriva {
-    id: number;
-    cupo: number;
-    efector: Efector;
-    efector_deriva: Efector;
-    servicio_deriva: Servicio;
-    especialidad_deriva: Especialidad; 
-}

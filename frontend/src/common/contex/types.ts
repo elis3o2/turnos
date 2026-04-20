@@ -1,4 +1,4 @@
-import type { KeyNLabel } from "../types";
+import type { Efector } from "../../features/efector/types";
 
 export interface AuthTokens {
     access: string;
@@ -9,7 +9,7 @@ export interface InitializeAuthData {
     access: string;
     refresh: string;
     username?: string;
-    efectores?: KeyNLabel[];
+    efectores?: Efector[];
 }
 
 export interface AuthContextType {
@@ -17,7 +17,7 @@ export interface AuthContextType {
     initializeAuth: (data: InitializeAuthData) => void;
 
     username: string | null;
-    efectores: KeyNLabel[];
+    efectores: Efector[];
 
     logout: () => void;
 }

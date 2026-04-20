@@ -1,12 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Button, CircularProgress, Divider } from "@mui/material";
-import { postTurnoEspera } from "../../features/turno_espera/api";
-
-import type { Efector, EfeSerEspCompleto } from "../../features/efector/types";
-import { getEfectorById } from "../../features/efector/api";
-import type { Paciente, Profesional } from "../../features/persona/types";
-import type { EstudioRequerido } from "../../features/turno_espera/types";
 import { AlertMessage } from "../../common/components";
 import { TarjetaPrioridad } from "./components/TarjetaPrioridad";
 import { TarjetaEfector } from "./components/TarjetaEfector";
@@ -14,167 +6,29 @@ import { TarjetaPaciente } from "./components/TarjetaPaciente";
 import { TarjetaProfesional } from "./components/TarjetaProfesional";
 import { TarjetaEfeSerEsp } from "./components/TarjetaEfeSerEsp";
 import { TarjetaEstudio } from "./components/TarjetaEstudio";
-
-type AlertSeverity = "success" | "info" | "warning" | "error";
+import { useAddEspera } from "./useAddEspera";
+import { canSelectPriority, canConfirm } from "./utilsAddEspera";
+import { useEfectorIdFromUrl } from "../../features/efector/utils/getUrl";
 
 export default function AddEspera(): React.ReactElement {
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  const search = new URLSearchParams(location.search);
-  const efQuery = search.get("efector");
-  const stateEf = (location.state as number) ?? undefined;
-  const efectorId = efQuery ? Number(efQuery) : stateEf ?? null;
-  const [efector, setEfector] = useState<Efector | null>(null);
-  const [loadingEfector, setLoadingEfector] = useState(false);
-  const [errorEfector, setErrorEfector] = useState<string | null>(null);
+  const efectorId = useEfectorIdFromUrl()   // pequeño helper para leer query/state
+  const {
+    efector, loadingEfector, errorEfector,
+    paciente, setPaciente, finishPaciente, setFinishPaciente, resetPaciente,
+    profesional, setProfesional, finishProfesional, setFinishProfesional, resetProfesional,
+    efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
+    cupo, setCupo,
+    estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
+    priority, setPriority,
+    alert, setAlert,
+    submitting, showRepeatOptions,
+    handleConfirm, resetForRepeat,
+    navigate,
+  } = useAddEspera(efectorId);
 
-  const [paciente, setPaciente] = useState<Paciente | null>(null);
-  const [finishPaciente, setFinishPaciente] = useState(false);
-
-  const [profesional, setProfesional] = useState<Profesional | null>(null);
-  const [finishProfesional, setFinishProfesional] = useState(false);
-
-  const [efeSerEspSeleccionado, setEfeSerEspSeleccionado] = useState<EfeSerEspCompleto | null>(null);
-  const [finishEfeSerEsp, setFinishEfeSerEsp] = useState(false);
-
-  const [cupo, setCupo] = useState(false);
-
-  const [estudioRequerido, setEstudioRequerido] = useState<EstudioRequerido[]>([]);
-  const [finishEstudioRequerido, setFinishEstudioRequerido] = useState(false);
-
-  const [priority, setPriority] = useState<string | null>(null);
-
-  const mapPriority: Record<string, number> = { baja: 2, media: 1, alta: 0 };
-
-  const [alertOpen, setAlertOpen] = useState<boolean>(false);
-  const [alertMsg, setAlertMsg] = useState<string>("");
-  const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>("info");
-
-  const [submitting, setSubmitting] = useState<boolean>(false);
-
-  const [showRepeatOptions, setShowRepeatOptions] = useState(false);
-
-  useEffect(() => {
-    if (efectorId == null) {
-      setEfector(null);
-      return;
-    }
-    let mounted = true;
-    const load = async () => {
-      setLoadingEfector(true);
-      setErrorEfector(null);
-      try {
-        const data = await getEfectorById(efectorId);
-        if (!mounted) return;
-        setEfector(data);
-      } catch (e: unknown) {
-        const msg = (e as { message?: string })?.message ?? "Error al cargar efector";
-        if (!mounted) return;
-        setErrorEfector(msg);
-        setEfector(null);
-        setAlertMsg(msg);
-        setAlertSeverity("error");
-        setAlertOpen(true);
-      } finally {
-        if (mounted) setLoadingEfector(false);
-      }
-    };
-    load();
-    return () => { mounted = false; };
-  }, [efectorId]);
-
-  const resetPaciente = () => {
-    setPaciente(null);
-    setFinishPaciente(false);
-    setPriority(null);
-  };
-
-  const resetProfesional = () => {
-    setProfesional(null);
-    setFinishProfesional(false);
-    setPriority(null);
-  };
-
-  const resetEfeSerEsp = () => {
-    setEfeSerEspSeleccionado(null);
-    setFinishEfeSerEsp(false);
-    setPriority(null);
-    setEstudioRequerido([]);
-    setFinishEstudioRequerido(false);
-  };
-
-  const resetEstudioRequerido = () => {
-    setEstudioRequerido([]);
-    setFinishEstudioRequerido(false);
-    setPriority(null);
-  };
-
-  // Reset parcial conservando paciente y profesional ──────
-  const resetForRepeat = () => {
-    setEfeSerEspSeleccionado(null);
-    setFinishEfeSerEsp(false);
-    setEstudioRequerido([]);
-    setFinishEstudioRequerido(false);
-    setPriority(null);
-    setCupo(false);
-    setShowRepeatOptions(false);
-  };
-  // ────────────────────────────────────────────────────────────────
-
-  const canSelectPriority = Boolean(
-    (efector || efectorId) &&
-      paciente &&
-      profesional &&
-      efeSerEspSeleccionado &&
-      finishEstudioRequerido
-  );
-
-  useEffect(() => {
-    if (!canSelectPriority) setPriority(null);
-  }, [canSelectPriority]);
-
-  const canConfirm = Boolean(
-    (efector || efectorId) &&
-      paciente &&
-      profesional &&
-      efeSerEspSeleccionado &&
-      priority
-  );
-
-  const handleConfirm = async () => {
-    if (!canConfirm || submitting) return;
-    setSubmitting(true);
-    try {
-      const idEfeSerEsp = efeSerEspSeleccionado!.id;
-      const idProf = profesional!.id;
-      const idEfeSolicitante = efector ? efector.id : efectorId;
-      const prioridadNum = mapPriority[priority!];
-      const idPaciente = paciente!.id;
-      const idsEstudios = estudioRequerido.map(e => e.id);
-
-      await postTurnoEspera(idEfeSerEsp, idProf, idEfeSolicitante, idPaciente, idsEstudios, prioridadNum, cupo);
-
-      setAlertMsg("Turno en espera creado correctamente.");
-      setAlertSeverity("success");
-      setAlertOpen(true);
-
-      // Mostrar opciones en lugar de navegar automáticamente
-      setSubmitting(false);
-      setShowRepeatOptions(true);
-      // ────────────────────────────────────────────────────────────
-    } catch (err: unknown) {
-      console.error("Error creando turno en espera:", err);
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        (err as { message?: string })?.message ||
-        "Error al crear turno en espera";
-      setAlertMsg(msg);
-      setAlertSeverity("error");
-      setAlertOpen(true);
-      setSubmitting(false);
-    }
-  };
+  const selectPriority = canSelectPriority(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, finishEstudioRequerido);
+  const confirm = canConfirm(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, priority);
 
   return (
     <Box sx={{ p: 3, maxWidth: 900, mx: "auto", position: "relative" }}>
@@ -198,7 +52,7 @@ export default function AddEspera(): React.ReactElement {
         resetPaciente={resetPaciente}
       />
 
-      {finishPaciente && (
+      {finishPaciente && efectorId && (
         <TarjetaProfesional
           efectorId={efectorId}
           profesional={profesional}
@@ -233,16 +87,16 @@ export default function AddEspera(): React.ReactElement {
 
       <Divider sx={{ my: 2 }} />
 
-      {canSelectPriority && (
+      {selectPriority && (
         <TarjetaPrioridad
-          canSelectPriority={canSelectPriority}
+          canSelectPriority={selectPriority}
           priority={priority}
           setPriority={setPriority}
         />
       )}
 
       {/* ── Botones de acción ─────────────────────────────────────── */}
-      {canSelectPriority && (
+      {confirm && (
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 1 }}>
           {showRepeatOptions ? (
             <>
@@ -268,12 +122,11 @@ export default function AddEspera(): React.ReactElement {
       )}
       {/* ──────────────────────────────────────────────────────────── */}
 
-      <AlertMessage
-        open={alertOpen}
-        handleClose={() => setAlertOpen(false)}
-        message={alertMsg}
-        severity={alertSeverity}
-      />
+      <AlertMessage 
+        open={alert.open}
+        handleClose={() => setAlert(a => ({...a, open: false}))} 
+        message={alert.msg}
+        severity={alert.severity}/>
     </Box>
   );
 }

@@ -3,25 +3,11 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Deriva, EstudioRequerido, TurnoEspera
-from .serializers import (DerivaSerializer, EstudioRequeridoSerializer,
-                        TurnoEsperaSerializer)
+from .models import  EstudioRequerido, TurnoEspera
+from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer
 from src.permissions import ReadOnly
 from .permissions import TurnoEsperaCreateUpdatePermission, TurnoEsperaReadPermission
 from src.utils.utils import fetch_paciente, fetch_profesional
-
-class DerivaViewSet(viewsets.ModelViewSet):
-    serializer_class = DerivaSerializer
-    permission_classes = [ReadOnly]
-
-    def get_queryset(self):
-        queryset = Deriva.objects.all()
-        id_efector = self.request.query_params.get("id_efector")
-
-        if id_efector:
-            queryset = queryset.filter(efector=id_efector)
-
-        return queryset
 
 
 class EstudioRequeridoViewSet(viewsets.ModelViewSet):

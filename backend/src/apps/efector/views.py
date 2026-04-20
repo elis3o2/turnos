@@ -2,9 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db.models import F
-from .models import Efector, Servicio, Especialidad, EfeSerEsp
+from .models import Efector, Servicio, Especialidad, EfeSerEsp, Deriva
 from .serializers import (EfectorSerializer, ServicioSerializer, EspecialidadSerializer, 
-                        EfeSerEspDetailSerializer, EfeSerEspListSerializer,EfeSerEspEfectorSerializer)
+                        EfeSerEspDetailSerializer, EfeSerEspListSerializer,EfeSerEspEfectorSerializer, DerivaSerializer)
 from src.serializers import KeyLabelSerializer
 from src.permissions import ReadOnly
 from src.views import KeyLabelMixin
@@ -56,13 +56,13 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
         servicios = (
             queryset
             .values(
-                key=F("ser_esp__servicio_id"),
-                label=F("ser_esp__servicio__nombre"),
+                id=F("ser_esp__servicio_id"),
+                nombre=F("ser_esp__servicio__nombre"),
             )
             .distinct()
-            .order_by("label")
+            .order_by("nombre")
         )
-        serializer = KeyLabelSerializer(servicios, many=True)
+        serializer = ServicioSerializer(servicios, many=True)
         return Response(serializer.data)
 
 
@@ -171,3 +171,15 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 
 
 
+class DerivaViewSet(viewsets.ModelViewSet):
+    serializer_class = DerivaSerializer
+    permission_classes = [ReadOnly]
+
+    def get_queryset(self):
+        queryset = Deriva.objects.all()
+        id_efector = self.request.query_params.get("id_efector")
+
+        if id_efector:
+            queryset = queryset.filter(efector=id_efector)
+
+        return queryset

@@ -12,7 +12,7 @@ import type { KeySLabel } from "../types";
 
 
 type Props = {
-  columns: KeySLabel[];
+  columns: readonly KeySLabel[];
   value: string[]; // columnas visibles
   onChange: (next: string[]) => void;
 

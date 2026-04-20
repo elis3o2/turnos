@@ -1,6 +1,6 @@
 import { Paper, Typography, IconButton } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
-import LookPaciente from "../../../features/turno_espera/components/LookPaciente";
+import LookPaciente from "../../../features/persona/components/LookPaciente/LookPaciente";
 import type { Paciente } from "../../../features/persona/types";
 
 interface Props {

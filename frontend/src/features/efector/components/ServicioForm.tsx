@@ -1,41 +1,42 @@
-import { FormControl, InputLabel, Select, MenuItem, ListItemText, Checkbox } from "@mui/material"
-import type { KeyNLabel } from "../../../common/types";
-
+import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import type { Servicio } from "../types";
 
 type Props = {
-  servicios: KeyNLabel[];
-  selectedServicios: number[];
-  setSelectedServicios: React.Dispatch<React.SetStateAction<number[]>>;
+  servicios: Servicio[];
+  selectedServicio: Servicio | null;
+  setSelectedServicio: (val: Servicio | null) => void
 };
 
-export const ServicioForm =({servicios, selectedServicios, setSelectedServicios}: Props) => {
-    return (
-    <FormControl size="small" fullWidth>
-        <InputLabel id="servicio-select-label">Servicio</InputLabel>
+
+
+export const ServicioForm = ({
+  servicios,
+  selectedServicio,
+  setSelectedServicio,
+}: Props) => {
+  
+  return (
+    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <InputLabel id="servicio-label">Servicio</InputLabel>
         <Select
-          labelId="servicio-select-label"
-          multiple
-          value={selectedServicios}
-          label="Servicio"
-          onChange={(e) =>
-            setSelectedServicios(e.target.value as number[])
-          }
-          renderValue={(selected) =>
-            (selected as number[])
-              .map((id) => servicios.find((x) => x.key === id)?.label ?? String(id))
-              .join(", ")
-          }
+            labelId="servicio-label"
+            value={selectedServicio?.id ?? ""}
+            label="Servicio"
+            onChange={(e) => {
+              const id = Number(e.target.value);
+              const srv = servicios.find((s) => s.id === id) ?? null;
+              setSelectedServicio(srv);
+            }}
         >
-          {servicios.length > 0 ? (
-            servicios.map((se) => (
-              <MenuItem key={se.key} value={se.key}>
-                <Checkbox checked={selectedServicios.includes(se.key)} />
-                <ListItemText primary={se.label} />
-              </MenuItem>
-            ))
-          ) : (
-            <MenuItem value="">(sin servicios)</MenuItem>
-          )}
+            <MenuItem value="">
+            <em>-- Seleccioná servicio --</em>
+            </MenuItem>
+            {servicios.map((s) => (
+            <MenuItem key={s.id} value={s.id}>
+                {s.nombre}
+            </MenuItem>
+            ))}
         </Select>
     </FormControl>
-)}
+    );
+};

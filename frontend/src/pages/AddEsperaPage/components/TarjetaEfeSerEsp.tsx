@@ -1,32 +1,29 @@
 import { Paper, IconButton, Typography, Stack } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
 
-import LookEfeSerEsp from "../../../features/turno_espera/components/LookEfeSerEsp";
+import LookEfeSerEsp from "../../../features/efector/components/LookEfeSerEsp/LookEfeSerEsp";
 import type { Efector, EfeSerEspCompleto } from "../../../features/efector/types";
+import { useLookEfeSerEsp } from "../../../features/efector/components/LookEfeSerEsp/useLookEfeSerEsp";
 
 interface Props {
     efector: Efector;
-    efeSerEspSeleccionado : EfeSerEspCompleto | null
+    efeSerEspSeleccionado : EfeSerEspCompleto | null;
     setEfeSerEspSeleccionado: React.Dispatch<React.SetStateAction<EfeSerEspCompleto | null>>;
     finishEfeSerEsp: boolean;
     setFinishEfeSerEsp: React.Dispatch<React.SetStateAction<boolean>>;
     resetEfeSerEsp: () => void;
-    setCupo: React.Dispatch<React.SetStateAction<boolean>>;
+    setCupo: (val: boolean) => void;
 }
 
 
 export const TarjetaEfeSerEsp = ({efector, efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp, setCupo}: Props) => {
     
     const especialidadStyle = { bgcolor: "#cf7302ff", color: "common.white" }; // naranja con texto blanco
-    
+    const lookProps = useLookEfeSerEsp({efector, setEfeSerEspSeleccionado, setFinishEfeSerEsp, setCupo}); 
+
     return (
         !finishEfeSerEsp? (
-            <LookEfeSerEsp
-            setCupo={setCupo}
-            efector={efector}
-            setEfeSerEspSeleccionado={setEfeSerEspSeleccionado}
-            setFinishEfeSerEsp={setFinishEfeSerEsp}
-            />
+            <LookEfeSerEsp {...lookProps}/>
         ) : (
             finishEfeSerEsp && (
             <Paper elevation={2} sx={{ p: 2, mb: 2, position: "relative", ...especialidadStyle }}>

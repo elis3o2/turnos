@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import type { KeySLabel } from "../types";
 
 type Props<T> = {
-  columns: KeySLabel[];
+  columns: readonly KeySLabel[];
   visibleColumns: string[];
   data: T[];
   loading?: boolean;

@@ -1,6 +1,5 @@
 import http from '../../common/api/client'
-import type { KeyNLabel } from '../../common/types';
-import type { Efector, Servicio, Especialidad, EfeSerEsp, EfeSerEspCompleto, SerEsp } from "../efector/types";
+import type { Efector, Servicio, Especialidad, EfeSerEsp, EfeSerEspCompleto, SerEsp, Deriva } from "../efector/types";
 
 export const getEfectoresAll = (): Promise<Efector[]> =>
   http.get<Efector[]>(`efector/efectores/`).then(res => res.data);
@@ -18,10 +17,10 @@ export const getEspecialidadesByServicio = (id: number): Promise<Especialidad[]>
   http.get<Especialidad[]>(`efector/especialidades/?id_servicio=${id}`).then(res => res.data);
 
 
-export const getServiciosByEfector = (ids_efec: number[]): Promise<KeyNLabel[]> => {
+export const getServiciosByEfector = (ids_efec: number[]): Promise<Servicio[]> => {
   const params = new URLSearchParams();
   ids_efec.forEach(id => {params.append("ids_efec", String(id))});
-  return http.get<KeyNLabel[]>(`efector/efe_ser_esp/servicios/?${params.toString()}`).then(res => res.data);
+  return http.get<Servicio[]>(`efector/efe_ser_esp/servicios/?${params.toString()}`).then(res => res.data);
 };
 
 export const getEfectoresByServEsp = (id_ser: number, id_esp: number): Promise <Efector[]> =>
@@ -37,3 +36,7 @@ export const getIdByEfeSerEsp = (efector: number, servicio: number, especialidad
 
 export const getSerEspByEfector = (id: number) : Promise<SerEsp[]> =>
   http.get<SerEsp[]>(`efector/efe_ser_esp/ser_esp/?id_efector=${id}`).then(res => res.data); 
+
+
+export const getDerivaByEfector = (id: number) : Promise<Deriva[]> =>
+  http.get<Deriva[]>(`turno_espera/derivaciones/?id_efector=${id}`).then(res=> res.data)

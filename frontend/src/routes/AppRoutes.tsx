@@ -3,14 +3,14 @@ import LoginPage from '../pages/LoginPage';
 import { PrivateRoute } from '../common/components';
 import Layout from '../common/layouts/Layout';
 import InitPage from '../pages/IncioPage';
-import ListaPage from '../pages/EfectoresPage';
+import ListaPage from '../pages/ConfiguracionPage.tsx/ConfiguracionPage';
 import TurnosPage from '../pages/TurnoPage';
-import HistoricoPage from '../pages/HistoricoPage';
-import ListaEspera from '../pages/ListaEsperaPage';
+import HistoricoPage from '../pages/HistoricoPage/HistoricoPage';
+import ListaEspera from '../pages/ListaEsperaPage/ListaEsperaPage';
 
 
 import TurnosEsperaDashboard from '../pages/EsperaHistoricoPage';
-import Plantillas from '../pages/PlantillasPage';
+import Plantillas from '../pages/PlantillasPage/PlantillasPage';
 import AddEspera from '../pages/AddEsperaPage/AddEsperaPage';
 
 const AppRoutes = () => {

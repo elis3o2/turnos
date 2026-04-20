@@ -1,7 +1,7 @@
 import { Paper, Typography, IconButton} from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
 
-import LookProfesional from "../../../features/turno_espera/components/LookProfesional";
+import LookProfesional from "../../../features/persona/components/LookProfesional/LookProfesional";
 import type { Profesional } from "../../../features/persona/types";
 
 interface Props {

@@ -3,18 +3,6 @@ from django.conf import settings
 from src.apps.efector.models import Efector, EfeSerEsp
 from src.models import CustomUser
 
-class Deriva(models.Model):
-    id = models.AutoField(primary_key=True)
-    efector = models.ForeignKey(
-        Efector, models.DO_NOTHING, db_column='id_efector')
-    efe_ser_esp_deriva = models.ForeignKey(
-        EfeSerEsp, models.DO_NOTHING, db_column='id_efe_ser_esp_deriva')
-    cupo = models.BooleanField()
-
-    class Meta:
-        managed = False
-        db_table = 'deriva'
-
 
 class EstadoTurnoEspera(models.Model):
     id = models.IntegerField(primary_key=True)  # equivale a TINYINT UNSIGNED

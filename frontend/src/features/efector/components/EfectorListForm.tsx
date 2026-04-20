@@ -6,10 +6,10 @@ import {
   Checkbox,
   ListItemText
 } from "@mui/material";
-import type { KeyNLabel } from "../../../common/types";
+import type { Efector } from "../types";
 
 type Props = {
-  efectores: KeyNLabel[];
+  efectores: Efector[];
   selectedEfectores: number[];
   setSelectedEfectores: React.Dispatch<React.SetStateAction<number[]>>;
 };
@@ -31,7 +31,7 @@ export const EfectorListForm = ({efectores, selectedEfectores, setSelectedEfecto
           (selected as number[])
             .map(
               (id) =>
-                efectores.find((x) => x.key === id)?.label ?? String(id)
+                efectores.find((x) => x.id === id)?.nombre ?? String(id)
             )
             .join(", ")
         }
@@ -40,9 +40,9 @@ export const EfectorListForm = ({efectores, selectedEfectores, setSelectedEfecto
       >
         {efectores.length > 0 ? (
           efectores.map((ef) => (
-            <MenuItem key={ef.key} value={ef.key}>
-              <Checkbox checked={selectedEfectores.includes(ef.key)} />
-              <ListItemText primary={ef.label} />
+            <MenuItem key={ef.id} value={ef.id}>
+              <Checkbox checked={selectedEfectores.includes(ef.id)} />
+              <ListItemText primary={ef.nombre} />
             </MenuItem>
           ))
         ) : (

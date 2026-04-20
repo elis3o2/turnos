@@ -13,11 +13,6 @@ export interface Column<T> {
     render?: (value: any, row: T) => ReactNode;
 }
 
-export type KeyNLabel = {
-  key: number;
-  label: string;
-};
-
 
 export type KeySLabel = {
   key: string;

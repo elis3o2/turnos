@@ -52,3 +52,16 @@ class EfeSerEsp(models.Model):
     class Meta:
         managed = False
         db_table = 'efe_ser_esp'
+
+
+class Deriva(models.Model):
+    id = models.AutoField(primary_key=True)
+    efector = models.ForeignKey(
+        Efector, models.DO_NOTHING, db_column='id_efector')
+    efe_ser_esp_deriva = models.ForeignKey(
+        EfeSerEsp, models.DO_NOTHING, db_column='id_efe_ser_esp_deriva')
+    cupo = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = 'deriva'

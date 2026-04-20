@@ -1,7 +1,7 @@
 import { createContext, useState, useRef, } from 'react'
 import type {ReactNode } from 'react';
 import type { AuthContextType, InitializeAuthData, AuthTokens } from './types';
-import type { KeyNLabel } from '../../common/types';
+import type { Efector } from '../../features/efector/types';
 
 const defaultContext: AuthContextType = {
     authTokens: null,
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [username, setUsername] = useState<string | null>(() =>
         localStorage.getItem('username') || null
     );
-    const [efectores, setEfectores] = useState<KeyNLabel[]>(() => {
+    const [efectores, setEfectores] = useState<Efector[]>(() => {
         const e = localStorage.getItem('efectores');
         return e ? JSON.parse(e) : [];
     });
@@ -37,19 +37,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         tokensRef.current = tokens;
         localStorage.setItem('tokens', JSON.stringify(tokens));
 
-        if (data.username) {
+        if (data.username !== undefined) {
             setUsername(data.username);
             localStorage.setItem('username', data.username);
         }
         
-        if (data.efectores) {
+        if (Array.isArray(data.efectores)) {
             const sorted = [...data.efectores].sort((a, b) =>
-                a.label.localeCompare(b.label, 'es', { sensitivity: 'base' })
+                a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
             );
+
             setEfectores(sorted);
             localStorage.setItem('efectores', JSON.stringify(sorted));
         }
-
     };
 
     const logout = () => {
