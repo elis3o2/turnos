@@ -578,8 +578,8 @@ def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_turno: int) -> bool:
         return False
 
     turno.id_estado_id = 1  # o el estado que corresponda
-    turno.id_turno_asignado = id_turno
-    turno.save(update_fields=["id_estado_id", "id_turno_asignado"])
+    turno.id_sisr = id_turno
+    turno.save(update_fields=["id_estado_id", "id_sisr"])
 
     return True
 

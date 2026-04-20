@@ -38,6 +38,8 @@ from rest_framework.permissions import AllowAny
 def frontend(request):
     return render(request, "index.html")
 
+from datetime import datetime
+
 
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
@@ -1112,6 +1114,7 @@ class TurnoPacienteView(APIView):
     def put(self, request):
         encoded_id = request.data.get('id')
         estado = request.data.get('estado')
+
         if not encoded_id or not estado:
             return Response(
                 {"error": "Faltan parámetros"},
@@ -1119,25 +1122,37 @@ class TurnoPacienteView(APIView):
             )
 
         try:
-
             turno_id = signing.loads(encoded_id)
             turno = Turno.objects.get(pk=turno_id)
 
-            turno.id_estado_paciente_id = estado
-            turno.fecha_estado_paciente = timezone.now()
+            # 🔹 Combinar fecha y hora del turno
+            fecha_hora_turno = datetime.combine(turno.fecha, turno.hora)
 
+            # 🔹 Fecha/hora actual
+            ahora = timezone.now()
+
+            # ❌ Si el turno ya pasó, no permitir
+            if fecha_hora_turno < ahora:
+                return Response(
+                    {"error": "No se puede modificar un turno que ya pasó"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ✅ Si no pasó, continuar
+            turno.id_estado_paciente_id = estado
+            turno.fecha_estado_paciente = ahora
             turno.save()
 
             if estado == 2:
                 lista_espera_look(turno)
-                a = liberar_turno(turno.id_sisr)
+                liberar_turno(turno.id_sisr)
 
             return Response(
                 {"message": "Turno actualizado correctamente"},
                 status=status.HTTP_200_OK
             )
 
-        except (ValueError):
+        except ValueError:
             return Response(
                 {"error": "ID inválido"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -1148,4 +1163,3 @@ class TurnoPacienteView(APIView):
                 {"error": "Turno no encontrado"},
                 status=status.HTTP_404_NOT_FOUND
             )
-
