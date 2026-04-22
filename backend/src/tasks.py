@@ -544,7 +544,7 @@ def send_reminder_task(
                     turno.save(update_fields=["id_estado_paciente", "fecha_estado_paciente"])
                 return
 
-            if ack == -5:
+            if ack == -5 or ack == -1:
                 eta = calcular_proximo_retry(now)
                 if eta < turno_dt:
                     print(f"[RETRY] turno {id_turno} en {eta}")
