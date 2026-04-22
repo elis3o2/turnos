@@ -3,7 +3,7 @@ import type { FieldName } from "../../utilsConfiguracion";
 export const getFieldLabel = (field: FieldName) => {
   switch (field) {
     case "asignacion":
-      return "Confirmaciones";
+      return "Asignaciones";
     case "reprogramacion":
       return "Reprogramaciones";
     case "cancelacion":

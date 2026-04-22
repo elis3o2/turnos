@@ -48,7 +48,7 @@ class EfeSerEspPlantillaDetailSerializer(serializers.ModelSerializer):
         model = EfeSerEspPlantilla
         fields = [
             "id",
-            "id_efe_ser_esp",
+            "efe_ser_esp",
             "id_efector",
             "id_servicio",
             "especialidad",

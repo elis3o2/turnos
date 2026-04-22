@@ -4,7 +4,7 @@ import type { Efector, Servicio } from "../../../../features/efector/types";
 import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
 import type { Setter, AlertSeverity } from "../../../../common/types";
 import SendAll from "../SendAll/SendAll";
-import { useSendAll } from "../SendAll/useSendAll";
+import { BurbujaCard } from "../BurbujaCard";
 
 type Props = {
   efectorSeleccionado: Efector[];
@@ -79,11 +79,12 @@ export const ServicioBlock = (props: Props) => {
         <Grid container spacing={2}>
           {servicios.map(serv => (
             <Grid item key={serv.id}>
-              <Card onClick={() => handleServicioClick(serv)}>
-                <CardContent>
-                  <Typography>{serv.nombre}</Typography>
-                </CardContent>
-              </Card>
+              <BurbujaCard
+                name={serv.nombre}
+                selected={servicioSeleccionado.some(s => s.id === serv.id)}
+                onClick={()=> handleServicioClick(serv)}
+                color="rgba(238, 200, 150, 1)"
+              />
             </Grid>
           ))}
         </Grid>

@@ -4,7 +4,6 @@ import {
   Box,
   Typography,
   Card,
-  GridLegacy as Grid,
   IconButton,
   Popper,
   Grow,
@@ -117,21 +116,22 @@ export const EspecialidadBlock = (props: Props) => {
               setAlertSeverity={setAlertSeverity}
             />
 
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              {especialidades.map((esp) => {
-                const nombreEspecialidad = esp.especialidad.nombre;
-                const nombreEfector = getNombreEfector(efectorSeleccionado, esp.id_efector);
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Box sx={{ width: "100%", maxWidth: 850, display: "flex", flexDirection: "column", gap: 2 }}>
+                {especialidades.map((esp) => {
+                  const nombreEspecialidad = esp.especialidad.nombre;
+                  const nombreEfector = getNombreEfector(efectorSeleccionado, esp.id_efector);
 
-                const confirmOn = isFlagOn(esp.asignacion);
-                const reproOn   = isFlagOn(esp.reprogramacion);
-                const cancOn    = isFlagOn(esp.cancelacion);
-                const recoOn    = isFlagOn(esp.recordatorio);
+                  const confirmOn = isFlagOn(esp.asignacion);
+                  const reproOn   = isFlagOn(esp.reprogramacion);
+                  const cancOn    = isFlagOn(esp.cancelacion);
+                  const recoOn    = isFlagOn(esp.recordatorio);
 
-                const showEfectorName = (efectorSeleccionado?.length ?? 0) > 1 && !!nombreEfector;
+                  const showEfectorName = (efectorSeleccionado?.length ?? 0) > 1 && !!nombreEfector;
 
-                return (
-                  <Grid item key={esp.id}>
+                  return (
                     <Card
+                      key={esp.id}
                       sx={{
                         display: "flex",
                         alignItems: "center",
@@ -141,16 +141,18 @@ export const EspecialidadBlock = (props: Props) => {
                         border: "2px solid rgba(0,0,0,0.12)",
                         transition: "border-color 200ms, box-shadow 200ms",
                         "&:hover": { borderColor: "primary.main", boxShadow: 6 },
+                        height: 56,
+                        width: "100%",
                       }}
                     >
                       {/* Nombre */}
-                      <Box sx={{ pl: 2, pr: 1, minWidth: 120 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", pl: 2, pr: 1, flex: "0 0 35%", minWidth: 0 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
                           {nombreEspecialidad}
                           {showEfectorName && (
                             <Typography
                               component="span"
-                              sx={{ fontSize: "0.85rem", fontWeight: 500, ml: 1, color: "text.secondary" }}
+                              sx={{ fontSize: "1rem", fontWeight: 500, ml: 1, color: "text.secondary" }}
                             >
                               ({nombreEfector})
                             </Typography>
@@ -159,15 +161,24 @@ export const EspecialidadBlock = (props: Props) => {
                       </Box>
 
                       {/* Botones */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Box sx={{ display: "flex", alignItems: "stretch", flex: "0 0 65%", height: "100%" }}>
                         <IconButton
                           aria-label="asignacion"
                           onClick={() => handleSectionClick(esp, "asignacion")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "asignacion", confirmOn)}
                           onMouseLeave={handleMouseLeave}
-                          sx={{ color: confirmOn ? "success.main" : "text.disabled" }}
+                          sx={{
+                            flex: 1,
+                            height: "100%",
+                            minWidth: 0,
+                            borderRadius: 0,
+                            px: 0,
+                            bgcolor: confirmOn ? "success.main" : "transparent",
+                            color: confirmOn ? "success.contrastText" : "text.secondary",
+                            "&:hover": { bgcolor: confirmOn ? "success.dark" : "action.hover" },
+                          }}
                         >
-                          <CheckCircleIcon />
+                          <CheckCircleIcon fontSize="medium" />
                         </IconButton>
 
                         <IconButton
@@ -175,9 +186,18 @@ export const EspecialidadBlock = (props: Props) => {
                           onClick={() => handleSectionClick(esp, "reprogramacion")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "reprogramacion", reproOn)}
                           onMouseLeave={handleMouseLeave}
-                          sx={{ color: reproOn ? "info.main" : "text.disabled" }}
+                          sx={{
+                            flex: 1,
+                            height: "100%",
+                            minWidth: 0,
+                            borderRadius: 0,
+                            px: 0,
+                            bgcolor: reproOn ? "primary.main" : "transparent",
+                            color: reproOn ? "primary.contrastText" : "text.secondary",
+                            "&:hover": { bgcolor: reproOn ? "primary.dark" : "action.hover" },
+                          }}
                         >
-                          <ReplayIcon />
+                          <ReplayIcon fontSize="medium" />
                         </IconButton>
 
                         <IconButton
@@ -185,9 +205,18 @@ export const EspecialidadBlock = (props: Props) => {
                           onClick={() => handleSectionClick(esp, "cancelacion")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "cancelacion", cancOn)}
                           onMouseLeave={handleMouseLeave}
-                          sx={{ color: cancOn ? "error.main" : "text.disabled" }}
+                          sx={{
+                            flex: 1,
+                            height: "100%",
+                            minWidth: 0,
+                            borderRadius: 0,
+                            px: 0,
+                            bgcolor: cancOn ? "error.main" : "transparent",
+                            color: cancOn ? "error.contrastText" : "text.secondary",
+                            "&:hover": { bgcolor: cancOn ? "error.dark" : "action.hover" },
+                          }}
                         >
-                          <CancelIcon />
+                          <CancelIcon fontSize="medium" />
                         </IconButton>
 
                         <IconButton
@@ -195,17 +224,28 @@ export const EspecialidadBlock = (props: Props) => {
                           onClick={() => handleSectionClick(esp, "recordatorio")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "recordatorio", recoOn)}
                           onMouseLeave={handleMouseLeave}
-                          sx={{ color: recoOn ? "warning.main" : "text.disabled" }}
+                          sx={{
+                            flex: 1,
+                            height: "100%",
+                            minWidth: 0,
+                            borderRadius: 0,
+                            px: 0,
+                            borderLeft: "1px solid rgba(0,0,0,0.04)",
+                            bgcolor: recoOn ? "warning.main" : "transparent",
+                            color: recoOn ? "warning.contrastText" : "text.secondary",
+                            "&:hover": { bgcolor: recoOn ? "warning.dark" : "action.hover" },
+                          }}
                         >
-                          <NotificationsIcon />
+                          <NotificationsIcon fontSize="medium" />
                         </IconButton>
                       </Box>
                     </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </>)}
+                  );
+                })}
+              </Box>
+            </Box>
+          </>
+        )}
       </Box>
 
       <Popper
