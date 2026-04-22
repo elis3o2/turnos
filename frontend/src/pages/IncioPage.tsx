@@ -19,13 +19,11 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { getTurnosCount } from '../features/turno/api'
 import {  getServiciosAll, getEspecialidadesAll, getEfeSerEspAll} from '../features/efector/api'
-import type {  Especialidad, Servicio } from '../features/efector/types'
-import type { EfeSerEsp } from '../features/efector/types'
+import type {  Especialidad, Servicio, EfeSerEsp } from '../features/efector/types'
 import HospitalIcon from '../assets/hospital.png'
 import AidKitIcon from '../assets/first-aid-kit.png'
 import MedicalReportIcon from '../assets/medical-report.png'
 import {  AuthContext } from '../common/contex'
-import { getServiciosByEfector } from '../features/efector/api'
 
 function InitPage() {
   const [turnos, setTurnos] = useState<number>(0)
@@ -43,50 +41,6 @@ function InitPage() {
   const [selectedServicios, setSelectedServicios] = useState<number[]>([])
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<number[]>([])
 
-
-  const efectoresMap: Record<number, string> = Object.fromEntries(
-    efectores?.map(e => [e.id, e.nombre])
-  );
-
-
-  
-useEffect(() => {
-  const fetchData = async () => {
-    const newEfeSerEsp = { ...efeSerEsp };
-    const newEspecialidades = { ...especialidades };
-    const newServicios = { ...servicios };
-
-    for (const e of selectedEfectores) {
-      if (!newEfeSerEsp[e]) {
-        const data = await getServEspByEfector(e);
-
-        newEfeSerEsp[e] = {};
-
-        for (const serv of data) {
-          const sid = serv.id_ser;
-          newServicios[sid] = serv.ser_nombre;
-
-          newEfeSerEsp[e][sid] = [];
-
-          for (const esp of serv.especialidades) {
-            newEspecialidades[esp.id_esp] = esp.esp_nombre;
-            newEfeSerEsp[e][sid].push(esp.id_esp);
-          }
-        }
-      }
-    }
-
-    setEfeSerEsp(newEfeSerEsp);
-    setEspecialidades(newEspecialidades);
-    setServicios(newServicios);
-  };
-
-  fetchData();
-}, [selectedEfectores]);
-
-
-
-
   // Menús abiertos
   const [anchorEfector, setAnchorEfector] = useState<null | HTMLElement>(null)
   const [anchorServicio, setAnchorServicio] = useState<null | HTMLElement>(null)
@@ -97,7 +51,7 @@ useEffect(() => {
 
   // nuevos estados para contadores de mensajes
   const [msjRecordatorioCount, setMsjRecordatorioCount] = useState<number>(0)
-  const [msjConfirmacionCount, setMsjConfirmacionCount] = useState<number>(0)
+  const [msjAsignacionCount, setMsjAsignacionCount] = useState<number>(0)
 
 
 
@@ -188,15 +142,15 @@ useEffect(() => {
       );
 
       // adaptarse a la forma que devuelve tu API; se asume:
-      // { count: number, msj_recordatorio: number, msj_confirmacion: number, ... }
+      // { count: number, msj_recordatorio: number, msj_asignacion: number, ... }
       setTurnos(res.count);
       setMsjRecordatorioCount(res.msj_recordatorio);
-      setMsjConfirmacionCount(res.msj_confirmacion);
+      setMsjAsignacionCount(res.msj_asignacion);
     } catch (err) {
       console.error("Error obteniendo conteo de turnos:", err);
       setTurnos(0);
       setMsjRecordatorioCount(0);
-      setMsjConfirmacionCount(0);
+      setMsjAsignacionCount(0);
     }
   };
 
@@ -483,7 +437,7 @@ useEffect(() => {
         <Card sx={{ flex: "1 1 220px", textAlign: "center", boxShadow: 3, borderRadius: 3 }}>
           <CardContent>
             <Typography variant="subtitle2">Mensajes de Confirmación</Typography>
-            <Typography variant="h4" fontWeight="bold">{msjConfirmacionCount}</Typography>
+            <Typography variant="h4" fontWeight="bold">{msjAsignacionCount}</Typography>
           </CardContent>
         </Card>
 

@@ -25,4 +25,16 @@ export interface EstadoTurnoPaciente {
 }
 
 
+export interface TurnoPacienteResp {
+    nombre: string
+    apellido: string
+    fecha: string
+    hora: string
+    efector: string
+    servicio: string
+    especialidad: string
+    estado_pac:number
+    estado: string
+}
+
 

@@ -1,6 +1,6 @@
 import http from '../../common/api/client'
-import type { Turno} from './types';
-import type { EstadoMsj } from '../mensaje/types';
+import type { Turno, TurnoPacienteResp} from './types';
+
 
 export const getTurnosAll = (
   id_servicio?: number,
@@ -23,7 +23,7 @@ export const getTurnosAll = (
 export type TurnosCountResult = {
   count: number;
   msj_recordatorio: number;
-  msj_confirmacion: number;
+  msj_asignacion: number;
   msj_cancelacion: number;
   msj_reprogramacion: number;
 };
@@ -59,7 +59,7 @@ export const getTurnosCount = (
     return {
       count: Number(d.count ?? 0),
       msj_recordatorio: Number(d.msj_recordatorio ?? 0),
-      msj_confirmacion: Number(d.msj_confirmacion ?? 0),
+      msj_asginacion: Number(d.msj_asignacion ?? 0),
       msj_cancelacion: Number(d.msj_cancelacion ?? 0),
       msj_reprogramacion: Number(d.msj_reprogramacion ?? 0),
     };
@@ -92,3 +92,10 @@ export const getTurnosByCombinations = async (
 };
 
 
+export const getTurnoPaciente = (id: string): Promise<TurnoPacienteResp> => {
+  return http.get(`turno-paciente/`,{params: {id }}).then(res => res.data)
+}
+
+export const putTurnoPaciente = (id: string, estado:number) => {
+  return http.put(`turno-paciente/`, { id, estado} )
+}

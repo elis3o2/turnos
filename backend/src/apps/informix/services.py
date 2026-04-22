@@ -4,14 +4,8 @@ from typing import Any, Dict, List
 from django.db.models import QuerySet
 
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
-from src.utils.utils import update_msg_state
+from src.apps.mensaje.services import update_msg_state
 import emoji
-
-
-def procesar_mensaje(m: Mensaje) -> dict:
-    if 0 <= m.estado_id < 3:
-        update_msg_state(m)
-
 
 
 def procesar_mensaje(m: Mensaje) -> dict:

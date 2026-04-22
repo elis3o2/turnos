@@ -1,7 +1,4 @@
 from rest_framework import serializers
-from concurrent.futures import ThreadPoolExecutor
-from src.utils.utils import update_msg_state
-import emoji
 from .models import EstadoTurno, EstadoTurnoPaciente, Turno
 
 class EstadoTurnoSerializer(serializers.ModelSerializer):

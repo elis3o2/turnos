@@ -3,7 +3,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from typing import Any, cast
 from .models import CustomUser
-from .utils.utils import fetch_paciente, fetch_profesional, update_msg_state
 
 
 

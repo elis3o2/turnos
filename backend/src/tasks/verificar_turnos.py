@@ -1,4 +1,14 @@
-from utils import map_estdo
+from zoneinfo import ZoneInfo
+from django.utils import timezone
+from django.db import connections
+from celery import shared_task
+from src.models import LastMod, EfeSerEsp
+from utils import enviar_whatsapp, format_plantilla, decode_res
+from src.apps.turno.services import create_Turno, update_estado_Turno
+from src.apps.mensaje.services import create_Mensaje, check_turno
+from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
+from src.utils.parse import parse_date, parse_time
+from src.apps.turno_espera.services import sacar_Turno_Espera
 
 @shared_task
 def verificar_turnos() -> None:
@@ -30,7 +40,10 @@ def verificar_turnos() -> None:
 
             mejor_raw = None
 
-            for r in cur.fetchall():
+
+            rows = list(cur.fetchall())
+            rows.sort(key=lambda r: (r[3], r[0]))
+            for r in rows:
                 print(f"[DEBUG] notificacion raw: {r}")
                 idturno, idpaciente, idestadoturno, last_modf_val = r
 
@@ -38,9 +51,7 @@ def verificar_turnos() -> None:
                 if mejor_raw is None or este_raw > mejor_raw:
                     mejor_raw = este_raw
 
-                # Mapeo de idestadoturno -> estado (restaurado al mapping esperado)
-                estado = map_estdo(idestadoturno)
-
+                estado = idestadoturno
                 # Inicializo variables que luego uso (mínimo)
                 id_efe_ser_esp = None
                 id_efector = id_servicio = id_especialidad = None
@@ -49,9 +60,9 @@ def verificar_turnos() -> None:
                 carac_tel = tel = nom_pac = ape_pac = nom_prof = ape_prof = None
                 d_fecha = d_hora = None
 
-                # Si corresponde (0 o 3) traigo detalles completos
+                # Si corresponde a un envio traigo detalles completos
                 detalles = None
-                if estado in (1, 3):
+                if estado in (3, 8):
                     try:
                         cur.execute(query_detalles_turno(1), [idturno])
                         detalles = cur.fetchone()
@@ -77,28 +88,28 @@ def verificar_turnos() -> None:
                     fecha = d_fecha.strftime("%d-%m-%Y")
                     hora = d_hora.strftime("%H:%M")
 
-                    if estado == 1:
+                    if estado == 3:
                         try:
                             t = create_Turno(idturno, idpaciente,estado,
                                 id_efe_ser_esp, d_fecha, d_hora)
                             
                             print(f"[INFO] Creado Turno id={idturno} fecha={fecha} hora={hora}")
 
-                            # b = sacar_Turno_Espera(idpaciente, id_efe_ser_esp)
-                            # if b:
-                            #     print(f"[INFO] Turno en Lista de Espera asignado idpaciente={idpaciente}")
+                            b = sacar_Turno_Espera(idpaciente, id_efe_ser_esp, idturno)
+                            if b:
+                                print(f"[INFO] Turno en Lista de Espera asignado idpaciente={idpaciente}")
 
                         except Exception as ex:
                             print(f"[ERROR] al crear Turno id={idturno}: {ex}")
                             continue
 
-                if estado in (2, 3, 4):
+                if estado != 3:
                     t = update_estado_Turno(idturno, idpaciente, estado)
                     
                     if t == None:
                         continue
                     # Si estado == 2 (suspendido) 
-                    if estado == 2:
+                    if estado in (1,2,7):
                             
                         try:
                             # obtener datos persona de forma segura
@@ -159,7 +170,7 @@ def verificar_turnos() -> None:
                             print(f"[ERROR] al procesar estado 2 para idturno={idturno}: {ex}")
                             continue
 
-                if estado == 4:
+                if estado in (4,5,6):
                     continue
 
                 telefono = None
@@ -188,9 +199,9 @@ def verificar_turnos() -> None:
                         }
 
                         mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-                        res = enviar_whatsapp2(telefono, mensaje)
+                        res = enviar_whatsapp(telefono, mensaje)
                         try:                            
-                            (envio_id, ack, fecha, ins) = decode_res2(res)
+                            (envio_id, ack, fecha, ins) = decode_res(res)
 
                             create_Mensaje(id=envio_id, turno=t, numero=telefono, plantilla=plantilla, estado=ack, fecha=fecha, sesion=ins)
 
@@ -235,4 +246,3 @@ def verificar_turnos() -> None:
 
     except Exception as e:
         print(f"[ERROR] Error en verificación de turnos: {e}")
-

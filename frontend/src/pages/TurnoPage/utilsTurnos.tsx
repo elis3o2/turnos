@@ -1,3 +1,4 @@
+import {Box, Chip, Typography} from "@mui/material";
 import {
   getTurnosMerged,
   getTurnosMergedAlerta,
@@ -7,6 +8,9 @@ import {
   downloadTurnosMergedError
 } from "../../features/informix/api"
 import type { TurnoMerged } from "../../features/informix/types";
+import type { Mensaje } from "../../features/mensaje/types";
+import { DateTimeStack } from "../../common/components/DateTimeStack";
+import { DateStack } from "../../common/components/DateStack";
 
 // ─── tipos exportados ────────────────────────────────────────────────────────
 
@@ -101,3 +105,58 @@ export const DEFAULT_VISIBLE_COLUMNS: string[] = [
   "estado", "asignacion", "cancelacion", "reprogramacion", "recordatorio",
   "fecha", "hora",
 ];
+
+export function mensajeChip(m?: Mensaje | null) {
+  if (!m) return <Typography variant="body2">—</Typography>;
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 120 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2">{m.estado}</Typography>
+        {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
+      </Box>
+    </Box>
+  );
+}
+
+export function renderCell(columnKey: string, t: TurnoMerged) {
+  switch (columnKey) {
+    case "id":        return t.id_sisr;
+    case "respuesta":
+      return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, width: "fit-content" }}>
+          <Chip
+            size="small"
+            label={t.estado_paciente ?? "-"}
+            color={estadoRespChipColor(t) as any}
+            variant="outlined"
+          />
+          {t.fecha_estado_paciente ? <DateTimeStack value={t.fecha_estado_paciente} /> : null}
+        </Box>
+      );
+    case "dni":           return t.paciente_dni;
+    case "nombre":        return t.paciente_nombre;
+    case "apellido":      return t.paciente_apellido;
+    case "efector":       return t.efector;
+    case "servicio":      return t.servicio;
+    case "especialidad":  return t.especialidad;
+    case "prof_nombre":   return t.profesional_nombre;
+    case "prof_apellido": return t.profesional_apellido;
+    case "estado":
+      return (
+        <Chip
+          size="small"
+          label={t.estado}
+          color={estadoChipColor(t) as any}
+          variant="outlined"
+        />
+      );
+    case "fecha":          return <DateStack value={t.fecha} />;
+    case "hora":           return t.hora ?? "—";
+    case "asignacion":     return mensajeChip(t.mensaje_asociado.ASIGNACION);
+    case "cancelacion":    return mensajeChip(t.mensaje_asociado.CANCELACION);
+    case "reprogramacion": return mensajeChip(t.mensaje_asociado.REPROGRAMACION);
+    case "recordatorio":   return mensajeChip(t.mensaje_asociado.RECORDATORIO);
+    default:               return "—";
+  }
+}

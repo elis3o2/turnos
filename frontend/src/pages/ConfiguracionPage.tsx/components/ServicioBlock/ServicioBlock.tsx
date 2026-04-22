@@ -3,7 +3,8 @@ import { useServicioBlock } from "./useServicioBlock";
 import type { Efector, Servicio } from "../../../../features/efector/types";
 import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
 import type { Setter, AlertSeverity } from "../../../../common/types";
-
+import SendAll from "../SendAll/SendAll";
+import { useSendAll } from "../SendAll/useSendAll";
 
 type Props = {
   efectorSeleccionado: Efector[];
@@ -40,13 +41,40 @@ export const ServicioBlock = (props: Props) => {
     servicios,
     servicioSeleccionado,
     efectorSeleccionado,
+    setEspecialidades,
+    setEfecServEspecialidades,  
+    confirmField,
+    setConfirmField,
+    confirmValue,
+    setConfirmValue,
+    confirmEspecialidades,
+    setConfirmEspecialidades,
+    setAlertOpen,
+    setAlertMsg,
+    setAlertSeverity,
+    open,
+    setOpen,
   } = props;
 
   return (
     <Collapse in={efectorSeleccionado.length > 0 && servicios.length > 0}>
       <Box sx={{ mt: 4 }}>
-        {/* header */}
-        <SendAll preFunction={allEspecialidadesToChange} />
+        <SendAll
+          preFunction={allEspecialidadesToChange}
+          open={open}
+          setOpen={setOpen}
+          setEspecialidades={setEspecialidades}
+          setEfectorEspecialidades={setEfecServEspecialidades} 
+          confirmField={confirmField}
+          setConfirmField={setConfirmField}
+          confirmValue={confirmValue}
+          setConfirmValue={setConfirmValue}
+          confirmEspecialidades={confirmEspecialidades}
+          setConfirmEspecialidades={setConfirmEspecialidades}
+          setAlertOpen={setAlertOpen}
+          setAlertMsg={setAlertMsg}
+          setAlertSeverity={setAlertSeverity}
+        />
 
         <Grid container spacing={2}>
           {servicios.map(serv => (

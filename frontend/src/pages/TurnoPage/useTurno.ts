@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { AuthContext } from "../../common/contex";
@@ -6,14 +6,13 @@ import { getServiciosByEfector } from "../../features/efector/api";
 import { getTurnosMergedAlerta } from "../../features/informix/api";
 import type { TurnoMerged, TurnoMergedFilters } from "../../features/informix/types";
 import type { Efector, Servicio } from "../../features/efector/types";
-
 import {
   resolveEndpoint,
   resolveDownloadEndpoint,
   DEFAULT_VISIBLE_COLUMNS,
   type AlertCategory,
   type AlertData
-} from "./utilsTurnos"
+} from "./utilsTurnos";
 
 const PAGE_SIZE = 25;
 
@@ -22,20 +21,20 @@ export function useTurno() {
   const { efectores } = useContext(AuthContext) as { efectores?: Efector[] };
 
   // ── estado de datos ──────────────────────────────────────────────────────
-  const [turnos, setTurnos]       = useState<TurnoMerged[]>([]);
-  const [loading, setLoading]     = useState(false);
+  const [turnos, setTurnos]           = useState<TurnoMerged[]>([]);
+  const [loading, setLoading]         = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [total, setTotal]         = useState(0);
-  const [page, setPage]           = useState(1);
+  const [total, setTotal]             = useState(0);
+  const [page, setPage]               = useState(1);
 
   // ── filtros ──────────────────────────────────────────────────────────────
-  const [servicios, setServicios]                   = useState<Servicio[]>([]);
-  const [selectedEfectores, setSelectedEfectores]   = useState<number[]>([]);
-  const [selectedServicios, setSelectedServicios]   = useState<number[]>([]);
-  const [fechaDesde, setFechaDesde]                 = useState<string | null>(null);
-  const [fechaHasta, setFechaHasta]                 = useState<string | null>(null);
-  const [appliedFilters, setAppliedFilters]         = useState<TurnoMergedFilters | null>(null);
-  const [hasSearched, setHasSearched]               = useState(false);
+  const [servicios, setServicios]                 = useState<Servicio[]>([]);
+  const [selectedEfectores, setSelectedEfectores] = useState<number[]>([]);
+  const [selectedServicios, setSelectedServicios] = useState<number[]>([]);
+  const [fechaDesde, setFechaDesde]               = useState<string | null>(null);
+  const [fechaHasta, setFechaHasta]               = useState<string | null>(null);
+  const [appliedFilters, setAppliedFilters]       = useState<TurnoMergedFilters | null>(null);
+  const [hasSearched, setHasSearched]             = useState(false);
 
   // ── columnas ─────────────────────────────────────────────────────────────
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
@@ -44,15 +43,22 @@ export function useTurno() {
   // ── modos ─────────────────────────────────────────────────────────────────
   const [errorMode, setErrorMode] = useState(false);
   const [alertMode, setAlertMode] = useState(false);
+
+  // Indica si la última búsqueda ejecutada fue en modo alerta
+  const [searchedInAlertMode, setSearchedInAlertMode] = useState(false);
+
   const [activeAlertCategory, setActiveAlertCategory] =
     useState<AlertCategory>("rechazados");
 
   // ── alertas ───────────────────────────────────────────────────────────────
-  const [alertData, setAlertData]     = useState<AlertData | null>(null);
+  const [alertData, setAlertData]       = useState<AlertData | null>(null);
   const [alertLoading, setAlertLoading] = useState(false);
 
-  // ── servicios ─────────────────────────────────────────────────────────────
+  // ── ref de appliedFilters para el efecto de categoría ────────────────────
+  const appliedFiltersRef = useRef(appliedFilters);
+  useEffect(() => { appliedFiltersRef.current = appliedFilters; }, [appliedFilters]);
 
+  // ── servicios ─────────────────────────────────────────────────────────────
   const loadServicios = useCallback(async () => {
     if (selectedEfectores.length === 0) {
       setServicios([]);
@@ -77,12 +83,11 @@ export function useTurno() {
   }, [loadServicios]);
 
   // ── carga de página ───────────────────────────────────────────────────────
-
   async function loadPage(params: {
-    pageToLoad: number;
-    filters: TurnoMergedFilters;
-    errorMode: boolean;
-    alertMode: boolean;
+    pageToLoad:          number;
+    filters:             TurnoMergedFilters;
+    errorMode:           boolean;
+    alertMode:           boolean;
     activeAlertCategory: AlertCategory;
   }) {
     const { pageToLoad, filters, errorMode, alertMode, activeAlertCategory } = params;
@@ -104,7 +109,7 @@ export function useTurno() {
       };
 
       const endpoint = resolveEndpoint({ errorMode, alertMode });
-      const data = await endpoint(requestFilters);
+      const data     = await endpoint(requestFilters);
       setTurnos(data.data ?? []);
       setTotal(data.count ?? 0);
     } catch (e) {
@@ -116,8 +121,21 @@ export function useTurno() {
     }
   }
 
-  // ── descarga CSV ──────────────────────────────────────────────────────────
+  // ── cambio de categoría: solo actúa si la última búsqueda fue en alertMode ─
+  useEffect(() => {
+    if (!searchedInAlertMode || !appliedFiltersRef.current) return;
 
+    loadPage({
+      pageToLoad:          1,
+      filters:             appliedFiltersRef.current,
+      errorMode:           false,
+      alertMode:           true,
+      activeAlertCategory,
+    });
+    setPage(1);
+  }, [activeAlertCategory]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── descarga CSV ──────────────────────────────────────────────────────────
   async function handleDescargar() {
     if (!appliedFilters || !appliedFilters.ids_efec?.length) return;
     setDownloading(true);
@@ -143,7 +161,6 @@ export function useTurno() {
   }
 
   // ── búsqueda ──────────────────────────────────────────────────────────────
-
   function buildAppliedFilters(): TurnoMergedFilters {
     const fallbackEfectores =
       selectedEfectores.length > 0
@@ -157,7 +174,6 @@ export function useTurno() {
       fecha_hasta: fechaHasta,
       cantidad:    PAGE_SIZE,
       offset:      0,
-      tipo:        alertMode ? activeAlertCategory : undefined,
     };
   }
 
@@ -168,24 +184,25 @@ export function useTurno() {
       setTurnos([]);
       setTotal(0);
       setHasSearched(false);
+      setSearchedInAlertMode(false);
       return;
     }
 
     setAppliedFilters(nextFilters);
     setPage(1);
     setHasSearched(true);
+    setSearchedInAlertMode(alertMode);   // registra si esta búsqueda fue en alertMode
 
     await loadPage({
-      pageToLoad: 1,
-      filters: nextFilters,
+      pageToLoad:          1,
+      filters:             nextFilters,
       errorMode,
       alertMode,
       activeAlertCategory,
     });
   }
 
-  // ── toggle modos ──────────────────────────────────────────────────────────
-
+  // ── toggle modos (solo cambian la bandera, no lanzan búsqueda) ────────────
   function handleToggleErrorMode() {
     const next = !errorMode;
     if (next && alertMode) setAlertMode(false);
@@ -199,7 +216,6 @@ export function useTurno() {
   }
 
   // ── carga inicial de alertas ──────────────────────────────────────────────
-
   useEffect(() => {
     const efIds = efectores?.map((e) => Number(e.id)) ?? [];
     if (efIds.length === 0) return;
@@ -243,14 +259,13 @@ export function useTurno() {
   }, [efectores]);
 
   // ── paginación ────────────────────────────────────────────────────────────
-
   function handleChangePage(_: React.ChangeEvent<unknown>, value: number) {
     setPage(value);
     if (!hasSearched || !appliedFilters) return;
 
     loadPage({
-      pageToLoad: value,
-      filters:    appliedFilters,
+      pageToLoad:          value,
+      filters:             appliedFilters,
       errorMode,
       alertMode,
       activeAlertCategory,
@@ -260,13 +275,10 @@ export function useTurno() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   // ── retorno ───────────────────────────────────────────────────────────────
-
   return {
-    // navegación
     navigate,
     efectores,
 
-    // datos
     turnos,
     loading,
     downloading,
@@ -275,27 +287,22 @@ export function useTurno() {
     totalPages,
     hasSearched,
 
-    // filtros
     servicios,
     selectedEfectores,    setSelectedEfectores,
     selectedServicios,    setSelectedServicios,
     fechaDesde,           setFechaDesde,
     fechaHasta,           setFechaHasta,
 
-    // columnas
     visibleColumns,       setVisibleColumns,
     anchorCols,           setAnchorCols,
 
-    // modos
     errorMode,
     alertMode,
     activeAlertCategory,  setActiveAlertCategory,
 
-    // alertas
     alertData,
     alertLoading,
 
-    // handlers
     handleBuscar,
     handleDescargar,
     handleChangePage,

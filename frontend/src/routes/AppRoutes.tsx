@@ -3,22 +3,20 @@ import LoginPage from '../pages/LoginPage';
 import { PrivateRoute } from '../common/components';
 import Layout from '../common/layouts/Layout';
 import InitPage from '../pages/IncioPage';
-import ListaPage from '../pages/ConfiguracionPage.tsx/ConfiguracionPage';
-import TurnosPage from '../pages/TurnoPage';
+import { ConfiguracionPage } from '../pages/ConfiguracionPage.tsx/ConfiguracionPage';
+import TurnosPage from '../pages/TurnoPage/TurnoPage';
 import HistoricoPage from '../pages/HistoricoPage/HistoricoPage';
-import ListaEspera from '../pages/ListaEsperaPage/ListaEsperaPage';
-
-
-import TurnosEsperaDashboard from '../pages/EsperaHistoricoPage';
-import Plantillas from '../pages/PlantillasPage/PlantillasPage';
+import ListaEsperaPage from '../pages/ListaEsperaPage/ListaEsperaPage';
 import AddEspera from '../pages/AddEsperaPage/AddEsperaPage';
+import PlantillasPage from '../pages/PlantillasPage/PlantillasPage';
+import ConfirmPage from '../pages/ConfitmPage/ConfirmPage';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Ruta pública */}
       <Route path="/login" element={<LoginPage />} />
-
+      <Route path="/confirma" element={<ConfirmPage />} />
       {/* Rutas privadas con Layout */}
       <Route
         element={
@@ -27,15 +25,14 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       >
-      {/*  <Route path="/home" element={<InitPage />} /> */}
-        <Route path="/list" element={<ListaPage />} />
-        <Route path="/plantillas" element={<Plantillas />} /> 
-        <Route path="/plantillas/:tipo" element={<Plantillas />} />
+        <Route path="/home" element={<InitPage />} />
+        <Route path="/list" element={<ConfiguracionPage />} />
+        <Route path="/plantillas" element={<PlantillasPage />} /> 
+        <Route path="/plantillas/:tipo" element={<PlantillasPage />} />
         <Route path="/turnos" element={<TurnosPage />}/>
         <Route path="/historico" element={<HistoricoPage />}/>
-        <Route path="/espera" element={<ListaEspera />}/>
+        <Route path="/espera" element={<ListaEsperaPage />}/>
         <Route path="/add-espera" element={<AddEspera />}/>
-        <Route path="/espera-paciente" element={<TurnosEsperaDashboard />}/>
         <Route path='*' element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>

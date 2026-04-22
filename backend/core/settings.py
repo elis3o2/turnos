@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import timedelta
 from decouple import config, Csv
 from celery.schedules import crontab
-
+from datetime import time
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -160,4 +160,8 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
-
+HORA_INICIO = time(8, 16)
+HORA_FIN = time(20, 0)
+SEND_TIME = time(15, 30)
+BATCH_SIZE = 5
+BATCH_WINDOW_SECONDS = 720

@@ -34,7 +34,7 @@ class EstadoMsj(models.Model):
 
 class EfeSerEspPlantilla(models.Model):
     id = models.AutoField(primary_key=True)
-    id_efe_ser_esp = models.ForeignKey(
+    efe_ser_esp = models.ForeignKey(
         EfeSerEsp, models.DO_NOTHING, db_column='id_efe_ser_esp')
     asignacion = models.IntegerField()
     reprogramacion = models.IntegerField()

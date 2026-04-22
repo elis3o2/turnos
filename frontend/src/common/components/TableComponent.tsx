@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+import React from "react";
 import {
   Typography,
   TableContainer,
@@ -9,23 +11,21 @@ import {
   Box,
   Paper
 } from "@mui/material";
-
 import { motion } from "framer-motion";
-
 import type { KeySLabel } from "../types";
+
+const MotionTableRow = motion(TableRow);
 
 type Props<T> = {
   columns: readonly KeySLabel[];
   visibleColumns: string[];
   data: T[];
   loading?: boolean;
-
   renderCell: (key: string, row: T) => React.ReactNode;
-
   emptyMessage?: string;
 };
 
-export function TableComponent<T>({
+export const TableComponent = React.memo(function TableComponent<T>({
   columns,
   visibleColumns,
   data,
@@ -33,15 +33,15 @@ export function TableComponent<T>({
   renderCell,
   emptyMessage = "No hay datos",
 }: Props<T>) {
-  
-  const visible = columns.filter(c => visibleColumns.includes(c.key));
-  const MotionTableRow = motion(TableRow);
+
+  const visible = useMemo(
+    () => columns.filter(c => visibleColumns.includes(c.key)),
+    [columns, visibleColumns]
+  );
 
   return (
     <TableContainer component={Paper} elevation={4}>
       <Table stickyHeader size="small">
-        
-        {/* HEADER */}
         <TableHead>
           <TableRow>
             {visible.map(col => (
@@ -52,7 +52,6 @@ export function TableComponent<T>({
           </TableRow>
         </TableHead>
 
-        {/* BODY */}
         <TableBody>
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
@@ -79,9 +78,7 @@ export function TableComponent<T>({
               >
                 {visible.map(col => (
                   <TableCell key={col.key}>
-                    <Typography variant="body">
                     {renderCell(col.key, row)}
-                    </Typography>
                   </TableCell>
                 ))}
               </MotionTableRow>
@@ -91,4 +88,4 @@ export function TableComponent<T>({
       </Table>
     </TableContainer>
   );
-}
+});

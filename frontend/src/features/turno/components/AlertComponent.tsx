@@ -8,7 +8,6 @@ import {
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-// 👇 tipado correcto
 type AlertCategory = 'rechazados' | 'incorrectos' | 'sin_respuesta';
 
 type AlertData = {

@@ -1,8 +1,6 @@
-import React from "react";
 import {
   Box,
   Button,
-  Chip,
   CircularProgress,
   GridLegacy as Grid,
   IconButton,
@@ -10,7 +8,6 @@ import {
   Paper,
   Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -19,77 +16,14 @@ import GetAppIcon       from "@mui/icons-material/GetApp";
 import RefreshIcon      from "@mui/icons-material/Refresh";
 import MenuBookIcon     from "@mui/icons-material/MenuBook";
 
-import type { TurnoMerged } from "../../features/informix/types";
-import type { Mensaje } from "../../features/mensaje/types";
 import { AlertaComponent } from "../../features/turno/components/AlertComponent";
 import { TableComponent } from "../../common/components/TableComponent";
 import { ColumnSelector } from "../../common/components/ColumnSelector";
 import { EfectorListForm } from "../../features/efector/components/EfectorListForm";
 import { ServicioListForm } from "../../features/efector/components/ServicioListForm";
-import { DateTimeStack } from "../../common/components/DateTimeStack";
-import { DateStack } from "../../common/components/DateStack";
 
-import { useTurno }                  from "./useTurno";
-import { ALL_COLUMNS, estadoChipColor, estadoRespChipColor } from "./utilsTurnos"
-
-// ─── render helpers ──────────────────────────────────────────────────────────
-
-function mensajeChip(m?: Mensaje | null) {
-  if (!m) return <Typography variant="body2">—</Typography>;
-
-  return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 120 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography variant="body2">{m.estado}</Typography>
-        {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
-      </Box>
-    </Box>
-  );
-}
-
-function renderCell(columnKey: string, t: TurnoMerged): React.ReactNode {
-  switch (columnKey) {
-    case "id":      return t.id_sisr;
-    case "respuesta":
-      return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, width: "fit-content" }}>
-          <Chip
-            size="small"
-            label={t.estado_paciente ?? "-"}
-            color={estadoRespChipColor(t) as any}
-            variant="outlined"
-          />
-          {t.fecha_estado_paciente ? <DateTimeStack value={t.fecha_estado_paciente} /> : null}
-        </Box>
-      );
-    case "dni":           return t.paciente_dni;
-    case "nombre":        return t.paciente_nombre;
-    case "apellido":      return t.paciente_apellido;
-    case "efector":       return t.efector;
-    case "servicio":      return t.servicio;
-    case "especialidad":  return t.especialidad;
-    case "prof_nombre":   return t.profesional_nombre;
-    case "prof_apellido": return t.profesional_apellido;
-    case "estado":
-      return (
-        <Chip
-          size="small"
-          label={t.estado}
-          color={estadoChipColor(t) as any}
-          variant="outlined"
-        />
-      );
-    case "fecha":          return <DateStack value={t.fecha} />;
-    case "hora":           return t.hora ?? "—";
-    case "asignacion":     return mensajeChip(t.mensaje_asociado.ASIGNACION);
-    case "cancelacion":    return mensajeChip(t.mensaje_asociado.CANCELACION);
-    case "reprogramacion": return mensajeChip(t.mensaje_asociado.REPROGRAMACION);
-    case "recordatorio":   return mensajeChip(t.mensaje_asociado.RECORDATORIO);
-    default:               return "—";
-  }
-}
-
-// ─── component ───────────────────────────────────────────────────────────────
+import { useTurno } from "./useTurno";
+import { ALL_COLUMNS, renderCell} from "./utilsTurnos";
 
 export default function TurnosPage() {
   const {
@@ -133,6 +67,7 @@ export default function TurnosPage() {
 
       <Paper elevation={1} sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
+
           <Grid item xs={12} md={4}>
             {efectores ? (
               <EfectorListForm
@@ -177,6 +112,7 @@ export default function TurnosPage() {
 
           <Grid item xs={12} md={6}>
             <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+
               <Button
                 startIcon={<RefreshIcon />}
                 variant="outlined"
@@ -231,19 +167,20 @@ export default function TurnosPage() {
               >
                 <MenuBookIcon fontSize="small" />
               </IconButton>
+
             </Box>
           </Grid>
         </Grid>
       </Paper>
+
 
       <TableComponent
         columns={ALL_COLUMNS}
         visibleColumns={visibleColumns}
         data={turnos}
         loading={loading}
-        renderCell={renderCell}
+        renderCell={renderCell as (key: string, row: unknown) => React.ReactNode}
       />
-
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <Pagination

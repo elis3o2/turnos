@@ -92,9 +92,6 @@ def query_turno_historico_paciente() -> str:
             th.idturno, 
             th.fecha_hora_mdf, 
             es.descripcion AS estado,
-            TRIM(per.nombre_per) AS paciente_nombre, 
-            TRIM(per.apellido) AS paciente_apellido,
-            per.nro_doc, 
             TRIM(p.nombre) AS profesional_nombre, 
             TRIM(p.apellido) AS profesional_apellido,
             t.fecha, 
@@ -112,7 +109,6 @@ def query_turno_historico_paciente() -> str:
         JOIN especialidadesserv se ON se.idespecialidadserv = ese.idespecialidadserv
         JOIN servicios s ON s.idservicio = se.idservicio
         JOIN especialidades esp ON esp.idespecialidad = se.idespecialidad
-        JOIN v_personas per ON per.id_persona = th.idpaciente
         WHERE th.idpaciente = ?
     )
     UNION ALL
@@ -121,9 +117,6 @@ def query_turno_historico_paciente() -> str:
             te.idturno, 
             te.fecha_hora_elim AS fecha_hora_mdf,
             'ELIMINADO' AS estado,
-            TRIM(per.nombre_per) AS paciente_nombre, 
-            TRIM(per.apellido) AS paciente_apellido,
-            per.nro_doc, 
             TRIM(p.nombre) AS nombre_profesional, 
             TRIM(p.apellido) AS apellido_profesional,
             te.fecha, 
@@ -139,7 +132,6 @@ def query_turno_historico_paciente() -> str:
         JOIN especialidadesserv se ON se.idespecialidadserv = ese.idespecialidadserv
         JOIN servicios s ON s.idservicio = se.idservicio
         JOIN especialidades esp ON esp.idespecialidad = se.idespecialidad
-        JOIN v_personas per ON per.id_persona = te.idpaciente
         WHERE te.idpaciente = ?
     )
     ORDER BY fecha_hora_mdf DESC

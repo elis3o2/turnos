@@ -1,8 +1,10 @@
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from .models import EstadoTurno, Turno
 from .serializers import EstadoTurnoSerializer, TurnoSerializer
 from src.permissions import ReadOnly, EfectorPermission
@@ -73,7 +75,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
           - msj_recordatorio
           - msj_cancelacion
           - msj_reprogramacion
-          - msj_confirmacion
+          - msj_asignacion
 
         """
         qs = self.filter_queryset(self.get_queryset())  # aplica filtros DRF si los hay
@@ -83,7 +85,7 @@ class TurnoViewSet(viewsets.ModelViewSet):
             recordatorios=Coalesce(Sum('msj_recordatorio'), 0),
             cancelaciones=Coalesce(Sum('msj_cancelado'), 0),
             reprogramaciones=Coalesce(Sum('msj_reprogramado'), 0),
-            confirmaciones=Coalesce(Sum('msj_asignado'), 0),
+            asignaciones=Coalesce(Sum('msj_asignado'), 0),
         )
 
         # Asegurarnos de devolver enteros (Coalesce ya lo hace, pero por seguridad)
@@ -92,10 +94,104 @@ class TurnoViewSet(viewsets.ModelViewSet):
             "msj_recordatorio": int(agg.get("recordatorios", 0) or 0),
             "msj_cancelacion": int(agg.get("cancelaciones", 0) or 0),
             "msj_reprogramacion": int(agg.get("reprogramaciones", 0) or 0),
-            "msj_confirmacion": int(agg.get("confirmaciones", 0) or 0),
+            "msj_asignacion": int(agg.get("asignaciones", 0) or 0),
         }
 
         return Response(result)
 
 
 
+
+class TurnoPacienteView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        encoded_id = request.query_params.get("id")
+        if not encoded_id:
+            return Response(
+                {"error": "Falta el id"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            turno_id = signing.loads(encoded_id)
+        except Exception:
+            return Response(
+                {"error": "ID inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            turno = Turno.objects.get(pk=turno_id)
+        except Turno.DoesNotExist:
+            return Response(
+                {"error": "Turno no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        resultado = fetch_paciente(turno.id_paciente)
+        pac = resultado[0] if resultado else None
+
+        return Response(
+            {
+                "nombre": str(pac['nombre']) if pac else None,
+                "apellido": str(pac['apellido']) if pac else None,
+                "fecha": turno.fecha,
+                "hora": turno.hora,
+                "efector": turno.id_efe_ser_esp.id_efector.nombre,
+                "servicio": turno.id_efe_ser_esp.id_ser_esp.id_servicio.nombre,
+                "especialidad": turno.id_efe_ser_esp.id_ser_esp.id_especialidad.nombre,
+                "estado_pac": turno.id_estado_paciente_id,
+                "estado": turno.id_estado.nombre
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+    def put(self, request):
+        encoded_id = request.data.get('id')
+        estado = request.data.get('estado')
+
+        if not encoded_id or not estado:
+            return Response(
+                {"error": "Faltan parámetros"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            turno_id = signing.loads(encoded_id)
+            turno = Turno.objects.get(pk=turno_id)
+
+            fecha_hora_turno = datetime.combine(turno.fecha, turno.hora)
+            ahora = timezone.now()
+
+            if fecha_hora_turno < ahora:
+                return Response(
+                    {"error": "No se puede modificar un turno que ya pasó"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            turno.id_estado_paciente_id = estado
+            turno.fecha_estado_paciente = ahora
+            turno.save()
+
+            if estado == 2:
+                lista_espera_look(turno)
+                liberar_turno(turno.id_sisr)
+
+            return Response(
+                {"message": "Turno actualizado correctamente"},
+                status=status.HTTP_200_OK
+            )
+
+        except ValueError:
+            return Response(
+                {"error": "ID inválido"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        except Turno.DoesNotExist:
+            return Response(
+                {"error": "Turno no encontrado"},
+                status=status.HTTP_404_NOT_FOUND
+            )

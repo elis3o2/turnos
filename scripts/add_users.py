@@ -17,4 +17,5 @@ def crear_usuario(username, password, dni, efector_id):
     return user
 
 
-crear_usuario('staffieri', 'staffieri',9674474, 21 )
+crear_usuario('ferrandini', 'ferrandini',3333, 101 )
+crear_usuario('martin', 'martin', 741474147, 96)

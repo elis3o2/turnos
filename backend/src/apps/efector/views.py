@@ -56,13 +56,20 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
         servicios = (
             queryset
             .values(
-                id=F("ser_esp__servicio_id"),
-                nombre=F("ser_esp__servicio__nombre"),
+                "ser_esp__servicio_id",
+                "ser_esp__servicio__nombre",
             )
             .distinct()
-            .order_by("nombre")
+            .order_by("ser_esp__servicio__nombre")
         )
-        serializer = ServicioSerializer(servicios, many=True)
+        data = [
+            {
+                "id": s["ser_esp__servicio_id"],
+                "nombre": s["ser_esp__servicio__nombre"],
+            }
+            for s in servicios
+        ]
+        serializer = ServicioSerializer(data, many=True)
         return Response(serializer.data)
 
 
