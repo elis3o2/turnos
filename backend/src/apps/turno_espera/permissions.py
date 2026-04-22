@@ -1,34 +1,38 @@
 from rest_framework.permissions import BasePermission,  SAFE_METHODS
 from src.permissions import is_administrativo
 
-class TurnoEsperaCreateUpdatePermission(BasePermission):
+class TurnoEsperaCreatePermission(BasePermission):
 
-    message = "No tiene permisos para realizar esta operación."
+    message = "No tiene permisos para crear el turno."
 
     def _efectores_usuario(self, request):
         return set(request.user.efectores.values_list("id", flat=True))
 
     def has_permission(self, request, view):
 
-        # solo nos interesa controlar CREATE
-        if request.method != "POST":
-            return True
-
         if not is_administrativo(request.user):
             return False
 
         id_efector_solicitante = request.data.get("id_efector_solicitante")
-        print("EFECTOR SOLICITANTE:", id_efector_solicitante)
-
         if not id_efector_solicitante:
             return False
 
         return int(id_efector_solicitante) in self._efectores_usuario(request)
 
-    def has_object_permission(self, request, view, obj):
 
-        if request.method not in ["PUT", "PATCH"]:
-            return True
+
+class TurnoEsperaUpdatePermission(BasePermission):
+
+    message = "No tiene permisos para modificar o cerrar este turno."
+
+    def _efectores_usuario(self, request):
+        return set(request.user.efectores.values_list("id", flat=True))
+
+    def has_permission(self, request, view):
+        # dejamos pasar, validamos en objeto
+        return True
+
+    def has_object_permission(self, request, view, obj):
 
         efectores_usuario = self._efectores_usuario(request)
 
@@ -36,13 +40,9 @@ class TurnoEsperaCreateUpdatePermission(BasePermission):
         efector_solicitante = obj.efector_solicitante.id
         cupo = obj.cupo
 
-        # caso 1
-        if not cupo and efector_turno in efectores_usuario:
-            return True
-
-        # caso 2
-        if cupo and efector_solicitante in efectores_usuario:
-            return True
+        # 🔹 CLOSE TURNO
+        if view.action == "close_turno":
+            return efector_turno in efectores_usuario
 
         return False
 

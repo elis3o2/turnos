@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from .models import  EstudioRequerido, TurnoEspera
 from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer
 from src.permissions import ReadOnly
-from .permissions import TurnoEsperaCreateUpdatePermission, TurnoEsperaReadPermission
+from .permissions import TurnoEsperaCreatePermission, TurnoEsperaUpdatePermission, TurnoEsperaReadPermission
 from src.utils.utils import fetch_paciente, fetch_profesional
 
 
@@ -32,8 +32,12 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
 
 
     def get_permissions(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return [TurnoEsperaCreateUpdatePermission()]
+        if self.action == "create":
+            return [TurnoEsperaCreatePermission()]
+
+        if self.action in ["update", "partial_update", "close_turno"]:
+            return [TurnoEsperaUpdatePermission()]
+
         return [TurnoEsperaReadPermission()]
     # ----------------------------------------------------
     # LISTA ESPERA
@@ -162,39 +166,37 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
     # ----------------------------------------------------
     # CREATE
     # ----------------------------------------------------
+    def create(self, request, *args, **kwargs):
 
-def create(self, request, *args, **kwargs):
+        paciente = request.data.get("id_paciente")
+        efe_ser_esp = request.data.get("id_efe_ser_esp")
 
-    paciente = request.data.get("id_paciente")
-    efe_ser_esp = request.data.get("id_efe_ser_esp")
+        if paciente and efe_ser_esp:
+            if TurnoEspera.objects.filter(
+                id_paciente=paciente,
+                efe_ser_esp_id=efe_ser_esp,
+                estado_id=0,
+            ).exists():
+                return Response(
+                    {"detail": "Ya se encuentra el mismo turno en la lista"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-    if paciente and efe_ser_esp:
-        if TurnoEspera.objects.filter(
-            id_paciente=paciente,
-            efe_ser_esp_id=efe_ser_esp,
-            estado_id=0,
-        ).exists():
-            return Response(
-                {"detail": "Ya se encuentra el mismo turno en la lista"},
-                status=status.HTTP_400_BAD_REQUEST,
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            instance = serializer.save(
+                usuario_creacion=request.user,
+                fecha_hora_creacion=timezone.now(),
+                estado_id=False
             )
 
-    serializer = self.get_serializer(data=request.data)
+            return Response(
+                self.get_serializer(instance).data,
+                status=status.HTTP_201_CREATED,
+            )
 
-    if serializer.is_valid():
-        instance = serializer.save(
-            usuario_creacion=request.user,
-            fecha_hora_creacion=timezone.now(),
-            estado_id=0
-        )
-
-        return Response(
-            self.get_serializer(instance).data,
-            status=status.HTTP_201_CREATED,
-        )
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     # ----------------------------------------------------
     # CERRAR TURNO
     # ----------------------------------------------------
@@ -204,6 +206,12 @@ def create(self, request, *args, **kwargs):
 
         turno = self.get_object()
 
+        if turno.estado_id != 0:
+            return Response(
+                {"detail": "El turno ya no está en espera"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+            
         turno.estado_id = 1
         turno.fecha_hora_cierre = timezone.now()
         turno.usuario_cierre = request.user

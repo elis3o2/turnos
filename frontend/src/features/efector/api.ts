@@ -39,4 +39,4 @@ export const getSerEspByEfector = (id: number) : Promise<SerEsp[]> =>
 
 
 export const getDerivaByEfector = (id: number) : Promise<Deriva[]> =>
-  http.get<Deriva[]>(`turno_espera/derivaciones/?id_efector=${id}`).then(res=> res.data)
+  http.get<Deriva[]>(`efector/derivaciones/?id_efector=${id}`).then(res=> res.data)

@@ -18,6 +18,5 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = cast(AbstractUser, self.user)
         data['username'] = user.username
 
-        data['efectores'] = [ {"key": ef.id, "label": ef.nombre}
-                                for ef in user.efectores.all()]
+        data['efectores'] = list(user.efectores.values('id', 'nombre'))
         return data

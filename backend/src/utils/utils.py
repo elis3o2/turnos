@@ -11,7 +11,8 @@ from zoneinfo import ZoneInfo
 from django.core import signing
 Row = [dict, any]
 from decimal import Decimal
-from .querys_informix import query_paciente_from_id, query_paciente_from_dni, query_profesional_from_id, query_profesional_from_nombre
+from .querys_informix import (query_paciente_from_id, query_paciente_from_id_extend,
+    query_paciente_from_dni, query_profesional_from_id, query_profesional_from_nombre)
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
