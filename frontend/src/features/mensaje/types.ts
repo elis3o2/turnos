@@ -63,3 +63,9 @@ export interface MensajeAsociado {
     REPROGRAMACION? : Mensaje
     RECORDATORIO? : Mensaje
 }
+
+export type MensajeCount = {
+    total_asignacion: number,
+    total_recordatorio: number,
+    estados_recordatorio: [{estado: string; count: number}] | []
+}

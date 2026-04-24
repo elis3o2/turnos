@@ -55,28 +55,30 @@ export default function LookEfeSerEsp({
         Seleccionar servicio / especialidad / efector
       </Typography>
 
-      <ServicioForm
-        servicios={servicios}
-        selectedServicio={selectedServicio}
-        setSelectedServicio={setSelectedServicio}  
-      />
-
-      {selectedServicio && especialidades.length > 0 && (
-        <EspecialidadForm
-          especialidades={especialidades}
-          selectedEspecialidad={selectedEspecialidad}
-          setSelectedEspecialidad={setSelectedEspecialidad}
+      <Stack spacing={2}>
+        <ServicioForm
+          servicios={servicios}
+          selectedServicio={selectedServicio}
+          setSelectedServicio={setSelectedServicio}
         />
-      )}
 
-      {selectedEspecialidad && efectores.length > 0 && (
-        <EfectorForm
-          efectores={efectores}
-          selectedEfector={selectedEfector}
-          setSelectedEfector={setSelectedEfector}
-        />
-      )}
+        {selectedServicio && especialidades.length > 0 && (
+          <EspecialidadForm
+            especialidades={especialidades}
+            selectedEspecialidad={selectedEspecialidad}
+            setSelectedEspecialidad={setSelectedEspecialidad}
+          />
+        )}
 
+        {selectedEspecialidad && efectores.length > 0 && (
+          <EfectorForm
+            efectores={efectores}
+            selectedEfector={selectedEfector}
+            setSelectedEfector={setSelectedEfector}
+          />
+        )}
+      </Stack>
+      
       {selectedEfector && (
         <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
           <Typography variant="subtitle2">Efector seleccionado</Typography>

@@ -1,5 +1,5 @@
 import http from '../../common/api/client'
-import type { Plantilla, EfeSerEspPlantilla, EfeSerEspPlantillaExtend} from './types'
+import type { Plantilla, EfeSerEspPlantilla, EfeSerEspPlantillaExtend, MensajeCount} from './types'
 
 
 export const getPlantillas = (): Promise<Plantilla[]> =>
@@ -24,5 +24,8 @@ export const getPlantillaByEfectorServicio = (id_e: number, id_s: number): Promi
   http.get<EfeSerEspPlantillaExtend[]>(`mensaje/efe_ser_esp_plantilla/detalle/?id_efector=${id_e}&id_servicio=${id_s}`).then(res => res.data);
 
 
-export const getEfeSerEspPlantillaAll = (): Promise<EfeSerEspPlantillaExtend[]> =>
+export const getEfeSerEspPlantillaAll = (): Promise<EfeSerEspPlantillaExtend[]> => 
   http.get<EfeSerEspPlantillaExtend[]>(`mensaje/efe_ser_esp_plantilla/buscar`).then(res => res.data); 
+
+export const getMensajesCount = (ids_efe: number[], ids_ser: number[], ids_esp: number[]) : Promise<MensajeCount> =>
+  http.get<MensajeCount>(`mensaje/mensajes/count`,{params: {ids_efe, ids_ser, ids_esp}}).then(res => res.data);

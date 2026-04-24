@@ -1,29 +1,10 @@
 from typing import Any, Optional, Iterable
 from src.apps.mensaje.models import Mensaje
+from src.utils.utils import safe_int, parse_int_list
 
 # ============================================================
 # Helpers
 # ============================================================
-
-def safe_int(value: Any, default: Optional[int] = None) -> Optional[int]:
-    if value is None:
-        return default
-    if isinstance(value, str) and not value.strip():
-        return default
-    return int(value)
-
-
-def parse_int_list(values: Iterable[str]) -> list[int]:
-    result: list[int] = []
-    for v in values:
-        if v is None:
-            continue
-        v = str(v).strip()
-        if not v:
-            continue
-        result.append(int(v))
-    return result
-
 
 def asig_dic(row: tuple, dic: dict[str, dict[str, Any]]) -> None:
     turno_id = str(row[0])

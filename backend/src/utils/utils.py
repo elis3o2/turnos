@@ -13,6 +13,28 @@ Row = [dict, any]
 from decimal import Decimal
 from .querys_informix import (query_paciente_from_id, query_paciente_from_id_extend,
     query_paciente_from_dni, query_profesional_from_id, query_profesional_from_nombre)
+from typing import Any, Optional, Iterable
+
+
+
+def safe_int(value: Any, default: Optional[int] = None) -> Optional[int]:
+    if value is None:
+        return default
+    if isinstance(value, str) and not value.strip():
+        return default
+    return int(value)
+
+
+def parse_int_list(values: Iterable[str]) -> list[int]:
+    result: list[int] = []
+    for v in values:
+        if v is None:
+            continue
+        v = str(v).strip()
+        if not v:
+            continue
+        result.append(int(v))
+    return result
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────

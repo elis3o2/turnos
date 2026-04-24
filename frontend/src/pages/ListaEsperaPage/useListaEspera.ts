@@ -151,9 +151,15 @@ export function useListaEspera() {
 
     try {
       setLoading(true);
-      const res = await postMarcarEstudiosTurno(activeTurno.id, selectedEstudios);
 
-      setTurnos((prev) => applyEstudiosToTurnos(prev, activeTurno.id, selectedEstudios));
+      const res = await postMarcarEstudiosTurno(
+        activeTurno.id,
+        selectedEstudios
+      );
+
+      setTurnos((prev) =>
+        applyEstudiosToTurnos(prev, activeTurno.id, res.estudios)
+      );
 
       setAlertMsg(`Se marcaron ${res.actualizados} estudio(s)`);
       setAlertSeverity("success");

@@ -3,8 +3,8 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import  EstudioRequerido, TurnoEspera
-from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer
+from .models import  EstudioRequerido, TurnoEspera, TurnoEsperaEstudio
+from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer, TurnoEsperaEstudioSerializer
 from src.permissions import ReadOnly
 from .permissions import TurnoEsperaCreatePermission, TurnoEsperaUpdatePermission, TurnoEsperaReadPermission
 from src.utils.utils import fetch_paciente, fetch_profesional
@@ -27,15 +27,16 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         "usuario_creacion",
         "usuario_cierre",
     ).prefetch_related(
-        "estudios_requerido"
-    )
+        "estudios_turno__estudio_requerido"
+        )
+
 
 
     def get_permissions(self):
         if self.action == "create":
             return [TurnoEsperaCreatePermission()]
 
-        if self.action in ["update", "partial_update", "close_turno"]:
+        if self.action in ["marcar_estudios", "close_turno"]:
             return [TurnoEsperaUpdatePermission()]
 
         return [TurnoEsperaReadPermission()]
@@ -72,7 +73,6 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
                 "pac_map": pac_map,
             },
         )
-
         return Response(serializer.data)
     # ----------------------------------------------------
     # DERIVACIONES
@@ -149,6 +149,8 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             estado=False,
         )
 
+        updated_ids = list(qs.values_list("id", flat=True))
+
         now = timezone.now()
         user = request.user if request.user.is_authenticated else None
 
@@ -158,8 +160,16 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             usuario_cierre=user,
         )
 
+        updated_qs = TurnoEsperaEstudio.objects.filter(id__in=updated_ids)
+
+        serializer = TurnoEsperaEstudioSerializer(updated_qs, many=True)
+        print(serializer.data)
         return Response(
-            {"ok": True, "actualizados": updated},
+            {
+                "ok": True,
+                "actualizados": updated,
+                "estudios": serializer.data,
+            },
             status=status.HTTP_200_OK,
         )
 

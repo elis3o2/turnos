@@ -17,5 +17,12 @@ def crear_usuario(username, password, dni, efector_id):
     return user
 
 
-crear_usuario('ferrandini', 'ferrandini',3333, 101 )
-crear_usuario('martin', 'martin', 741474147, 96)
+crear_usuario('dunant', 'dunant', 'dunant',  23)
+crear_usuario('ugarte', 'ugarte', 'ugarte', 102)
+crear_usuario('duarte', 'duarte', 'duarte', 64)
+crear_usuario('santalucia', 'santalucia', 'santalucia', 65)
+crear_usuario('rosello', 'rosello', 'rosello', 29)
+crear_usuario('azurduy', 'azurduy', 'azurduy', 63)
+crear_usuario('emaus', 'emaus', 'emaus', 25)
+crear_usuario('coulin', 'coulin', 'coulin', 14)
+crear_usuario('ceferino', 'ceferino', 'ceferino', 19)

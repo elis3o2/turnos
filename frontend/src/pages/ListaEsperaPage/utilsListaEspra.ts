@@ -60,30 +60,26 @@ export function filterAndSortTurnos(
 }
 
 export function getSelectedEstudiosFromTurno(activeTurno: TurnoEspera | null): number[] {
-  if (!activeTurno?.estudio_requerido) return [];
-  return activeTurno.estudio_requerido.filter((e) => e.estado).map((e) => e.id);
+  if (!activeTurno?.estudios_requerido) return [];
+  return activeTurno.estudios_requerido.filter((e) => e.estado).map((e) => e.id);
 }
 
 export function applyEstudiosToTurnos(
   turnos: TurnoEspera[],
   turnoId: number,
-  selectedEstudios: number[]
+  updatedEstudios: any[]
 ): TurnoEspera[] {
-  return turnos.map((t) =>
-    t.id === turnoId
-      ? {
-          ...t,
-          estudio_requerido: t.estudio_requerido.map((e) => {
-            const seleccionado = selectedEstudios.includes(e.id) && !e.estado;
-            return {
-              ...e,
-              estado: seleccionado ? true : e.estado,
-              fecha_cierre: seleccionado ? new Date().toISOString() : e.fecha_cierre,
-            };
-          }),
-        }
-      : t
-  );
+  return turnos.map((t) => {
+    if (t.id !== turnoId) return t;
+
+    return {
+      ...t,
+      estudios_requerido: t.estudios_requerido.map((e) => {
+        const updated = updatedEstudios.find((u) => u.id === e.id);
+        return updated ? updated : e;
+      }),
+    };
+  });
 }
 
 export function getErrorMessage(error: unknown, fallback: string): string {

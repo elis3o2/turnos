@@ -12,7 +12,7 @@ export interface TurnoEspera {
     efector_solicitante: Efector;
     paciente: Paciente;
     prioridad: number;
-    estudio_requerido:  EstudioRequerido[];
+    estudios_requerido:  EstudioRequerido[];
     fecha_hora_creacion: string;
     fecha_hora_cierre: string | null;
     usuario_creacion: User;
@@ -24,10 +24,7 @@ export interface TurnoEspera {
 export interface EstudioRequerido {
     id: number,
     estudio_requerido: {id: number, nombre: string},
-    nombre: string,
     estado: boolean,
     fecha_cierre: string,
     usuario_cierre: number,
-    id_turno_espera: number
 }
-

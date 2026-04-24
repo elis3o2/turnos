@@ -29,8 +29,7 @@ class TurnoEsperaUpdatePermission(BasePermission):
         return set(request.user.efectores.values_list("id", flat=True))
 
     def has_permission(self, request, view):
-        # dejamos pasar, validamos en objeto
-        return True
+        return True  # validamos a nivel objeto
 
     def has_object_permission(self, request, view, obj):
 
@@ -40,12 +39,20 @@ class TurnoEsperaUpdatePermission(BasePermission):
         efector_solicitante = obj.efector_solicitante.id
         cupo = obj.cupo
 
-        # 🔹 CLOSE TURNO
+        # 🔹 CERRAR TURNO
         if view.action == "close_turno":
             return efector_turno in efectores_usuario
 
-        return False
+        # 🔹 MARCAR ESTUDIOS
+        if view.action == "marcar_estudios":
+            # lógica típica: puede actuar si pertenece al efector del turno
+            # o al efector solicitante (ajustalo según tu negocio)
+            return (
+                efector_turno in efectores_usuario
+                or efector_solicitante in efectores_usuario
+            )
 
+        return False
 
 class TurnoEsperaReadPermission(BasePermission):
 

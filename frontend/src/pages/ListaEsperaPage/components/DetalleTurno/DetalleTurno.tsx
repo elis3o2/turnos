@@ -62,7 +62,7 @@ export default function DetalleTurno({
     selectedDerivacion,
     isRemoving,
   });
-
+  
   const telefonoIcon =
     telefonoEstado === "valid" ? (
       <CheckCircleIcon sx={{ color: "success.main", ml: 1 }} fontSize="small" />
@@ -136,7 +136,7 @@ export default function DetalleTurno({
               <strong>Días en espera:</strong> {diasEnEspera}
             </Typography>
 
-            {activeTurno.estudio_requerido && activeTurno.estudio_requerido.length > 0 && (
+            {activeTurno.estudios_requerido && activeTurno.estudios_requerido.length > 0 && (
               <>
                 <Divider sx={{ my: 1 }} />
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
@@ -144,7 +144,7 @@ export default function DetalleTurno({
                 </Typography>
 
                 <Stack spacing={0.5}>
-                  {activeTurno.estudio_requerido.map((e) => {
+                  {activeTurno.estudios_requerido.map((e) => {
                     const cerrado = e.estado;
 
                     return (

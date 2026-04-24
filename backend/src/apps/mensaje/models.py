@@ -99,6 +99,11 @@ class Mensaje(models.Model):
         db_table = 'mensaje'
 
 
+
+
+
+
+
 ## FLOWS Y RESPUESTAS
 
 class TipoNodo(models.Model):

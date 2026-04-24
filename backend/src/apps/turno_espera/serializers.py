@@ -17,6 +17,21 @@ class EstudioRequeridoSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 
+
+class TurnoEsperaEstudioSerializer(serializers.ModelSerializer):
+    estudio_requerido = EstudioRequeridoSerializer(read_only=True)
+
+    class Meta:
+        model = TurnoEsperaEstudio
+        fields = [
+            "id",
+            "estudio_requerido",
+            "estado",
+            "fecha_cierre",
+            "usuario_cierre",
+        ]
+
+
 class TurnoEsperaSerializer(serializers.ModelSerializer):
     # ---------- LECTURA ----------
     estado = EstadoTurnoEsperaSerializer(read_only=True)
@@ -24,8 +39,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
     servicio = ServicioSerializer(source="efe_ser_esp.ser_esp.servicio", read_only=True)
     especialidad = EspecialidadSerializer(source="efe_ser_esp.ser_esp.especialidad", read_only=True)
     efector_solicitante = EfectorSerializer(read_only=True)
-    estudio_requerido = EstudioRequeridoSerializer(many=True, read_only=True)
-
+    estudios_requerido = TurnoEsperaEstudioSerializer(source="estudios_turno", many=True, read_only=True)
     paciente = serializers.SerializerMethodField()
     profesional_solicitante = serializers.SerializerMethodField()
     fecha_hora_creacion = serializers.DateTimeField(read_only=True)
@@ -57,7 +71,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
             "servicio",
             "especialidad",
             "efector_solicitante",
-            "estudio_requerido",
+            "estudios_requerido",
             "paciente",
             "profesional_solicitante",
 
@@ -75,7 +89,3 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
         return prof_map.get(obj.id_profesional_solicitante)
 
 
-class EstudioRequeridoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EstudioRequerido
-        fields = '__all__'

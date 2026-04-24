@@ -78,7 +78,7 @@ export function pacienteSexoFechaLabel(t: TurnoEspera): string {
 }
 
 export function tieneEstudiosPendientes(turno: TurnoEspera | null): boolean {
-  return !!turno?.estudio_requerido?.some((e) => e.estado === false);
+  return !!turno?.estudios_requerido?.some((e) => e.estado === false);
 }
 
 export function puedeSacarTurno(

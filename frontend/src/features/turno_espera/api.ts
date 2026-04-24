@@ -19,7 +19,7 @@ export const postTurnoEspera = (id_efe_ser_esp: number, id_profesional_solicitan
 
 
 export const CloseTurnoEspera = (id: number) => {
-  return http.post(`turno_espera/turno_espera/close/?id=${id}`).then(res => res.data);
+  return http.post(`turno_espera/turno_espera/${id}/close/`).then(res => res.data);
 }
 
 export const getTurnoEsperaById= (id: number) => {
@@ -30,8 +30,8 @@ export const getEstudioRequeridoAll = () => {
   return http.get<EstudioRequerido[]>(`turno_espera/estudio_requerido/`).then(res => res.data)
 } 
 
-export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number }> => {
-  return http.post<{ ok: boolean; actualizados: number }>(`turno_espera/turno_espera/${idTurno}/marcar-estudios/`,{ estudios }).then(res => res.data);
+export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number; estudios:EstudioRequerido[] }> => {
+  return http.post<{ ok: boolean; actualizados: number; estudios:EstudioRequerido[] }>(`turno_espera/turno_espera/${idTurno}/marcar-estudios/`,{ estudios }).then(res => res.data);
 };
 
 
