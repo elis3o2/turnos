@@ -264,8 +264,8 @@ def verificar_turnos() -> None:
 
 
 SEND_TIME = time(10, 30)
-BATCH_SIZE = 8
-BATCH_WINDOW_SECONDS = 600
+BATCH_SIZE = 6
+BATCH_WINDOW_SECONDS = 900
 @shared_task
 def programar_recordatorios() -> None:
     print(f"[{timezone.now().isoformat()}] Ejecutando recordatorios...")
