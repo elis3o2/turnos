@@ -32,7 +32,7 @@ function renderCell(columnKey: string, t: TurnoEspera): React.ReactNode {
           />
         </Tooltip>
       ) : '—';
-    case 'profesional': return t.profesional_solicitante?.apellido ?? '—';
+    case 'profesional': return `${t.profesional_solicitante?.nombre ?? ''} ${t.profesional_solicitante?.apellido ?? ''}`.trim() || '—';
     case 'efector':     return t.efector?.nombre      ?? '—';
     case 'servicio':    return t.servicio?.nombre     ?? '—';
     case 'especialidad':return t.especialidad?.nombre ?? '—';
@@ -101,30 +101,12 @@ export default function EsperaHistorico(): React.ReactElement {
               >
                 Deseleccionar
               </Button>
-
-              <Button
-                variant="contained"
-                startIcon={loading ? <CircularProgress size={18} /> : <SearchIcon />}
-                onClick={handleFetch}
-                disabled={loading || !paciente?.id}
-              >
-                {loading ? 'Cargando...' : 'Cargar turnos del paciente'}
-              </Button>
             </Box>
           </Box>
         )}
 
         {/* Barra inferior: limpiar + ordenar */}
         <Box display="flex" gap={1} mt={2} alignItems="center">
-          <Button
-            variant="outlined"
-            startIcon={<ClearIcon />}
-            onClick={handleClear}
-            disabled={loading}
-          >
-            Limpiar
-          </Button>
-
           <Box flexGrow={1} />
 
           <Typography variant="body2">Ordenar por creación</Typography>
@@ -137,14 +119,14 @@ export default function EsperaHistorico(): React.ReactElement {
 
         {error && <Typography color="error" mt={1}>{error}</Typography>}
       </Paper>
-
+      
       {/* Tabla */}
       <TableComponent
         columns={ALL_COLUMNS}
         visibleColumns={ALL_COLUMNS.map(c => c.key)}
         data={displayedRows}
         loading={loading}
-        renderCell={renderCell}
+        renderCell={renderCell as (key: string, row: unknown) => React.ReactNode}
       />
 
       {/* Footer */}

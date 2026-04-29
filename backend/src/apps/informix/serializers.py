@@ -1,26 +1,33 @@
 from rest_framework import serializers
 from src.apps.turno.models import Turno
 from .services import build_mensajes_map
+import re
+
+
+class CleanCharField(serializers.CharField):
+    def to_representation(self, value):
+        if value is None:
+            return None
+        import re
+        return re.sub(r"\s+", "", str(value))
 
 class PacienteSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
     nombre = serializers.CharField(required=False, allow_null=True)
+    nro_doc = serializers.CharField(required=False, allow_null=True)
     apellido = serializers.CharField(required=False, allow_null=True)
-    nro_doc = serializers.CharField(required=False, allow_null=True)    
-    carac_telef = serializers.CharField(required=False, allow_null=True)
-    nro_telef = serializers.CharField(required=False, allow_null=True)
+    carac_telef = CleanCharField(required=False, allow_null=True)
+    nro_telef = CleanCharField(required=False, allow_null=True)
     fecha_nacimiento = serializers.DateField(required=False, allow_null=True)
     sexo = serializers.CharField(required=False, allow_null=True)
     nombre_calle = serializers.CharField(required=False, allow_null=True)
     numero_calle = serializers.IntegerField(required=False, allow_null=True)
     
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        if rep.get("carac_telef"):
-            rep["carac_telef"] = str(rep["carac_telef"]).replace(" ", "")
-        if rep.get("nro_telef"):
-            rep["nro_telef"] = str(rep["nro_telef"]).replace(" ", "")
-        return rep
+    def validate(self, data):
+        for field in ["carac_telef", "nro_telef"]:
+            if field in data and data[field] is not None:
+                data[field] = str(data[field]).replace(" ", "")
+        return data
 
 class ProfesionalSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)

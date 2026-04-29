@@ -3,6 +3,7 @@ from .models import EstadoTurnoEspera, EstudioRequerido, TurnoEspera, TurnoEsper
 from src.apps.efector.models import Efector, EfeSerEsp
 from src.apps.efector.serializers import EfectorSerializer, ServicioSerializer, EspecialidadSerializer
 from src.utils.utils import fetch_paciente, fetch_profesional
+from src.apps.informix.serializers import PacienteSerializer, ProfesionalSerializer
 
 
 class EstadoTurnoEsperaSerializer(serializers.ModelSerializer):
@@ -81,11 +82,11 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
         ]
 
     def get_paciente(self, obj):
-        pac_map = self.context.get("pac_map", {})
-        return pac_map.get(obj.id_paciente)
+        pac = self.context.get("pac_map", {}).get(obj.id_paciente)
+        return PacienteSerializer(pac).data if pac else None
 
     def get_profesional_solicitante(self, obj):
-        prof_map = self.context.get("prof_map", {})
-        return prof_map.get(obj.id_profesional_solicitante)
+        prof = self.context.get("prof_map", {}).get(obj.id_profesional_solicitante)
+        return ProfesionalSerializer(prof).data if prof else None
 
 

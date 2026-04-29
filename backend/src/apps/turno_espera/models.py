@@ -33,6 +33,7 @@ class TurnoEspera(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='turnos_cerrados', null=True, blank=True)
     estudios_requerido = models.ManyToManyField(
         'EstudioRequerido', through='TurnoEsperaEstudio')
+    id_sisr = models.IntegerField(blank=True, null=True)
 
     class Meta:
         db_table = 'turno_espera'

@@ -65,7 +65,12 @@ export interface MensajeAsociado {
 }
 
 export type MensajeCount = {
-    total_asignacion: number,
-    total_recordatorio: number,
-    estados_recordatorio: [{estado: string; count: number}] | []
+    total: number;
+    total_asignacion: number;
+    total_cancelacion: number;
+    total_reprogramacion: number;
+    total_recordatorio: number;
+    estados_recordatorio: [
+        {estado: string, count: number, estado_turno: [{estado_turno: string, count: number}]}
+    ] | []
 }

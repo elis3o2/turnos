@@ -27,7 +27,7 @@ export function useDetalleTurno({
 }: UseDetalleTurnoParams) {
   const telefonoEstado = useMemo(() => {
     if (!activeTurno) return "missing" as const;
-
+    
     return getTelefonoEstado(
       activeTurno.paciente?.carac_telef,
       activeTurno.paciente?.nro_telef

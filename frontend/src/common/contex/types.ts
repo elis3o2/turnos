@@ -15,7 +15,7 @@ export interface InitializeAuthData {
 export interface AuthContextType {
     authTokens: AuthTokens | null;
     initializeAuth: (data: InitializeAuthData) => void;
-
+    isLoading: boolean;   
     username: string | null;
     efectores: Efector[];
 

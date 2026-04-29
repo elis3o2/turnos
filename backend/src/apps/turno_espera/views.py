@@ -122,9 +122,21 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
 
         if id_paciente:
-            queryset = queryset.filter(id_paciente=id_paciente)
+            queryset = queryset.filter(id_paciente=id_paciente) 
 
-        serializer = self.get_serializer(queryset, many=True)
+        ids_profesionales = list(set(queryset.values_list("id_profesional_solicitante", flat=True)))  
+        profesionales = fetch_profesional(ids=ids_profesionales) if ids_profesionales else []
+
+        prof_map = {p["id"]: p for p in profesionales}
+
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={
+                "prof_map": prof_map,
+            }
+        )
+
         return Response(serializer.data)
 
     # ----------------------------------------------------

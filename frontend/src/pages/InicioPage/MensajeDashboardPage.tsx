@@ -4,14 +4,11 @@ import {
   Card,
   CardContent,
   Typography,
-  IconButton,
   Menu,
   MenuItem,
   Checkbox,
   ListItemIcon,
   ListItemText,
-  Chip,
-  Stack,
   CircularProgress,
   Divider,
 } from '@mui/material'
@@ -19,69 +16,10 @@ import HospitalIcon from '../../assets/hospital.png'
 import AidKitIcon from '../../assets/first-aid-kit.png'
 import MedicalReportIcon from '../../assets/medical-report.png'
 import { useMensajesDashboard } from './useMensajeDashboard'
-import { ESTADO_COLORS, DEFAULT_ESTADO_COLOR } from './utilsMensajeDashboard'
+import { EstadoRecordatorioCard } from './components/EstadoRecordatorioCard'
+import { FilterIcon } from './components/FilterIcon'
+import { StatCard } from './components/StatCard'
 
-// ─────────────────────────────────────────────
-// SUBCOMPONENTE: ícono de filtro
-// ─────────────────────────────────────────────
-
-interface ChipItem {
-  id: number
-  label: string
-  onDelete?: () => void
-}
-
-interface FilterIconProps {
-  src: string
-  label: string
-  disabled: boolean
-  onClick: (e: React.MouseEvent<HTMLElement>) => void
-  chips: ChipItem[]
-}
-
-function FilterIcon({ src, label, disabled, onClick, chips }: FilterIconProps) {
-  return (
-    <Box sx={{ textAlign: 'center' }}>
-      <IconButton
-        onClick={onClick}
-        sx={{
-          width: 100,
-          height: 100,
-          borderRadius: 3,
-          filter: disabled ? 'brightness(0.65) saturate(0.4)' : 'none',
-          cursor: disabled ? 'default' : 'pointer',
-          transition: 'filter 0.2s',
-        }}
-        aria-label={label}
-        aria-disabled={disabled}
-        tabIndex={disabled ? -1 : 0}
-      >
-        <img src={src} alt={label} width={56} height={56} />
-      </IconButton>
-
-      <Stack
-        direction="row"
-        spacing={0.5}
-        justifyContent="center"
-        sx={{ mt: 1, flexWrap: 'wrap', maxWidth: 220 }}
-      >
-        {chips.map(chip => (
-          <Chip
-            key={chip.id}
-            label={chip.label}
-            size="small"
-            onDelete={chip.onDelete}
-            sx={{ backgroundColor: '#1976d2', color: 'white', my: 0.25 }}
-          />
-        ))}
-      </Stack>
-    </Box>
-  )
-}
-
-// ─────────────────────────────────────────────
-// PÁGINA PRINCIPAL
-// ─────────────────────────────────────────────
 
 export function MensajesDashboard() {
   const {
@@ -93,8 +31,8 @@ export function MensajesDashboard() {
     selectedEfectores,
     selectedServicios,
     selectedEspecialidades,
-    anchorEfector,   setAnchorEfector,
-    anchorServicio,  setAnchorServicio,
+    anchorEfector, setAnchorEfector,
+    anchorServicio, setAnchorServicio,
     anchorEspecialidad, setAnchorEspecialidad,
     loading,
     resumen,
@@ -120,11 +58,8 @@ export function MensajesDashboard() {
 
   return (
     <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-
       {/* ── FILTROS ─────────────────────────────────── */}
       <Box sx={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-
-        {/* Efector */}
         <FilterIcon
           src={HospitalIcon}
           label="efectores"
@@ -152,13 +87,14 @@ export function MensajesDashboard() {
           </MenuItem>
           {efectores?.map(e => (
             <MenuItem key={e.id} onClick={() => handleToggleEfector(e.id)}>
-              <ListItemIcon><Checkbox edge="start" checked={selectedEfectores.includes(e.id)} /></ListItemIcon>
+              <ListItemIcon>
+                <Checkbox edge="start" checked={selectedEfectores.includes(e.id)} />
+              </ListItemIcon>
               <ListItemText>{e.nombre}</ListItemText>
             </MenuItem>
           ))}
         </Menu>
 
-        {/* Servicio */}
         <FilterIcon
           src={MedicalReportIcon}
           label="servicios"
@@ -186,13 +122,14 @@ export function MensajesDashboard() {
           </MenuItem>
           {servicios.filter(s => availableServicios.includes(s.id)).map(s => (
             <MenuItem key={s.id} onClick={() => handleToggleServicio(s.id)}>
-              <ListItemIcon><Checkbox edge="start" checked={selectedServicios.includes(s.id)} /></ListItemIcon>
+              <ListItemIcon>
+                <Checkbox edge="start" checked={selectedServicios.includes(s.id)} />
+              </ListItemIcon>
               <ListItemText>{s.nombre}</ListItemText>
             </MenuItem>
           ))}
         </Menu>
 
-        {/* Especialidad */}
         <FilterIcon
           src={AidKitIcon}
           label="especialidades"
@@ -220,33 +157,63 @@ export function MensajesDashboard() {
           </MenuItem>
           {especialidades.filter(e => availableEspecialidades.includes(e.id)).map(es => (
             <MenuItem key={es.id} onClick={() => handleToggleEspecialidad(es.id)}>
-              <ListItemIcon><Checkbox edge="start" checked={selectedEspecialidades.includes(es.id)} /></ListItemIcon>
+              <ListItemIcon>
+                <Checkbox edge="start" checked={selectedEspecialidades.includes(es.id)} />
+              </ListItemIcon>
               <ListItemText>{es.nombre}</ListItemText>
             </MenuItem>
           ))}
         </Menu>
-
       </Box>
 
-      {/* ── CARD PRINCIPAL: ASIGNACIÓN ───────────── */}
-      <Card sx={{ width: '60%', minWidth: 400, textAlign: 'center', borderRadius: 4, boxShadow: 4, p: 2 }}>
-        <CardContent>
-          <Typography variant="overline" color="text.secondary" letterSpacing={2}>
-            Mensajes de confirmación enviados
-          </Typography>
-          <Typography variant="h2" fontWeight={700} sx={{ mt: 1 }}>
-            {resumen.total_asignacion.toLocaleString()}
-          </Typography>
-        </CardContent>
-      </Card>
-
-      {/* ── CARD RECORDATORIO + ESTADOS ─────────── */}
+      {/* ── TARJETAS RESUMEN ─────────────────────── */}
       <Box
         sx={{
-          width: '60%',
+          width: '80%',
+          minWidth: 400,
+          mx: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        {/* Card de total: ocupa todo el ancho */}
+        <Card sx={{ textAlign: 'center', borderRadius: 4, boxShadow: 4, p: 2 }}>
+          <CardContent>
+            <Typography variant="overline" color="text.secondary" letterSpacing={2}>
+              Total de mensajes
+            </Typography>
+            <Typography variant="h2" fontWeight={700} sx={{ mt: 1 }}>
+              {resumen.total.toLocaleString()}
+            </Typography>
+          </CardContent>
+        </Card>
+
+        {/* StatCards: en fila centradas, bajan si no entran */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: 2,
+          }}
+        >
+          <StatCard label="Mensajes de asignación" value={resumen.total_asignacion} />
+          <StatCard label="Mensajes de cancelación" value={resumen.total_cancelacion} />
+          <StatCard label="Mensajes de reprogramación" value={resumen.total_reprogramacion} />
+          <StatCard label="Mensajes de recordatorio" value={resumen.total_recordatorio} />
+        </Box>
+      </Box>
+
+      {/* ── RECORDATORIOS + ESTADOS ─────────────── */}
+      <Box
+        sx={{
+          width: '80%',
           minWidth: 400,
           display: 'flex',
           gap: 2,
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 260px))', 
+          justifyContent: 'center', 
           alignItems: 'stretch',
           flexWrap: 'wrap',
         }}
@@ -254,7 +221,7 @@ export function MensajesDashboard() {
         <Card
           sx={{
             flex: '0 0 auto',
-            width: 200,
+            width: 230,
             textAlign: 'center',
             borderRadius: 4,
             boxShadow: 4,
@@ -280,7 +247,7 @@ export function MensajesDashboard() {
           sx={{
             flex: 1,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
             gap: 1.5,
             alignContent: 'center',
           }}
@@ -290,42 +257,17 @@ export function MensajesDashboard() {
               Sin datos de estados
             </Typography>
           ) : (
-            resumen.estados_recordatorio.map(({ estado, count }) => {
-              const colors = ESTADO_COLORS[estado.toLowerCase()] ?? DEFAULT_ESTADO_COLOR
-              return (
-                <Box
-                  key={estado}
-                  sx={{
-                    background: colors.bg,
-                    border: `1.5px solid ${colors.border}`,
-                    borderRadius: 3,
-                    p: 1.5,
-                    textAlign: 'center',
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: colors.color,
-                      fontWeight: 600,
-                      letterSpacing: 1,
-                      textTransform: 'uppercase',
-                      fontSize: 10,
-                    }}
-                  >
-                    {estado}
-                  </Typography>
-                  <Typography variant="h5" fontWeight={700} sx={{ color: colors.color, mt: 0.5 }}>
-                    {count.toLocaleString()}
-                  </Typography>
-                </Box>
-              )
-            })
+            resumen.estados_recordatorio.map(({ estado, count, estado_turno }) => (
+              <EstadoRecordatorioCard
+                key={estado}
+                estado={estado}
+                count={count}
+                estadoTurno={estado_turno}
+              />
+            ))
           )}
         </Box>
       </Box>
-
     </Box>
   )
 }
-

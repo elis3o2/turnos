@@ -29,8 +29,11 @@ export function useMensajesDashboard() {
 
   const [loading, setLoading] = useState(true)
   const [resumen, setResumen] = useState<MensajeCount>({
+    total: 0,
     total_asignacion: 0,
     total_recordatorio: 0,
+    total_cancelacion: 0,
+    total_reprogramacion: 0,
     estados_recordatorio: [],
   })
 

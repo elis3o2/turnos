@@ -44,7 +44,7 @@ export function useEsperaHistorico() {
       setLoading(false);
     }
   }, []);
-
+  console.log(rows)
   // Dispara automáticamente al confirmar paciente
   useEffect(() => {
     if (finishPaciente && paciente?.id) {

@@ -64,6 +64,7 @@ export function diasEnEsperaNumber(t: TurnoEspera): number {
 }
 
 export function pacienteLabel(t: TurnoEspera): string {
+  console.log(t)
   const apellido = t.paciente?.apellido ?? "";
   const nombre = t.paciente?.nombre ?? "";
   const dni = t.paciente?.nro_doc ? ` · DNI: ${t.paciente.nro_doc}` : "";

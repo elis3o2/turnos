@@ -1,3 +1,4 @@
+from collections import defaultdict
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,67 +19,91 @@ class MensajeViewSet(viewsets.ModelViewSet):
     queryset = Mensaje.objects.all()
     serializer_class = MensajeSerializer
     permission_classes = [ReadOnly]
- 
+
     @action(detail=False, methods=["get"], url_path="count")
     def count(self, request) -> Response:
-        print(request.query_params.getlist("ids_efe[]"))
-        ids_efectores    = request.query_params.getlist("ids_efe[]")
-        ids_servicios    = request.query_params.getlist("ids_ser[]")
+        ids_efectores = request.query_params.getlist("ids_efe[]")
+        ids_servicios = request.query_params.getlist("ids_ser[]")
         ids_especialidades = request.query_params.getlist("ids_esp[]")
+
         ids_efectores = parse_int_list(ids_efectores)
         ids_servicios = parse_int_list(ids_servicios)
         ids_especialidades = parse_int_list(ids_especialidades)
 
-
-        print(ids_efectores)
-        # id_efectores es obligatorio
         if not ids_efectores:
             return Response(
                 {"detail": "Se requiere al menos un efector."},
                 status=400,
             )
- 
-        # ── Filtro base por efector ──────────────────────────────────────────
+
         qs = Mensaje.objects.filter(turno__efe_ser_esp__efector_id__in=ids_efectores)
- 
-        # ── Filtros opcionales ───────────────────────────────────────────────
+
         if ids_servicios:
             qs = qs.filter(turno__efe_ser_esp__ser_esp__servicio_id__in=ids_servicios)
- 
-        if ids_especialidades:
-            qs = qs.filter(turno__efe_ser_esp__ser_esp_especialidad_id__in=ids_especialidades)
- 
-        # ── Totales por tipo de mensaje ──────────────────────────────────────
-        totales = qs.aggregate(
-            total_asignacion=Count("id", filter=Q(plantilla__tipo_id=1)),
-            total_recordatorio=Count("id", filter=Q(plantilla__tipo_id=4)),
-        )
- 
-        # ── Estados del mensaje de recordatorio ─────────────────────────────
-        estados_recordatorio = (
-            qs.filter(plantilla__tipo_id=4)
-            .values("estado__significado")
-            .annotate(count=Count("id"))
-            .order_by("estado__significado")
-        )
-        # Renombrar la clave en la respuesta final
-        estados_lista = [
-            {"estado": item["estado__significado"], "count": item["count"]}
-            for item in estados_recordatorio
-        ]
-        print(estados_lista)
 
-        print({
-            "total_asignacion": totales["total_asignacion"],
-            "total_recordatorio": totales["total_recordatorio"],
-            "estados_recordatorio": estados_lista,
-        })
-        return Response({
-            "total_asignacion": totales["total_asignacion"],
-            "total_recordatorio": totales["total_recordatorio"],
-            "estados_recordatorio": estados_lista,
-        })
- 
+        if ids_especialidades:
+            qs = qs.filter(
+                turno__efe_ser_esp__ser_esp_especialidad_id__in=ids_especialidades
+            )
+
+        # Ajustá estos IDs si en tu sistema son otros
+        TIPO_ASIGNACION = 1
+        TIPO_CANCELACION = 2
+        TIPO_REPROGRAMACION = 3
+        TIPO_RECORDATORIO = 4
+
+        totales = qs.aggregate(
+            total=Count("id"),
+            total_asignacion=Count("id", filter=Q(plantilla__tipo_id=TIPO_ASIGNACION)),
+            total_cancelacion=Count("id", filter=Q(plantilla__tipo_id=TIPO_CANCELACION)),
+            total_reprogramacion=Count(
+                "id", filter=Q(plantilla__tipo_id=TIPO_REPROGRAMACION)
+            ),
+            total_recordatorio=Count("id", filter=Q(plantilla__tipo_id=TIPO_RECORDATORIO)),
+        )
+
+        # Recordatorios agrupados por estado del mensaje y estado del turno
+        # Si tu FK en Turno se llama id_estado, cambiá turno__estado__significado por turno__id_estado__significado
+        recordatorios = (
+            qs.filter(plantilla__tipo_id=TIPO_RECORDATORIO)
+            .values("estado__significado", "turno__estado__nombre")
+            .annotate(count=Count("id"))
+            .order_by("estado__significado", "turno__estado__nombre")
+        )
+
+        mapa_estados = {}
+        for item in recordatorios:
+            estado = item["estado__significado"] or "Sin estado"
+            estado_turno = item["turno__estado__nombre"] or "Sin estado"
+
+            if estado not in mapa_estados:
+                mapa_estados[estado] = {
+                    "estado": estado,
+                    "estado_turno": [],
+                    "count": 0,
+                }
+
+            mapa_estados[estado]["estado_turno"].append(
+                {
+                    "estado_turno": estado_turno,
+                    "count": item["count"],
+                }
+            )
+
+            mapa_estados[estado]["count"] += item["count"]
+
+        estados_lista = list(mapa_estados.values())
+
+        return Response(
+            {
+                "total": totales["total"],
+                "total_asignacion": totales["total_asignacion"],
+                "total_cancelacion": totales["total_cancelacion"],
+                "total_reprogramacion": totales["total_reprogramacion"],
+                "total_recordatorio": totales["total_recordatorio"],
+                "estados_recordatorio": estados_lista,
+            }
+        )
 
 
 class PlantillaViewSet(viewsets.ModelViewSet):

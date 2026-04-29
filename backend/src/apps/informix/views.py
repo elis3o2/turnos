@@ -39,6 +39,7 @@ class GetPacienteAPIView(APIView):
 
             pacientes = fetch_paciente(dni=dni)
             ser = PacienteSerializer(instance=pacientes, many=True)
+            print(ser.data)
             return Response(ser.data, status=status.HTTP_200_OK)
 
         except DatabaseError:
