@@ -689,7 +689,7 @@ def ajustar_horario_envio(dt):
 
 
 def calcular_proximo_retry(now):
-    eta = now + timedelta(minutes=15)
+    eta = now + timedelta(minutes=60)
     return ajustar_horario_envio(eta)
 
 
