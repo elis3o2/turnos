@@ -1,10 +1,10 @@
 import {Box, Chip, Typography} from "@mui/material";
 import {
   getTurnosMerged,
-  getTurnosMergedAlerta,
+  getTurnosMergedRespuesta,
   getTurnosMergedError,
   downloadTurnosMerged,
-  downloadTurnosMergedAlerta,
+  downloadTurnosMergedRespuesta,
   downloadTurnosMergedError
 } from "../../features/informix/api"
 import type { TurnoMerged } from "../../features/informix/types";
@@ -12,27 +12,16 @@ import type { Mensaje } from "../../features/mensaje/types";
 import { DateTimeStack } from "../../common/components/DateTimeStack";
 import { DateStack } from "../../common/components/DateStack";
 
-// ─── tipos exportados ────────────────────────────────────────────────────────
 
-export type AlertCategory = "rechazados" | "incorrectos" | "sin_respuesta";
-
-export type AlertData = {
-  count_total: number;
-  grupos: {
-    rechazados: TurnoMerged[];
-    incorrectos: TurnoMerged[];
-    sin_respuesta: TurnoMerged[];
-  };
-};
 
 // ─── resolvers de endpoint ───────────────────────────────────────────────────
 
 /** Elige el endpoint de consulta correcto según el modo activo. */
 export function resolveEndpoint(mode: {
   errorMode: boolean;
-  alertMode: boolean;
+  respuestaMode: boolean;
 }): typeof getTurnosMerged {
-  if (mode.alertMode) return getTurnosMergedAlerta;
+  if (mode.respuestaMode) return getTurnosMergedRespuesta;
   if (mode.errorMode) return getTurnosMergedError;
   return getTurnosMerged;
 }
@@ -40,9 +29,9 @@ export function resolveEndpoint(mode: {
 /** Elige el endpoint de descarga correcto según el modo activo. */
 export function resolveDownloadEndpoint(mode: {
   errorMode: boolean;
-  alertMode: boolean;
+  respuestaMode: boolean;
 }): typeof downloadTurnosMerged {
-  if (mode.alertMode) return downloadTurnosMergedAlerta;
+  if (mode.respuestaMode) return downloadTurnosMergedRespuesta;
   if (mode.errorMode) return downloadTurnosMergedError;
   return downloadTurnosMerged;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useContext, useRef } from 'react'
+import { useEffect, useState, useCallback, useContext } from 'react'
 import type { Especialidad, Servicio, EfeSerEsp, Efector } from '../../features/efector/types'
 import {
   getServiciosAll,
@@ -8,7 +8,9 @@ import {
 import { getMensajesCount } from '../../features/mensaje/api'
 import type { MensajeCount } from '../../features/mensaje/types'
 import { AuthContext } from '../../common/contex'
+import { getDefaultDesde } from './utilsMensajeDashboard'
 
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function useMensajesDashboard() {
   const { efectores } = useContext(AuthContext) as { efectores?: Efector[] };
@@ -22,6 +24,10 @@ export function useMensajesDashboard() {
   const [selectedEfectores, setSelectedEfectores] = useState<number[]>([])
   const [selectedServicios, setSelectedServicios] = useState<number[]>([])
   const [selectedEspecialidades, setSelectedEspecialidades] = useState<number[]>([])
+
+  // ── Fechas ────────────────────────────────────────────────────────────────
+  const [selectedDesde, setSelectedDesde] = useState<string | null>(getDefaultDesde)
+  const [selectedHasta, setSelectedHasta] = useState<string | null>(null)
 
   const [anchorEfector, setAnchorEfector] = useState<null | HTMLElement>(null)
   const [anchorServicio, setAnchorServicio] = useState<null | HTMLElement>(null)
@@ -62,9 +68,7 @@ export function useMensajesDashboard() {
   }, [])
 
   // ── Filtros encadenados ───────────────────
-  // Se recalculan directo en useEffect, sin useCallback intermedio
 
-  // Cuando cambia efector → recalcular servicios y especialidades disponibles
   useEffect(() => {
     if (combinaciones.length === 0) return
 
@@ -79,22 +83,16 @@ export function useMensajesDashboard() {
     const posibles = combinaciones.filter(p => selectedEfectores.includes(p.id_efector))
     const newServicios = [...new Set(posibles.map(p => p.id_servicio))]
     setAvailableServicios(newServicios)
-
-    // Limpiar servicios seleccionados que ya no están disponibles
     setSelectedServicios(prev => prev.filter(id => newServicios.includes(id)))
-
-    // Especialidades según efector (sin servicio seleccionado aún)
     setAvailableEspecialidades([...new Set(posibles.map(p => p.id_especialidad))])
     setSelectedEspecialidades([])
 
   }, [selectedEfectores, combinaciones, servicios, especialidades])
 
-  // Cuando cambia servicio → recalcular especialidades disponibles
   useEffect(() => {
     if (combinaciones.length === 0) return
 
     if (selectedServicios.length === 0) {
-      // Sin servicio: especialidades disponibles según efector
       const posibles = selectedEfectores.length > 0
         ? combinaciones.filter(p => selectedEfectores.includes(p.id_efector))
         : combinaciones
@@ -127,12 +125,14 @@ export function useMensajesDashboard() {
         idsEfe,
         selectedServicios,
         selectedEspecialidades,
+        selectedDesde,
+        selectedHasta,
       )
       setResumen(data)
     } catch (err) {
       console.error('Error obteniendo resumen de mensajes:', err)
     }
-  }, [selectedEfectores, selectedServicios, selectedEspecialidades, efectores])
+  }, [selectedEfectores, selectedServicios, selectedEspecialidades, selectedDesde, selectedHasta, efectores])
 
   useEffect(() => { fetchResumen() }, [fetchResumen])
 
@@ -157,6 +157,8 @@ export function useMensajesDashboard() {
     efectores, servicios, especialidades,
     availableServicios, availableEspecialidades,
     selectedEfectores, selectedServicios, selectedEspecialidades,
+    selectedDesde, setSelectedDesde,
+    selectedHasta, setSelectedHasta,
     anchorEfector, setAnchorEfector,
     anchorServicio, setAnchorServicio,
     anchorEspecialidad, setAnchorEspecialidad,

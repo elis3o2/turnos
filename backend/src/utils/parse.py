@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime, date, time
+import re
 
 def parse_date(value : str) -> date:
 
@@ -27,3 +28,19 @@ def parse_time(value : str) -> time:
     for fmt in ("%H:%M:%S", "%H:%M"):
         return datetime.strptime(s, fmt).time()
 
+
+
+def normalizar_telefono(carac_tel: str, tel: str) -> str | None:
+    if not carac_tel or not tel:
+        return None
+
+    telefono = f"549{carac_tel}{tel}"
+    
+    # eliminar basura
+    telefono = re.sub(r"\D", "", telefono)
+
+    # validar formato argentino típico: 549 + 10 dígitos
+    if re.fullmatch(r"549\d{10}", telefono):
+        return telefono
+
+    return None

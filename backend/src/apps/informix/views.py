@@ -466,7 +466,7 @@ class TurnosMergedAllAPIView(BaseTurnosMerged):
         return self.run_pipeline(request, build_qs, csv_filename="turnos_todos.csv")
 
 
-class TurnosAlertasAPIView(BaseTurnosMerged):
+class TurnosRespuestaAPIView(BaseTurnosMerged):
     def get(self, request):
         tipo = request.query_params.get("tipo")
         if not tipo:
@@ -482,16 +482,19 @@ class TurnosAlertasAPIView(BaseTurnosMerged):
                 .order_by("-fecha", "-hora", "-id")
             )
 
-            if tipo == "rechazados":
-                qs = qs.filter(estado__id=3, estado_paciente__id=2)
+            if tipo == "confirmados":
+                qs = qs.filter(estado_paciente__id=1)
+            elif tipo == "rechazados":
+                qs = qs.filter(estado_paciente__id=2)
             elif tipo == "incorrectos":
-                qs = qs.filter(estado__id=3, estado_paciente__id=3)
+                qs = qs.filter(estado_paciente__id=3)
             elif tipo == "sin_respuesta":
-                qs = qs.filter(estado__id=3, estado_paciente__id=4)
+                qs = qs.filter(estado_paciente__id=4)
+
 
             return qs
 
-        return self.run_pipeline(request, build_qs, csv_filename=f"turnos_alertas_{tipo}.csv")
+        return self.run_pipeline(request, build_qs, csv_filename=f"turnos_respuestas_{tipo}.csv")
 
 
 

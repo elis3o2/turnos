@@ -1,4 +1,5 @@
 from .models import Turno
+from datetime import date, time
 
 def create_Turno(id_sisr: int, id_pac: int, id_est: int, 
                  id_ess: int, fecha: date, hora: time) -> Turno:

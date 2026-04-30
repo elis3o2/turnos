@@ -11,6 +11,8 @@ import {
   ListItemText,
   CircularProgress,
   Divider,
+  TextField,
+  Stack,
 } from '@mui/material'
 import HospitalIcon from '../../assets/hospital.png'
 import AidKitIcon from '../../assets/first-aid-kit.png'
@@ -31,6 +33,8 @@ export function MensajesDashboard() {
     selectedEfectores,
     selectedServicios,
     selectedEspecialidades,
+    selectedDesde, setSelectedDesde,
+    selectedHasta, setSelectedHasta,
     anchorEfector, setAnchorEfector,
     anchorServicio, setAnchorServicio,
     anchorEspecialidad, setAnchorEspecialidad,
@@ -59,7 +63,16 @@ export function MensajesDashboard() {
   return (
     <Box sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
       {/* ── FILTROS ─────────────────────────────────── */}
-      <Box sx={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 4,
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Filtros de entidad */}
         <FilterIcon
           src={HospitalIcon}
           label="efectores"
@@ -164,6 +177,30 @@ export function MensajesDashboard() {
             </MenuItem>
           ))}
         </Menu>
+
+        {/* ── Filtros de fecha ─────────────────────── */}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            label="Desde"
+            type="date"
+            size="small"
+            value={selectedDesde}
+            onChange={e => setSelectedDesde(e.target.value)}
+            inputProps={{ max: selectedHasta }}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 155 }}
+          />
+          <TextField
+            label="Hasta"
+            type="date"
+            size="small"
+            value={selectedHasta}
+            onChange={e => setSelectedHasta(e.target.value)}
+            inputProps={{ min: selectedDesde }}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 155 }}
+          />
+        </Stack>
       </Box>
 
       {/* ── TARJETAS RESUMEN ─────────────────────── */}
@@ -177,7 +214,6 @@ export function MensajesDashboard() {
           gap: 2,
         }}
       >
-        {/* Card de total: ocupa todo el ancho */}
         <Card sx={{ textAlign: 'center', borderRadius: 4, boxShadow: 4, p: 2 }}>
           <CardContent>
             <Typography variant="overline" color="text.secondary" letterSpacing={2}>
@@ -189,7 +225,6 @@ export function MensajesDashboard() {
           </CardContent>
         </Card>
 
-        {/* StatCards: en fila centradas, bajan si no entran */}
         <Box
           sx={{
             display: 'flex',
@@ -212,8 +247,8 @@ export function MensajesDashboard() {
           minWidth: 400,
           display: 'flex',
           gap: 2,
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 260px))', 
-          justifyContent: 'center', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 260px))',
+          justifyContent: 'center',
           alignItems: 'stretch',
           flexWrap: 'wrap',
         }}

@@ -3,16 +3,15 @@ import { useNavigate } from "react-router-dom";
 
 import { AuthContext } from "../../common/contex";
 import { getServiciosByEfector } from "../../features/efector/api";
-import { getTurnosMergedAlerta } from "../../features/informix/api";
 import type { TurnoMerged, TurnoMergedFilters } from "../../features/informix/types";
 import type { Efector, Servicio } from "../../features/efector/types";
+import type { RespuestaCategory } from "../../features/informix/types";
 import {
   resolveEndpoint,
   resolveDownloadEndpoint,
   DEFAULT_VISIBLE_COLUMNS,
-  type AlertCategory,
-  type AlertData
 } from "./utilsTurnos";
+
 
 const PAGE_SIZE = 25;
 
@@ -41,20 +40,13 @@ export function useTurno() {
   const [anchorCols, setAnchorCols]         = useState<null | HTMLElement>(null);
 
   // ── modos ─────────────────────────────────────────────────────────────────
-  const [errorMode, setErrorMode] = useState(false);
-  const [alertMode, setAlertMode] = useState(false);
+  const [errorMode, setErrorMode]                   = useState(false);
+  const [activeRespuestaCategory, setActiveRespuestaCategory] = useState<RespuestaCategory | null>(null);
 
-  // Indica si la última búsqueda ejecutada fue en modo alerta
-  const [searchedInAlertMode, setSearchedInAlertMode] = useState(false);
+  // respuestaMode se deriva: hay categoría seleccionada
+  const respuestaMode = activeRespuestaCategory !== null;
 
-  const [activeAlertCategory, setActiveAlertCategory] =
-    useState<AlertCategory>("rechazados");
-
-  // ── alertas ───────────────────────────────────────────────────────────────
-  const [alertData, setAlertData]       = useState<AlertData | null>(null);
-  const [alertLoading, setAlertLoading] = useState(false);
-
-  // ── ref de appliedFilters para el efecto de categoría ────────────────────
+  // ── ref de appliedFilters ─────────────────────────────────────────────────
   const appliedFiltersRef = useRef(appliedFilters);
   useEffect(() => { appliedFiltersRef.current = appliedFilters; }, [appliedFilters]);
 
@@ -78,19 +70,17 @@ export function useTurno() {
     }
   }, [selectedEfectores]);
 
-  useEffect(() => {
-    loadServicios();
-  }, [loadServicios]);
+  useEffect(() => { loadServicios(); }, [loadServicios]);
 
   // ── carga de página ───────────────────────────────────────────────────────
   async function loadPage(params: {
-    pageToLoad:          number;
-    filters:             TurnoMergedFilters;
-    errorMode:           boolean;
-    alertMode:           boolean;
-    activeAlertCategory: AlertCategory;
+    pageToLoad:           number;
+    filters:              TurnoMergedFilters;
+    errorMode:            boolean;
+    activeRespuestaCategory:  RespuestaCategory | null;
   }) {
-    const { pageToLoad, filters, errorMode, alertMode, activeAlertCategory } = params;
+    const { pageToLoad, filters, errorMode, activeRespuestaCategory } = params;
+    const respuestaMode = activeRespuestaCategory !== null;
 
     if (!filters.ids_efec || filters.ids_efec.length === 0) {
       setTurnos([]);
@@ -105,10 +95,10 @@ export function useTurno() {
         ...filters,
         cantidad: PAGE_SIZE,
         offset,
-        ...(alertMode ? { tipo: activeAlertCategory } : {}),
+        ...(respuestaMode ? { tipo: activeRespuestaCategory } : {}),
       };
 
-      const endpoint = resolveEndpoint({ errorMode, alertMode });
+      const endpoint = resolveEndpoint({ errorMode, respuestaMode });
       const data     = await endpoint(requestFilters);
       setTurnos(data.data ?? []);
       setTotal(data.count ?? 0);
@@ -121,28 +111,14 @@ export function useTurno() {
     }
   }
 
-  // ── cambio de categoría: solo actúa si la última búsqueda fue en alertMode ─
-  useEffect(() => {
-    if (!searchedInAlertMode || !appliedFiltersRef.current) return;
-
-    loadPage({
-      pageToLoad:          1,
-      filters:             appliedFiltersRef.current,
-      errorMode:           false,
-      alertMode:           true,
-      activeAlertCategory,
-    });
-    setPage(1);
-  }, [activeAlertCategory]);  // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── descarga CSV ──────────────────────────────────────────────────────────
   async function handleDescargar() {
     if (!appliedFilters || !appliedFilters.ids_efec?.length) return;
     setDownloading(true);
     try {
-      const blob = await resolveDownloadEndpoint({ errorMode, alertMode })({
+      const blob = await resolveDownloadEndpoint({ errorMode, respuestaMode })({
         ...appliedFilters,
-        ...(alertMode ? { tipo: activeAlertCategory } : {}),
+        ...(respuestaMode ? { tipo: activeRespuestaCategory! } : {}),
       });
 
       const url    = URL.createObjectURL(blob);
@@ -184,79 +160,37 @@ export function useTurno() {
       setTurnos([]);
       setTotal(0);
       setHasSearched(false);
-      setSearchedInAlertMode(false);
       return;
     }
 
     setAppliedFilters(nextFilters);
     setPage(1);
     setHasSearched(true);
-    setSearchedInAlertMode(alertMode);   // registra si esta búsqueda fue en alertMode
 
     await loadPage({
       pageToLoad:          1,
       filters:             nextFilters,
       errorMode,
-      alertMode,
-      activeAlertCategory,
+      activeRespuestaCategory,
     });
   }
 
-  // ── toggle modos (solo cambian la bandera, no lanzan búsqueda) ────────────
+  // ── toggle modos ──────────────────────────────────────────────────────────
   function handleToggleErrorMode() {
     const next = !errorMode;
-    if (next && alertMode) setAlertMode(false);
+    if (next) setActiveRespuestaCategory(null); // mutuamente exclusivo
     setErrorMode(next);
   }
 
-  function handleToggleAlertMode() {
-    const next = !alertMode;
-    if (next && errorMode) setErrorMode(false);
-    setAlertMode(next);
+  // Toggle de categoría: click en la activa la desactiva, click en otra la activa
+  function handleSelectCategory(cat: RespuestaCategory) {
+    if (activeRespuestaCategory === cat) {
+      setActiveRespuestaCategory(null);
+    } else {
+      setActiveRespuestaCategory(cat);
+      if (errorMode) setErrorMode(false); // mutuamente exclusivo
+    }
   }
-
-  // ── carga inicial de alertas ──────────────────────────────────────────────
-  useEffect(() => {
-    const efIds = efectores?.map((e) => Number(e.id)) ?? [];
-    if (efIds.length === 0) return;
-
-    (async () => {
-      setAlertLoading(true);
-      try {
-        const baseFilters: TurnoMergedFilters = {
-          cantidad:    PAGE_SIZE,
-          offset:      0,
-          ids_efec:    efIds,
-          ids_serv:    [],
-          fecha_desde: null,
-          fecha_hasta: null,
-        };
-
-        const [resRechaz, resIncorrect, resSinResp] = await Promise.all([
-          getTurnosMergedAlerta({ ...baseFilters, tipo: "rechazados" }),
-          getTurnosMergedAlerta({ ...baseFilters, tipo: "incorrectos" }),
-          getTurnosMergedAlerta({ ...baseFilters, tipo: "sin_respuesta" }),
-        ]);
-
-        setAlertData({
-          count_total:
-            (resRechaz.count ?? 0) +
-            (resIncorrect.count ?? 0) +
-            (resSinResp.count ?? 0),
-          grupos: {
-            rechazados:    resRechaz.data ?? [],
-            incorrectos:   resIncorrect.data ?? [],
-            sin_respuesta: resSinResp.data ?? [],
-          },
-        });
-      } catch (err) {
-        console.error("Error cargando turnos alerta", err);
-        setAlertData(null);
-      } finally {
-        setAlertLoading(false);
-      }
-    })();
-  }, [efectores]);
 
   // ── paginación ────────────────────────────────────────────────────────────
   function handleChangePage(_: React.ChangeEvent<unknown>, value: number) {
@@ -267,8 +201,7 @@ export function useTurno() {
       pageToLoad:          value,
       filters:             appliedFilters,
       errorMode,
-      alertMode,
-      activeAlertCategory,
+      activeRespuestaCategory,
     });
   }
 
@@ -278,7 +211,6 @@ export function useTurno() {
   return {
     navigate,
     efectores,
-
     turnos,
     loading,
     downloading,
@@ -286,27 +218,20 @@ export function useTurno() {
     page,
     totalPages,
     hasSearched,
-
     servicios,
     selectedEfectores,    setSelectedEfectores,
     selectedServicios,    setSelectedServicios,
     fechaDesde,           setFechaDesde,
     fechaHasta,           setFechaHasta,
-
     visibleColumns,       setVisibleColumns,
     anchorCols,           setAnchorCols,
-
     errorMode,
-    alertMode,
-    activeAlertCategory,  setActiveAlertCategory,
-
-    alertData,
-    alertLoading,
-
+    respuestaMode,
+    activeRespuestaCategory,
     handleBuscar,
     handleDescargar,
     handleChangePage,
     handleToggleErrorMode,
-    handleToggleAlertMode,
+    handleSelectCategory,
   };
 }

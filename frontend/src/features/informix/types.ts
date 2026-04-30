@@ -25,6 +25,9 @@ export interface TurnoMerged {
     mensaje_asociado: MensajeAsociado;
 }
 
+export type RespuestaCategory =  'confirmados' | 'rechazados' | 'incorrectos' | 'sin_respuesta';
+
+
 export interface TurnoMergedFilters  {
   ids_efec: number[];
   ids_serv: number[];
@@ -32,7 +35,7 @@ export interface TurnoMergedFilters  {
   fecha_hasta: string | null;
   cantidad: number;
   offset: number;
-  tipo?: "rechazados" | "incorrectos" | "sin_respuesta";
+  tipo?: RespuestaCategory;
 };
 
 export interface TurnoMergedResp {

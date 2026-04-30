@@ -1,4 +1,5 @@
 from .models import TurnoEspera
+from src.apps.turno.models import Turno
 from datetime import datetime
 from src.utils.querys_informix import query_turno_fecha
 from django.db import connections

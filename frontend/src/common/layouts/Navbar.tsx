@@ -1,15 +1,16 @@
 import React, { useContext, useState } from 'react';
 import { AppBar, Toolbar, IconButton, MenuItem, Button, Typography, Menu, Box } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRightFromBracket, faUser, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRightFromBracket, faUser, faArrowLeft, faBars } from '@fortawesome/free-solid-svg-icons';
 import { AuthContext } from '../contex';
 import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
-  backTo?: string;  // Ruta opcional para mostrar la flecha
+  backTo?: string; 
+  onMenuClick?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ backTo }) => {
+const Navbar: React.FC<NavbarProps> = ({ backTo, onMenuClick })  => {
   const { username, logout } = useContext(AuthContext);
   const [menu, setMenu] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();
@@ -29,6 +30,9 @@ const Navbar: React.FC<NavbarProps> = ({ backTo }) => {
       }}
     >
       <Toolbar>
+        <IconButton onClick={onMenuClick} sx={{ color: 'inherit', mr: 1 }}>
+          <FontAwesomeIcon icon={faBars} />
+        </IconButton>
         {/* Flecha de volver si la prop está definida */}
         {backTo && (
           <IconButton

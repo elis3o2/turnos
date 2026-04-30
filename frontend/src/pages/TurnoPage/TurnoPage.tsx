@@ -16,7 +16,6 @@ import GetAppIcon       from "@mui/icons-material/GetApp";
 import RefreshIcon      from "@mui/icons-material/Refresh";
 import MenuBookIcon     from "@mui/icons-material/MenuBook";
 
-import { AlertaComponent } from "../../features/turno/components/AlertComponent";
 import { TableComponent } from "../../common/components/TableComponent";
 import { ColumnSelector } from "../../common/components/ColumnSelector";
 import { EfectorListForm } from "../../features/efector/components/EfectorListForm";
@@ -24,6 +23,7 @@ import { ServicioListForm } from "../../features/efector/components/ServicioList
 
 import { useTurno } from "./useTurno";
 import { ALL_COLUMNS, renderCell} from "./utilsTurnos";
+import { RespuestaComponent } from "./components/RespuestaComponent";
 
 export default function TurnosPage() {
   const {
@@ -43,26 +43,19 @@ export default function TurnosPage() {
     visibleColumns,       setVisibleColumns,
     anchorCols,           setAnchorCols,
     errorMode,
-    alertMode,
-    activeAlertCategory,  setActiveAlertCategory,
-    alertData,
-    alertLoading,
+    activeRespuestaCategory,
     handleBuscar,
     handleDescargar,
     handleChangePage,
     handleToggleErrorMode,
-    handleToggleAlertMode,
+    handleSelectCategory,
   } = useTurno();
-
   return (
     <Box sx={{ p: 2 }}>
-      <AlertaComponent
-        alertData={alertData}
-        alertLoading={alertLoading}
-        alertMode={alertMode}
-        activeAlertCategory={activeAlertCategory}
-        setActiveAlertCategory={setActiveAlertCategory}
-        handleToggleAlertMode={handleToggleAlertMode}
+      <RespuestaComponent
+        activeRespuestaCategory={activeRespuestaCategory}
+        loading={loading}
+        handleSelectCategory={handleSelectCategory}
       />
 
       <Paper elevation={1} sx={{ p: 2, mb: 2 }}>

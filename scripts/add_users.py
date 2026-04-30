@@ -26,3 +26,16 @@ crear_usuario('azurduy', 'azurduy', 'azurduy', 63)
 crear_usuario('emaus', 'emaus', 'emaus', 25)
 crear_usuario('coulin', 'coulin', 'coulin', 14)
 crear_usuario('ceferino', 'ceferino', 'ceferino', 19)
+
+
+crear_usuario('gaucho', 'gaucho', 'gaucho', 10)
+crear_usuario('tiorolo', 'tiorolo', 'tiorolo', 91)
+crear_usuario('plata', 'plata', 'plata', 35)
+crear_usuario('vicente', 'vicente', 'vicente', 38)
+crear_usuario('itati', 'itati', 'itati', 103)
+crear_usuario('champagnat', 'champagnat', 'champagnat', 34)
+
+
+crear_usuario('primero', 'primero', 'primero', 12)
+crear_usuario('richiger', 'richiger', 'richiger', 231)
+crear_usuario('mazza', 'mazza', 'mazza', 13)

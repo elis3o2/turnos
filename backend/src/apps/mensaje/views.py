@@ -26,6 +26,9 @@ class MensajeViewSet(viewsets.ModelViewSet):
         ids_servicios = request.query_params.getlist("ids_ser[]")
         ids_especialidades = request.query_params.getlist("ids_esp[]")
 
+        fecha_desde = request.query_params.get("fecha_desde")
+        fecha_hasta = request.query_params.get("fecha_hasta")
+
         ids_efectores = parse_int_list(ids_efectores)
         ids_servicios = parse_int_list(ids_servicios)
         ids_especialidades = parse_int_list(ids_especialidades)
@@ -36,15 +39,26 @@ class MensajeViewSet(viewsets.ModelViewSet):
                 status=400,
             )
 
-        qs = Mensaje.objects.filter(turno__efe_ser_esp__efector_id__in=ids_efectores)
+        qs = Mensaje.objects.filter(
+            turno__efe_ser_esp__efector_id__in=ids_efectores
+        )
 
         if ids_servicios:
-            qs = qs.filter(turno__efe_ser_esp__ser_esp__servicio_id__in=ids_servicios)
+            qs = qs.filter(
+                turno__efe_ser_esp__ser_esp__servicio_id__in=ids_servicios
+            )
 
         if ids_especialidades:
             qs = qs.filter(
                 turno__efe_ser_esp__ser_esp_especialidad_id__in=ids_especialidades
             )
+
+        if fecha_desde:
+            qs = qs.filter(fecha_envio__gte=fecha_desde)
+
+        if fecha_hasta:
+            qs = qs.filter(fecha_envio__lte=fecha_hasta)
+
 
         # Ajustá estos IDs si en tu sistema son otros
         TIPO_ASIGNACION = 1
@@ -68,7 +82,7 @@ class MensajeViewSet(viewsets.ModelViewSet):
             qs.filter(plantilla__tipo_id=TIPO_RECORDATORIO)
             .values("estado__significado", "turno__estado__nombre")
             .annotate(count=Count("id"))
-            .order_by("estado__significado", "turno__estado__nombre")
+            .order_by("estado__id", "turno__estado__id")
         )
 
         mapa_estados = {}

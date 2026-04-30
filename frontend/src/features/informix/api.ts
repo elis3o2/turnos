@@ -13,8 +13,8 @@ export const getTurnosMergedError = (filters: TurnoMergedFilters): Promise<Turno
 };
 
 
-export const getTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
-  return http.get<TurnoMergedResp>('informix/turnos-merged-alerta/', { params: filters }).then(res => res.data);
+export const getTurnosMergedRespuesta = (filters: TurnoMergedFilters): Promise<TurnoMergedResp> => {
+  return http.get<TurnoMergedResp>('informix/turnos-merged-respuesta/', { params: filters }).then(res => res.data);
 };
 
 
@@ -32,7 +32,7 @@ export const downloadTurnosMergedError = (filters: TurnoMergedFilters): Promise<
   }).then(res => res.data);
 
 
-export const downloadTurnosMergedAlerta = (filters: TurnoMergedFilters): Promise<Blob> =>
+export const downloadTurnosMergedRespuesta = (filters: TurnoMergedFilters): Promise<Blob> =>
   http.get<Blob>('informix/turnos-merged-alerta/', {
     params: { ...filters, csv: 1 },
     responseType: 'blob',

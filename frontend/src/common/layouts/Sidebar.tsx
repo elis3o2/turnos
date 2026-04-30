@@ -1,8 +1,7 @@
 import { Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faFileMedical, faHouse, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-
+import {faChevronLeft, faHouse, faCalendarCheck, faClock, faGear} from '@fortawesome/free-solid-svg-icons';
 const NAVBAR_HEIGHT = 64;
 const DRAWER_WIDTH = 200;
 
@@ -51,29 +50,44 @@ const Sidebar = ({ open, toggleSidebar }: { open: boolean; toggleSidebar: (open:
 
                 <ListItemButton 
                     component={Link} 
-                    to='/buscar' 
+                    to='/turnos' 
                     sx={{ 
                         color: (theme) => theme.palette.text.primary, 
                         gap: 2
                     }}
                 >
-                    <FontAwesomeIcon icon={faMagnifyingGlass} size='1x' />
-                    <ListItemText primary='Buscar' />
+                    <FontAwesomeIcon icon={faCalendarCheck} size='1x' />
+                    <ListItemText primary='Turnos' />
                 </ListItemButton>
 
                 <Divider variant='middle' />
 
                 <ListItemButton 
                     component={Link} 
-                    to='/atenciones' 
+                    to='/espera' 
                     sx={{ 
                         color: (theme) => theme.palette.text.primary, 
                         gap: 2
                     }}
                 >
-                    <FontAwesomeIcon icon={faFileMedical} size='1x' />
-                    <ListItemText primary='Atenciones' />
+                    <FontAwesomeIcon icon={faClock} size='1x' />
+                    <ListItemText primary='Espera' />
                 </ListItemButton>
+
+                <Divider variant='middle' />
+
+                <ListItemButton 
+                    component={Link} 
+                    to='/list' 
+                    sx={{ 
+                        color: (theme) => theme.palette.text.primary, 
+                        gap: 2
+                    }}
+                >
+                    <FontAwesomeIcon icon={faGear} size='1x' />
+                    <ListItemText primary='Configuración' />
+                </ListItemButton>
+
             </List>
         </Drawer>
     );

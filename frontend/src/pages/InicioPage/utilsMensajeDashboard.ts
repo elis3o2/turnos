@@ -1,3 +1,13 @@
+// ── Helpers de fecha ──────────────────────────────────────────────────────────
+
+const toDateString = (date: Date): string => date.toISOString().split('T')[0]
+
+export const getDefaultDesde = (): string => {
+  const d = new Date()
+  d.setDate(d.getDate() - 7)
+  return toDateString(d)
+}
+
 // ─────────────────────────────────────────────
 // COLORES POR ESTADO
 // ─────────────────────────────────────────────

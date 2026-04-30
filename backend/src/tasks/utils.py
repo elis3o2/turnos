@@ -4,6 +4,8 @@ from core.settings import HORA_INICIO, HORA_FIN
 from decouple import config
 from django.utils import timezone
 from django.core import signing
+from rest_framework.response import Response
+from datetime import datetime
 
 
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
@@ -17,7 +19,7 @@ def enviar_whatsapp(numero: str, mensaje: str) -> Response:
         .first()
     )
 
-    return _enviar_whatsapp2(numero, mensaje, sesion)
+    return _enviar_whatsapp(numero, mensaje, sesion)
 
 
 def _enviar_whatsapp(numero: str, mensaje: str, sesion: str | None) -> Response:
@@ -109,7 +111,7 @@ def ajustar_horario_envio(dt):
 
 
 def calcular_proximo_retry(now):
-    eta = now + timedelta(minutes=15)
+    eta = now + timedelta(minutes=60)
     return ajustar_horario_envio(eta)
 
 
