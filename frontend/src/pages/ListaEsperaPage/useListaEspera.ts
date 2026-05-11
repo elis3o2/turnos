@@ -10,7 +10,7 @@ import {
   CloseTurnoEspera,
 } from "../../features/turno_espera/api";
 import { getDerivaByEfector } from "../../features/efector/api";
-
+import { hasEspera } from "../../common/utils/permissions";
 import {
     applyEstudiosToTurnos,
     buildEspecialidadesOptions,
@@ -23,7 +23,7 @@ import {
  } from "./utilsListaEspra";
 
 export function useListaEspera() {
-  const { efectores } = useContext(AuthContext) as { efectores: Efector[] };
+  const { efectores, groups } = useContext(AuthContext) as { efectores: Efector[], groups: string[] };
   const navigate = useNavigate();
 
   const [selectedEfector, setSelectedEfector] = useState<Efector | null>(null);
@@ -45,6 +45,8 @@ export function useListaEspera() {
   const [alertMsg, setAlertMsg] = useState("");
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>("info");
 
+  const permiso = hasEspera(groups)
+  
   useEffect(() => {
     if (!selectedEfector) {
       setTurnos([]);
@@ -217,6 +219,7 @@ export function useListaEspera() {
 
   return {
     efectores,
+    permiso,
     selectedEfector,
     setSelectedEfector,
     selectedEspecialidad,

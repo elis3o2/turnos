@@ -18,8 +18,8 @@ export function BurbujaCard({ name, selected, onClick, color }: Props) {
         borderRadius: 5,
         textAlign: 'center',
         cursor: 'pointer',
-        minHeight: 20,
-        maxHeight: 30,
+        minHeight: 14,
+        maxHeight: 18,
         width: 'auto',
         display: 'flex',
         justifyContent: 'center',
@@ -42,11 +42,11 @@ export function BurbujaCard({ name, selected, onClick, color }: Props) {
         }),
       }}
     >
-      <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+    <CardContent >
+    <Typography variant="body2" sx={{ fontSize: 13 }}>
           {name}
-        </Typography>
-      </CardContent>
+      </Typography>
+    </CardContent>
     </Card>
   );
 }

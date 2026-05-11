@@ -26,6 +26,13 @@ export const EspecialidadForm = ({
                 const esp = especialidades.find((x) => x.id === id) ?? null;
                 setSelectedEspecialidad(esp);
               }}
+              sx={{
+                fontSize: 13,
+                height: 36,
+                '& .MuiSelect-select': {
+                  py: 0.5, 
+                },
+              }}
             >
               <MenuItem value="">
                 <em>-- Seleccioná especialidad --</em>

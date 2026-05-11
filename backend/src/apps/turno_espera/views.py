@@ -175,7 +175,6 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         updated_qs = TurnoEsperaEstudio.objects.filter(id__in=updated_ids)
 
         serializer = TurnoEsperaEstudioSerializer(updated_qs, many=True)
-        print(serializer.data)
         return Response(
             {
                 "ok": True,

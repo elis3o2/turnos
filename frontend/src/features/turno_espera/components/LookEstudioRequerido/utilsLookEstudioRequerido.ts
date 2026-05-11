@@ -1,4 +1,4 @@
-import type { EstudioRequerido } from "../../types";
+import type { Estudio } from "../../types";
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message || fallback;
@@ -25,10 +25,11 @@ export function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function filterEstudios(
-  estudios: EstudioRequerido[],
+  estudios: Estudio[],
   query: string
-): EstudioRequerido[] {
+): Estudio[] {
   const q = query.toLowerCase();
+
 
   return estudios.filter((e) =>
     [e.nombre, e.id?.toString()]

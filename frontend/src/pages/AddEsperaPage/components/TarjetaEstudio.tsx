@@ -1,12 +1,12 @@
 import { Paper, IconButton, Typography, Stack, Chip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import type { EstudioRequerido } from "../../../features/turno_espera/types";
+import type { Estudio } from "../../../features/turno_espera/types";
 import LookEstudioRequerido from "../../../features/turno_espera/components/LookEstudioRequerido/LookEstudioRequerido";
 
 interface Props {
-  estudioRequerido: EstudioRequerido[];
-  setEstudioRequerido: React.Dispatch<React.SetStateAction<EstudioRequerido[]>>;
+  estudioRequerido: Estudio[];
+  setEstudioRequerido: React.Dispatch<React.SetStateAction<Estudio[]>>;
   finishEstudioRequerido: boolean;
   setFinishEstudioRequerido: React.Dispatch<React.SetStateAction<boolean>>;
   resetEstudioRequerido: () => void;

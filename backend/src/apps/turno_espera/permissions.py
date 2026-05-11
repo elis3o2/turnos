@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission,  SAFE_METHODS
-from src.permissions import is_administrativo
+from src.permissions import is_espera
 
 class TurnoEsperaCreatePermission(BasePermission):
 
@@ -10,7 +10,7 @@ class TurnoEsperaCreatePermission(BasePermission):
 
     def has_permission(self, request, view):
 
-        if not is_administrativo(request.user):
+        if not is_espera(request.user):
             return False
 
         id_efector_solicitante = request.data.get("id_efector_solicitante")
@@ -29,12 +29,11 @@ class TurnoEsperaUpdatePermission(BasePermission):
         return set(request.user.efectores.values_list("id", flat=True))
 
     def has_permission(self, request, view):
-        return True  # validamos a nivel objeto
+        return is_espera(request.user)
 
     def has_object_permission(self, request, view, obj):
 
         efectores_usuario = self._efectores_usuario(request)
-
         efector_turno = obj.efe_ser_esp.efector.id
         efector_solicitante = obj.efector_solicitante.id
         cupo = obj.cupo

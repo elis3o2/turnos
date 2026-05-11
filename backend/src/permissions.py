@@ -1,11 +1,11 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
-def is_administrativo(user):
-    return user.groups.filter(name="administrativo").exists()
+def is_espera(user):
+    return user.groups.filter(name="espera").exists()
 
-def is_agente(user):
-    return user.groups.filter(name="agente").exists()
+def is_configuracion(user):
+    return user.groups.filter(name="configuracion").exists()
 
 
 class ReadOnly(BasePermission):
@@ -40,13 +40,13 @@ class EfectorPermission(BasePermission):
 
 
 
-class OnlyAdmPostUpdatePermission(BasePermission):
+class OnlyEsperaPostUpdatePermission(BasePermission):
     """
     Permite crear o modificar solo a usuarios que
-    pertenecen al grupo 'administrativo'.
+    pertenecen al grupo 'espera'.
     """
 
-    message = "Solo los usuarios del grupo 'administrativo' pueden crear o modificar."
+    message = "Solo los usuarios del grupo 'espera' pueden crear o modificar."
 
     def has_permission(self, request, view):
 
@@ -55,5 +55,20 @@ class OnlyAdmPostUpdatePermission(BasePermission):
             return True
 
         # verificar grupo
-        return is_administrativo(request.user)
+        return is_espera(request.user)
 
+
+class OnlyConfiguracionUpdatePermission(BasePermission):
+    """
+    Permite modificar solo a usuarios que 
+    pertenecen al grupo 'configuracion'. No permite crear.
+    """
+
+    def has_permission(self, request, view):
+        if request.method == "POST":
+            return False
+
+        if request.method in SAFE_METHODS:
+            return True
+
+        return is_configuracion(request.user)

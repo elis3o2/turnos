@@ -29,13 +29,13 @@ def _get_turnos_candidatos(hoy: date) -> list:
     """
     efp_qs = (
         EfeSerEspPlantilla.objects
-        .filter(id_efe_ser_esp=OuterRef('id_efe_ser_esp'), recordatorio=1)
+        .filter(efe_ser_esp=OuterRef('efe_ser_esp'), recordatorio=1)
     )
     rango_fin = hoy + timedelta(days=5)
 
     qs = (
         Turno.objects
-        .filter(id_estado=3, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
+        .filter(estado=3, msj_recordatorio=0, fecha__range=(hoy, rango_fin))
         .annotate(
             efp_exists=Exists(efp_qs),
             plantilla_reco=Subquery(efp_qs.values('plantilla_reco')[:1]),
@@ -43,7 +43,7 @@ def _get_turnos_candidatos(hoy: date) -> list:
         )
         .filter(efp_exists=True)
         .order_by('fecha', 'hora')
-        .values('id', 'id_sisr', 'id_efe_ser_esp', 'fecha', 'hora', 'dias_antes', 'plantilla_reco')
+        .values('id', 'id_sisr', 'efe_ser_esp', 'fecha', 'hora', 'dias_antes', 'plantilla_reco')
     )
     return list(qs)
 
@@ -153,7 +153,7 @@ def _programar_fila(r: tuple, turnos_map: dict, per_day_counter: dict, per_day_b
     id_local = t_local["id"]
     fecha_turno: date = t_local["fecha"]
     dias_antes = int(t_local.get("dias_antes") or 0)
-    id_efe_ser_esp_local = t_local["id_efe_ser_esp"]
+    id_efe_ser_esp_local = t_local["efe_ser_esp"]
 
     telefono = normalizar_telefono(carac_tel, tel)
     if not telefono:
@@ -214,7 +214,7 @@ def _turno_valido_para_recordatorio(turno: Turno, id_efe_ser_esp, id_turno) -> t
     Verifica que el turno siga en condiciones de recibir recordatorio.
     Retorna (send_flag, plantilla) o (False, None) si no corresponde.
     """
-    if turno.id_estado_id != 3 or turno.msj_recordatorio == 1:
+    if turno.estado_id != 3 or turno.msj_recordatorio == 1:
         return False, None
 
     send_flag, plantilla = check_turno(id_efe_ser_esp, 4)
@@ -222,7 +222,7 @@ def _turno_valido_para_recordatorio(turno: Turno, id_efe_ser_esp, id_turno) -> t
         print(f"[DEBUG] check_turno: send={send_flag} plantilla={plantilla} turno={id_turno}")
         return False, None
 
-    if Mensaje.objects.filter(id_turno=turno.id, id_plantilla__id_tipo__id=4).exists():
+    if Mensaje.objects.filter(turno=turno.id, plantilla__tipo__id=4).exists():
         print(f"[DEBUG] Mensaje ya enviado, abortando turno={id_turno}")
         return False, None
 
@@ -235,11 +235,11 @@ def _marcar_recordatorio_enviado(turno: Turno, id_efector, id_servicio, id_espec
     turno.save(update_fields=["msj_recordatorio"])
 
     # Lógica especial: Cirugía General
-    if int(id_efector) == 1 and int(id_servicio) == 85 and int(id_especialidad) == 112:
+    if int(id_efector) == 1:
         now = datetime.now()
-        turno.id_estado_paciente_id = 4
+        turno.estado_paciente_id = 4
         turno.fecha_estado_paciente = now
-        turno.save(update_fields=["id_estado_paciente", "fecha_estado_paciente"])
+        turno.save(update_fields=["estado_paciente", "fecha_estado_paciente"])
 
 
 # ---------------------------------------------------------------------------
@@ -298,8 +298,6 @@ def send_reminder_task(
     tel_efe, calle_nom, carac_tel, tel,
     id,
 ):
-    ack = None
-
     try:
         with transaction.atomic():
             turno = Turno.objects.select_for_update().get(id=id)
@@ -319,38 +317,63 @@ def send_reminder_task(
                 tel_efe, calle_nom, token_url(turno.id),
             )
 
-            # Verificar que el turno no haya vencido
             now = datetime.now(TZ)
             turno_dt = make_aware(datetime.combine(d_fecha, d_hora), TZ)
+
             if now >= turno_dt:
-                print(f"[INFO] Turno vencido {id_turno}")
+                print(f"[INFO] Turno vencido, no se envía recordatorio: turno={id_turno}")
                 return
 
             mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-            res = enviar_whatsapp(telefono, mensaje)
-            (envio_id, ack, fecha_msj, ins) = decode_res(res)
 
-            if ack == -5:
-                # Rate-limit: reintentar si hay tiempo antes del turno
+            # --- Intento de envío ---
+            try:
+                res = enviar_whatsapp(telefono, mensaje)
+                envio_id, ack, fecha_msj, ins = decode_res(res)
+            except Exception as send_ex:
+                # Error de red/API: reintentar si hay tiempo, sino abandonar
+                print(f"[WARN] Error al enviar turno={id_turno}: {send_ex}")
                 eta = calcular_proximo_retry(now)
                 if eta < turno_dt:
-                    print(f"[RETRY] turno {id_turno} en {eta}")
+                    print(f"[RETRY] turno={id_turno} por error de envío, próximo intento: {eta}")
                     raise self.retry(eta=eta)
-                # Sin tiempo para reintentar: registrar y abandonar
+                # Sin tiempo: registrar fallo definitivo
+                print(f"[STOP] Sin tiempo para reintentar turno={id_turno}, registrando fallo.")
+                create_Mensaje(
+                    id=None, turno=turno, numero=telefono,
+                    plantilla=plantilla, estado=-1, fecha=now, sesion=None,
+                )
+                return
+
+                if ack in (-1, -5):
+                    eta = calcular_proximo_retry(now)
+                    if eta < turno_dt:
+                        print(f"[RETRY] turno={id_turno} ack={ack}, próximo intento: {eta}")
+                        raise self.retry(eta=eta)
+                    # Sin tiempo: registrar fallo definitivo
+                    print(f"[STOP] Sin tiempo para reintentar turno={id_turno} ack={ack}, registrando.")
+                    create_Mensaje(
+                        id=envio_id, turno=turno, numero=telefono,
+                        plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
+                    )
+                    return
+
+                if ack < 0:
+                    # Fallo definitivo para cualquier otro código negativo
+                    print(f"[STOP] Fallo definitivo turno={id_turno} ack={ack}, registrando.")
+                    create_Mensaje(
+                        id=envio_id, turno=turno, numero=telefono,
+                        plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
+                    )
+                    return
+
+                # --- Éxito ---
                 create_Mensaje(
                     id=envio_id, turno=turno, numero=telefono,
                     plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
                 )
-                print(f"[STOP] Se alcanzó la fecha del turno {id_turno}")
-                return
-
-            create_Mensaje(
-                id=envio_id, turno=turno, numero=telefono,
-                plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
-            )
-
-            if ack >= 0:
                 _marcar_recordatorio_enviado(turno, id_efector, id_servicio, id_especialidad)
+                print(f"[OK] Recordatorio enviado turno={id_turno} ack={ack}")
 
     except self.MaxRetriesExceededError:
         print(f"[WARN] Max retries alcanzado turno={id_turno}")

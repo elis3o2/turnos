@@ -3,6 +3,7 @@ from datetime import timedelta
 from decouple import config, Csv
 from celery.schedules import crontab
 from datetime import time
+from zoneinfo import ZoneInfo
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -156,12 +157,13 @@ CELERY_BEAT_SCHEDULE = {
     },
     "recordatorios-diarios": {
         "task": "src.tasks.recordatorios.programar_recordatorios",  # ruta completa a la tarea
-        "schedule": crontab(hour=13, minute=11),
+        "schedule": crontab(hour=14, minute=2),
     },
 }
 
-HORA_INICIO = time(8, 16)
+TZ = ZoneInfo("America/Argentina/Buenos_Aires")
+HORA_INICIO = time(8, 0)
 HORA_FIN = time(20, 0)
-SEND_TIME = time(15, 30)
+SEND_TIME = time(14, 2)
 BATCH_SIZE = 5
 BATCH_WINDOW_SECONDS = 720

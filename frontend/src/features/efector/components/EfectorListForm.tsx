@@ -35,7 +35,13 @@ export const EfectorListForm = ({efectores, selectedEfectores, setSelectedEfecto
             )
             .join(", ")
         }
-        sx={{ minWidth: 240 }}
+        sx={{
+          fontSize: 13,
+          height: 36,
+          '& .MuiSelect-select': {
+            py: 0.5, 
+          },
+        }}
         MenuProps={{ PaperProps: { style: { maxHeight: 320 } } }}
       >
         {efectores.length > 0 ? (

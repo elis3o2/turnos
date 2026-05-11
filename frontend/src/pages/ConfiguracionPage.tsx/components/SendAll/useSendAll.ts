@@ -5,16 +5,12 @@ import type { FieldName } from "../../utilsConfiguracion";
 import { getToChange } from "./utilsSendAll";
 
 type Props = {
-  open: boolean;
   setOpen: Setter<boolean>;
   preFunction: () => Promise<EfeSerEspPlantillaExtend[]> | EfeSerEspPlantillaExtend[];
   setEspecialidades: Setter<EfeSerEspPlantillaExtend[]>;
   setEfectorEspecialidades: Setter<Record<number, Record<number, EfeSerEspPlantillaExtend[]>>>;
-  confirmField: FieldName;
   setConfirmField: Setter<FieldName>;
-  confirmValue: 0 | 1;
   setConfirmValue: Setter<0 | 1>;
-  confirmEspecialidades: EfeSerEspPlantillaExtend[];
   setConfirmEspecialidades: Setter<EfeSerEspPlantillaExtend[]>;
   setAlertOpen: Setter<boolean>;
   setAlertMsg: Setter<string>;
@@ -22,16 +18,12 @@ type Props = {
 };
 
 export const useSendAll = ({
-  open,
   setOpen,
   preFunction,
   setEspecialidades,
   setEfectorEspecialidades,
-  confirmField,
   setConfirmField,
-  confirmValue,
   setConfirmValue,
-  confirmEspecialidades,
   setConfirmEspecialidades,
   setAlertMsg,
   setAlertSeverity,

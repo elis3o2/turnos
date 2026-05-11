@@ -5,26 +5,23 @@ from django.db.models import F
 from .models import Efector, Servicio, Especialidad, EfeSerEsp, Deriva
 from .serializers import (EfectorSerializer, ServicioSerializer, EspecialidadSerializer, 
                         EfeSerEspDetailSerializer, EfeSerEspListSerializer,EfeSerEspEfectorSerializer, DerivaSerializer)
-from src.serializers import KeyLabelSerializer
 from src.permissions import ReadOnly
-from src.views import KeyLabelMixin
-from src.serializers import KeyLabelSerializer
 from collections import OrderedDict
 
-class EfectorViewSet(KeyLabelMixin, viewsets.ModelViewSet):
+class EfectorViewSet(viewsets.ModelViewSet):
     queryset = Efector.objects.all()
     serializer_class = EfectorSerializer
     permission_classes = [ReadOnly]
 
 
-class ServicioViwSet(KeyLabelMixin, viewsets.ModelViewSet):
+class ServicioViwSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
     serializer_class = ServicioSerializer
     permission_classes = [ReadOnly]
 
 
 
-class EspecialidadViewSet(KeyLabelMixin, viewsets.ModelViewSet):
+class EspecialidadViewSet(viewsets.ModelViewSet):
     queryset = Especialidad.objects.all()
     serializer_class = EspecialidadSerializer
     permission_classes = [ReadOnly]

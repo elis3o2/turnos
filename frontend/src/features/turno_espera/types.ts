@@ -20,6 +20,10 @@ export interface TurnoEspera {
     cupo: boolean;
 }
 
+export interface Estudio {
+    id: number,
+    nombre: string
+}
 
 export interface EstudioRequerido {
     id: number,

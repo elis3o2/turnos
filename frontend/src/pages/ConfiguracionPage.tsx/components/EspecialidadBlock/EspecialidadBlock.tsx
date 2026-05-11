@@ -13,7 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReplayIcon from "@mui/icons-material/Replay";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { Confirmacion } from "../Confirmacion/Confitmacion";
+import { Confirmacion } from "../Confirmacion/Confirmacion";
 import SendAll from "../SendAll/SendAll";
 import type { Setter, AlertSeverity } from "../../../../common/types";
 import {
@@ -25,6 +25,7 @@ import type { FieldName } from "../../utilsConfiguracion";
 import { useEspecialidadBlock } from "./useEspecialidadBolck";
 
 type Props = {
+  permiso: boolean,
   open: boolean;
   setOpen: Setter<boolean>;
   especialidades: EfeSerEspPlantillaExtend[];
@@ -36,7 +37,6 @@ type Props = {
   setConfirmField: Setter<FieldName>;
   confirmValue: 0 | 1;
   setConfirmValue: Setter<0 | 1>;
-  efecServEspecialidades: Record<number, Record<number, EfeSerEspPlantillaExtend[]>>;
   setEfecServEspecialidades: Setter<Record<number, Record<number, EfeSerEspPlantillaExtend[]>>>;
   setAlertOpen: Setter<boolean>;
   setAlertMsg: Setter<string>;
@@ -45,6 +45,7 @@ type Props = {
 
 export const EspecialidadBlock = (props: Props) => {
   const {
+    permiso,
     open,
     setOpen,
     especialidades,
@@ -56,7 +57,6 @@ export const EspecialidadBlock = (props: Props) => {
     setConfirmField,
     confirmValue,
     setConfirmValue,
-    efecServEspecialidades,
     setEfecServEspecialidades,
     setAlertOpen,
     setAlertMsg,
@@ -98,7 +98,7 @@ export const EspecialidadBlock = (props: Props) => {
             </Typography>
           </Box>
         ) : (
-          <>
+          <>{permiso &&
             <SendAll
               open={open}
               setOpen={setOpen}
@@ -114,7 +114,7 @@ export const EspecialidadBlock = (props: Props) => {
               setAlertOpen={setAlertOpen}
               setAlertMsg={setAlertMsg}
               setAlertSeverity={setAlertSeverity}
-            />
+            />}
 
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Box sx={{ width: "100%", maxWidth: 850, display: "flex", flexDirection: "column", gap: 2 }}>
@@ -141,18 +141,18 @@ export const EspecialidadBlock = (props: Props) => {
                         border: "2px solid rgba(0,0,0,0.12)",
                         transition: "border-color 200ms, box-shadow 200ms",
                         "&:hover": { borderColor: "primary.main", boxShadow: 6 },
-                        height: 56,
-                        width: "100%",
+                        height: 46,
+                        width: "80%",
                       }}
                     >
                       {/* Nombre */}
                       <Box sx={{ display: "flex", alignItems: "center", pl: 2, pr: 1, flex: "0 0 35%", minWidth: 0 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }} noWrap>
+                        <Typography variant="body1" sx={{fontSize: 12, fontWeight: 600 }} noWrap>
                           {nombreEspecialidad}
                           {showEfectorName && (
                             <Typography
                               component="span"
-                              sx={{ fontSize: "1rem", fontWeight: 500, ml: 1, color: "text.secondary" }}
+                              sx={{ fontSize: 12,fontWeight: 500, ml: 1, color: "text.secondary" }}
                             >
                               ({nombreEfector})
                             </Typography>
@@ -164,7 +164,7 @@ export const EspecialidadBlock = (props: Props) => {
                       <Box sx={{ display: "flex", alignItems: "stretch", flex: "0 0 65%", height: "100%" }}>
                         <IconButton
                           aria-label="asignacion"
-                          onClick={() => handleSectionClick(esp, "asignacion")}
+                          onClick={() => permiso?? handleSectionClick(esp, "asignacion")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "asignacion", confirmOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
@@ -178,7 +178,7 @@ export const EspecialidadBlock = (props: Props) => {
                             "&:hover": { bgcolor: confirmOn ? "success.dark" : "action.hover" },
                           }}
                         >
-                          <CheckCircleIcon fontSize="medium" />
+                          <CheckCircleIcon fontSize="small" />
                         </IconButton>
 
                         <IconButton
@@ -197,12 +197,12 @@ export const EspecialidadBlock = (props: Props) => {
                             "&:hover": { bgcolor: reproOn ? "primary.dark" : "action.hover" },
                           }}
                         >
-                          <ReplayIcon fontSize="medium" />
+                          <ReplayIcon fontSize="small" />
                         </IconButton>
 
                         <IconButton
                           aria-label="cancelacion"
-                          onClick={() => handleSectionClick(esp, "cancelacion")}
+                          onClick={() =>  handleSectionClick(esp, "cancelacion")}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "cancelacion", cancOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
@@ -216,13 +216,13 @@ export const EspecialidadBlock = (props: Props) => {
                             "&:hover": { bgcolor: cancOn ? "error.dark" : "action.hover" },
                           }}
                         >
-                          <CancelIcon fontSize="medium" />
+                          <CancelIcon fontSize="small" />
                         </IconButton>
 
                         <IconButton
                           aria-label="recordatorio"
-                          onClick={() => handleSectionClick(esp, "recordatorio")}
-                          onMouseEnter={(e) => handleMouseEnter(e, esp.id, "recordatorio", recoOn)}
+                          onClick={() =>  handleSectionClick(esp, "recordatorio")}
+                          onMouseEnter={(e) =>  handleMouseEnter(e, esp.id, "recordatorio", recoOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
                             flex: 1,
@@ -236,7 +236,7 @@ export const EspecialidadBlock = (props: Props) => {
                             "&:hover": { bgcolor: recoOn ? "warning.dark" : "action.hover" },
                           }}
                         >
-                          <NotificationsIcon fontSize="medium" />
+                          <NotificationsIcon fontSize="small" />
                         </IconButton>
                       </Box>
                     </Card>

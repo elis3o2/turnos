@@ -2,67 +2,16 @@ import React from 'react';
 import {
   Box,
   GridLegacy as Grid,
-  Card,
-  CardContent,
   Typography,
   TextField,
-  Button,
+  Chip,
 } from '@mui/material';
-
 import { AlertMessage } from '../../common/components';
+import { usePlantillas } from './usePlantillas';
 import PlantillaComponent from './components/PlantillaComponent';
+import { TIPO_TO_LABEL, TIPO_TO_COLOR, TIPO_KEYS } from './utilsPlantillas';
 
-import { usePlantillas }  from './usePlantillas';
-import { TIPO_KEYS } from './utilsPlantillas';
-
-// ---------------------- Sub-componente: card de selección ----------------------
-interface Props {
-  contenido: string;
-  updating: boolean;
-  onAssign: () => void;
-}
-
-function PlantillaCard({ contenido, updating, onAssign }: Props): React.ReactElement {
-  return (
-    <Card
-      sx={{
-        borderRadius: 3,
-        border: '2px solid rgba(0,0,0,0.12)',
-        boxShadow: 3,
-        display: 'flex',
-        flexDirection: 'column',
-        p: 2,
-        minHeight: 230,
-        maxWidth: 320,
-        cursor: updating ? 'default' : 'pointer',
-        justifyContent: 'space-between',
-        alignItems: 'stretch',
-        transition: 'transform 0.2s',
-        opacity: updating ? 0.7 : 1,
-        '&:hover': updating ? {} : { transform: 'scale(1.02)', boxShadow: 6 },
-      }}
-    >
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-          {contenido}
-        </Typography>
-      </CardContent>
-
-      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', p: 2 }}>
-        <Button
-          size="small"
-          variant="contained"
-          onClick={onAssign}
-          disabled={updating}
-        >
-          Asignar
-        </Button>
-      </Box>
-    </Card>
-  );
-}
-
-// ---------------------- Componente principal ----------------------
+// ─── Componente principal ─────────────────────────────────────────────────────
 export default function PlantillasPage(): React.ReactElement {
   const {
     plantillas,
@@ -86,6 +35,7 @@ export default function PlantillasPage(): React.ReactElement {
   return (
     <Box sx={{ p: 3 }}>
       {isModificationMode ? (
+        // ── Modo modificación: cards seleccionables ──────────────────────────
         <>
           {tipo === 'recordatorio' && (
             <Box sx={{ mb: 3 }}>
@@ -98,7 +48,6 @@ export default function PlantillasPage(): React.ReactElement {
                 value={diasAntes}
                 onChange={(e) => {
                   const val = e.target.value;
-                  // Permitimos vacío o valores dentro del rango para tipeo fluido
                   if (val === '' || (Number(val) >= 0 && Number(val) <= 5)) {
                     setDiasAntes(val);
                   }
@@ -111,22 +60,48 @@ export default function PlantillasPage(): React.ReactElement {
           )}
 
           <Grid container spacing={2}>
-            {plantillas.map((plantilla) => (
-              <Grid item xs={12} sm={6} md={4} key={plantilla.id}>
-                <PlantillaCard
-                  contenido={plantilla.contenido}
-                  updating={updating}
-                  onAssign={() => handleCardAssign(plantilla.id)}
-                />
-              </Grid>
-            ))}
+            <PlantillaComponent
+              items={plantillas}
+              updating={updating}
+              onAssign={handleCardAssign}
+            />
           </Grid>
         </>
       ) : (
+        // ── Modo visualización: agrupado por tipo ────────────────────────────
         <Grid container spacing={2}>
-          {TIPO_KEYS.map((t) => (
-            <PlantillaComponent key={t} items={grouped[t] ?? []} />
-          ))}
+          {TIPO_KEYS.map((t) => {
+            const items = grouped[t] ?? [];
+            console.log(items)
+            return (
+              <Grid item xs={12} sm={6} md={3} key={t}>
+                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                  <Chip
+                    label={TIPO_TO_LABEL[t]}
+                    sx={{
+                      backgroundColor: TIPO_TO_COLOR[t],
+                      color: t === 'recordatorio' ? 'rgba(0,0,0,0.87)' : '#fff',
+                      fontWeight: 700,
+                      fontSize: 14,
+                      px: 2,
+                    }}
+                  />
+                </Box>
+            
+                <Grid container spacing={2}>
+                  {items.length === 0 ? (
+                    <Grid item xs={12}>
+                      <Typography variant="body2">
+                        No hay plantillas para {TIPO_TO_LABEL[t]}
+                      </Typography>
+                    </Grid>
+                  ) : (
+                    <PlantillaComponent items={items} />
+                  )}
+                </Grid>
+              </Grid>
+            );
+          })}
         </Grid>
       )}
 

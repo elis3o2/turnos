@@ -27,6 +27,13 @@ export const ServicioForm = ({
               const srv = servicios.find((s) => s.id === id) ?? null;
               setSelectedServicio(srv);
             }}
+          sx={{
+            fontSize: 13,
+            height: 36,
+            '& .MuiSelect-select': {
+              py: 0.5, 
+            },
+          }}
         >
             <MenuItem value="">
             <em>-- Seleccioná servicio --</em>

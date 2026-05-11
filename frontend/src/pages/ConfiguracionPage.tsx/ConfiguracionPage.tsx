@@ -14,6 +14,7 @@ import { BurbujaCard } from './components/BurbujaCard';
 export function ConfiguracionPage() {
   const {
     efectores,
+    permiso,
     efectorSeleccionado,
     servicios,
     servicioSeleccionado,
@@ -71,6 +72,7 @@ export function ConfiguracionPage() {
       {/* Servicios */}
       {efectorSeleccionado.length > 0 && (
         <ServicioBlock
+          permiso={permiso}
           efectorSeleccionado={efectorSeleccionado}
           servicios={servicios}
           servicioSeleccionado={servicioSeleccionado}
@@ -98,6 +100,7 @@ export function ConfiguracionPage() {
       {/* Especialidades */}
       {servicioSeleccionado.length > 0 && efectorSeleccionado.length > 0 && (
         <EspecialidadBlock
+          permiso={permiso}
           open={open}
           setOpen={setOpen}
           especialidades={especialidades}
@@ -109,7 +112,6 @@ export function ConfiguracionPage() {
           setConfirmField={setConfirmField}
           confirmValue={confirmValue}
           setConfirmValue={setConfirmValue}
-          efecServEspecialidades={efecServEspecialidades}
           setEfecServEspecialidades={setEfecServEspecialidades}
           setAlertOpen={setAlertOpen}
           setAlertMsg={setAlertMsg}

@@ -1,4 +1,4 @@
-import { Collapse, Box, Card, Typography, CardContent, GridLegacy as Grid } from "@mui/material";
+import { Collapse, Box, GridLegacy as Grid } from "@mui/material";
 import { useServicioBlock } from "./useServicioBlock";
 import type { Efector, Servicio } from "../../../../features/efector/types";
 import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
@@ -7,6 +7,7 @@ import SendAll from "../SendAll/SendAll";
 import { BurbujaCard } from "../BurbujaCard";
 
 type Props = {
+  permiso: boolean;
   efectorSeleccionado: Efector[];
   servicios: Servicio[];
   servicioSeleccionado: Servicio[];
@@ -38,6 +39,7 @@ export const ServicioBlock = (props: Props) => {
   } = useServicioBlock(props);
 
   const {
+    permiso,
     servicios,
     servicioSeleccionado,
     efectorSeleccionado,
@@ -59,7 +61,7 @@ export const ServicioBlock = (props: Props) => {
   return (
     <Collapse in={efectorSeleccionado.length > 0 && servicios.length > 0}>
       <Box sx={{ mt: 4 }}>
-        <SendAll
+        {permiso && <SendAll
           preFunction={allEspecialidadesToChange}
           open={open}
           setOpen={setOpen}
@@ -74,7 +76,7 @@ export const ServicioBlock = (props: Props) => {
           setAlertOpen={setAlertOpen}
           setAlertMsg={setAlertMsg}
           setAlertSeverity={setAlertSeverity}
-        />
+        />}
 
         <Grid container spacing={2}>
           {servicios.map(serv => (

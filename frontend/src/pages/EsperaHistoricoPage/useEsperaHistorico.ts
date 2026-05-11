@@ -53,13 +53,6 @@ export function useEsperaHistorico() {
   }, [finishPaciente, paciente, fetchTurnos]);
 
   // --- Handlers de UI ---
-  const handleClear = useCallback(() => {
-    setPaciente(null);
-    setFinishPaciente(false);
-    setError(null);
-    setRows([]);
-  }, []);
-
   const handleDeselect = useCallback(() => {
     setPaciente(null);
     setFinishPaciente(false);
@@ -67,9 +60,7 @@ export function useEsperaHistorico() {
     setError(null);
   }, []);
 
-  const handleFetch = useCallback(() => {
-    if (paciente?.id) fetchTurnos(paciente.id);
-  }, [paciente, fetchTurnos]);
+
 
   // --- Datos derivados ---
   const displayedRows = useMemo(() => {
@@ -102,9 +93,7 @@ export function useEsperaHistorico() {
     visibleKeys,
     sortDesc,
     toggleSort,
-    handleClear,
     handleDeselect,
-    handleFetch,
     handleDownloadCSV,
   };
 }

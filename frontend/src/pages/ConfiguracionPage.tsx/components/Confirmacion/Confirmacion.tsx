@@ -27,8 +27,6 @@ type Props = {
 export const Confirmacion = (props: Props) => {
   const {
     open,
-    setOpen,
-    field,
     value,
     confirmEspecialidades,
   } = props;

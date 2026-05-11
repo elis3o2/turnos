@@ -10,7 +10,7 @@ const defaultContext: AuthContextType = {
     username: null,
 
     efectores: [],
-
+    groups: [],
     logout: () => {},
 };
 
@@ -32,6 +32,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return e ? JSON.parse(e) : [];
   });
 
+  const [groups, setGroups] = useState<string[]>(() => {
+    const g = localStorage.getItem('groups');
+    return g ? JSON.parse(g) : [];
+  });
+
   const initializeAuth = (data: InitializeAuthData) => {
     const tokens: AuthTokens = { access: data.access, refresh: data.refresh };
     setAuthTokens(tokens);
@@ -50,6 +55,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setEfectores(sorted);
       localStorage.setItem('efectores', JSON.stringify(sorted));
     }
+
+    if (Array.isArray(data.groups)) {
+      setGroups(data.groups);
+      localStorage.setItem('groups', JSON.stringify(data.groups));
+    }
   };
 
   const logout = () => {
@@ -67,6 +77,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         initializeAuth,
         username,
         efectores,
+        groups,
         logout,
         isLoading: false,   // ✅ Siempre false: todo se inicializa síncronamente desde localStorage
       }}

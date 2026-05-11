@@ -25,7 +25,6 @@ export const useServicioBlock = (props: Props) => {
     servicios,
     servicioSeleccionado,
     setServicioSeleccionado,
-    especialidades,
     setEspecialidades,
     efecServEspecialidades,
     setEfecServEspecialidades,

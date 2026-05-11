@@ -25,6 +25,13 @@ export const ServicioListForm =({servicios, selectedServicios, setSelectedServic
               .map((id) => servicios.find((x) => x.id === id)?.nombre ?? String(id))
               .join(", ")
           }
+          sx={{
+            fontSize: 13,
+            height: 36,
+            '& .MuiSelect-select': {
+              py: 0.5, 
+            },
+          }}
         >
           {servicios.length > 0 ? (
             servicios.map((se) => (

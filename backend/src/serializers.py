@@ -6,10 +6,6 @@ from .models import CustomUser
 
 
 
-class KeyLabelSerializer(serializers.Serializer):
-    key = serializers.IntegerField()
-    label = serializers.CharField()
-
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -19,4 +15,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['username'] = user.username
 
         data['efectores'] = list(user.efectores.values('id', 'nombre'))
+
+        data['groups'] = list(user.groups.values_list('name', flat=True))
+
         return data

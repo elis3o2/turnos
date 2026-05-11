@@ -1,6 +1,5 @@
 import http from '../../common/api/client'
-import type { TurnoEspera } from './types';
-import type { EstudioRequerido } from './types';
+import type { Estudio, EstudioRequerido, TurnoEspera } from './types';
 
 export const getTurnoEsperaAbierto = (id: number) :Promise<TurnoEspera[]> =>{
   return http.get<TurnoEspera[]>(`turno_espera/turno_espera/espera/?id_efector=${id}`).then(res => res.data);
@@ -27,7 +26,7 @@ export const getTurnoEsperaById= (id: number) => {
 }
 
 export const getEstudioRequeridoAll = () => {
-  return http.get<EstudioRequerido[]>(`turno_espera/estudio_requerido/`).then(res => res.data)
+  return http.get<Estudio[]>(`turno_espera/estudio_requerido/`).then(res => res.data)
 } 
 
 export const postMarcarEstudiosTurno = (idTurno: number, estudios: number[]): Promise<{ ok: boolean; actualizados: number; estudios:EstudioRequerido[] }> => {

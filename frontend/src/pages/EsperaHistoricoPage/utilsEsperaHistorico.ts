@@ -1,4 +1,5 @@
 import type { TurnoEspera } from '../../features/turno_espera/types';
+import { mapPriorityIdName } from '../../features/turno_espera/utils';
 
 // ---------------------- Columnas ----------------------
 export const ALL_COLUMNS = [
@@ -56,7 +57,7 @@ export const getCellValue = (key: string, r: TurnoEspera): string => {
     case 'efector':             return r.efector?.nombre ?? '';
     case 'servicio':            return r.servicio?.nombre ?? '';
     case 'especialidad':        return r.especialidad?.nombre ?? '';
-    case 'prioridad':           return String(r.prioridad ?? '');
+    case 'prioridad':           return mapPriorityIdName[r.prioridad] ?? '';
     default:                    return "";
   }
 };

@@ -1,6 +1,7 @@
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
-from rest_framework import viewsets
+from django.core import signing
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,7 +9,11 @@ from rest_framework.permissions import AllowAny
 from .models import EstadoTurno, Turno
 from .serializers import EstadoTurnoSerializer, TurnoSerializer
 from src.permissions import ReadOnly, EfectorPermission
-
+from src.utils.utils import fetch_paciente
+from datetime import datetime
+from django.utils import timezone
+from src.apps.turno_espera.services import lista_espera_look
+from src.apps.informix.services import liberar_turno
 
 class EstadoTurnoViewSet(viewsets.ModelViewSet):
     queryset = EstadoTurno.objects.all()
@@ -107,6 +112,7 @@ class TurnoPacienteView(APIView):
 
     def get(self, request):
         encoded_id = request.query_params.get("id")
+        print(encoded_id)
         if not encoded_id:
             return Response(
                 {"error": "Falta el id"},
@@ -115,6 +121,7 @@ class TurnoPacienteView(APIView):
 
         try:
             turno_id = signing.loads(encoded_id)
+            print(turno_id)
         except Exception:
             return Response(
                 {"error": "ID inválido"},
@@ -129,7 +136,7 @@ class TurnoPacienteView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        resultado = fetch_paciente(turno.id_paciente)
+        resultado = fetch_paciente(ids=[turno.id_paciente])
         pac = resultado[0] if resultado else None
 
         return Response(
@@ -138,11 +145,11 @@ class TurnoPacienteView(APIView):
                 "apellido": str(pac['apellido']) if pac else None,
                 "fecha": turno.fecha,
                 "hora": turno.hora,
-                "efector": turno.id_efe_ser_esp.id_efector.nombre,
-                "servicio": turno.id_efe_ser_esp.id_ser_esp.id_servicio.nombre,
-                "especialidad": turno.id_efe_ser_esp.id_ser_esp.id_especialidad.nombre,
-                "estado_pac": turno.id_estado_paciente_id,
-                "estado": turno.id_estado.nombre
+                "efector": turno.efe_ser_esp.efector.nombre,
+                "servicio": turno.efe_ser_esp.ser_esp.servicio.nombre,
+                "especialidad": turno.efe_ser_esp.ser_esp.especialidad.nombre,
+                "estado_pac": turno.estado_paciente_id,
+                "estado": turno.estado.nombre
             },
             status=status.HTTP_200_OK
         )
@@ -171,7 +178,7 @@ class TurnoPacienteView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            turno.id_estado_paciente_id = estado
+            turno.estado_paciente_id = estado
             turno.fecha_estado_paciente = ahora
             turno.save()
 

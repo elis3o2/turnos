@@ -1,36 +1,57 @@
-import { Stack, Typography } from "@mui/material";
 type Props = {
   value?: string | Date | null;
 };
 
+import { Box, Typography } from "@mui/material";
+
 export const DateTimeStack = ({ value }: Props) => {
   if (!value) return null;
 
-  const date = value instanceof Date ? value : new Date(value);
-  if (isNaN(date.getTime())) return null;
+  let formattedDate = "";
+  let formattedTime = "";
 
-  const formattedDate = date
-    .toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
-    .replace(/\//g, "-");
+  if (typeof value === "string") {
+    // yyyy-mm-dd hh:mm:ss o ISO
+    const match = value.match(
+      /^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/
+    );
 
-  const formattedTime = date.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false, 
-  });
+    if (!match) return null;
+
+    const [, year, month, day, hour, minute] = match;
+
+    formattedDate = `${day}-${month}-${year}`;
+    formattedTime = `${hour}:${minute}`;
+  } else {
+    // Date real
+    if (isNaN(value.getTime())) return null;
+
+    formattedDate = value
+      .toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+      .replace(/\//g, "-");
+
+    formattedTime = value.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "UTC",
+    });
+  }
 
   return (
-    <Stack spacing={0}>
-      <Typography variant="caption">
+    <Box sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+      <Typography sx={{ fontSize: 11, lineHeight: 1 }}>
         {formattedDate}
       </Typography>
-      <Typography variant="caption">
+
+      <Typography sx={{ fontSize: 11, lineHeight: 1 }}>
         {formattedTime}
       </Typography>
-    </Stack>
+    </Box>
   );
 };

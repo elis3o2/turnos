@@ -10,6 +10,7 @@ export interface InitializeAuthData {
     refresh: string;
     username?: string;
     efectores?: Efector[];
+    groups?: string;
 }
 
 export interface AuthContextType {
@@ -18,6 +19,7 @@ export interface AuthContextType {
     isLoading: boolean;   
     username: string | null;
     efectores: Efector[];
+    groups: string[];
 
     logout: () => void;
 }

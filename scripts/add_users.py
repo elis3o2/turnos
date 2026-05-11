@@ -39,3 +39,8 @@ crear_usuario('champagnat', 'champagnat', 'champagnat', 34)
 crear_usuario('primero', 'primero', 'primero', 12)
 crear_usuario('richiger', 'richiger', 'richiger', 231)
 crear_usuario('mazza', 'mazza', 'mazza', 13)
+
+
+crear_usuario('casiano', 'casiano', 'casiano', 11)
+crear_usuario('florida', 'florida', 'florida', 18)
+crear_usuario('juanbjusto', 'juanbjusto', 'juanbjusto', 52)

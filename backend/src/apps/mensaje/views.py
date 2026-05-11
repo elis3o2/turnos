@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from .models import EstadoMsj, Mensaje, Plantilla, EfeSerEspPlantilla
 from .serializers import (EstadoMsjSerializer, MensajeSerializer, PlantillaSerializer,
                         EfeSerEspPlantilla, EfeSerEspPlantillaDetailSerializer)
-from src.permissions import ReadOnly
+from src.permissions import ReadOnly, OnlyConfiguracionUpdatePermission
 from django.db.models import Count, Q, F
 from src.utils.utils import parse_int_list
 
@@ -136,6 +136,7 @@ class PlantillaViewSet(viewsets.ModelViewSet):
 class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
     queryset = EfeSerEspPlantilla.objects.all()
     serializer_class = EfeSerEspPlantillaDetailSerializer
+    permission_classes = [OnlyConfiguracionUpdatePermission]
 
     @action(detail=False, methods=["get"], url_path="buscar")
     def search(self, request) -> Response:

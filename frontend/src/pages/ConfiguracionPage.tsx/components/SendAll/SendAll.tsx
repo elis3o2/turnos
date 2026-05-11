@@ -5,7 +5,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import type { Setter, AlertSeverity } from "../../../../common/types";
-import { Confirmacion } from "../Confirmacion/Confitmacion";
+import { Confirmacion } from "../Confirmacion/Confirmacion";
 import { useSendAll } from "./useSendAll";
 import type { FieldName } from "../../utilsConfiguracion";
 
@@ -50,16 +50,12 @@ const SendAll = (props: Props) => {
     handleOnSuccess,
     onClosed,
   } = useSendAll({
-    open,
     setOpen,
     preFunction,
     setEspecialidades,
     setEfectorEspecialidades,
-    confirmField,
     setConfirmField,
-    confirmValue,
     setConfirmValue,
-    confirmEspecialidades,
     setConfirmEspecialidades,
     setAlertOpen,
     setAlertMsg,
@@ -84,96 +80,97 @@ const SendAll = (props: Props) => {
       <Stack direction="row" spacing={1} alignItems="center">
         <Tooltip title="Prender confirmación (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
+
               aria-label="prender-asignacion"
               onClick={() => handleFieldToggleAll("asignacion", 1)}
               disabled={loadingField !== null}
             >
-              <CheckCircleIcon sx={{ color: "success.main" }} />
+              <CheckCircleIcon sx={{ fontSize: 22, color: "success.main" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Apagar confirmación (todas)">
           <span>
-            <IconButton
+            <IconButton  size="small"
               aria-label="apagar-asignacion"
               onClick={() => handleFieldToggleAll("asignacion", 0)}
               disabled={loadingField !== null}
             >
-              <CheckCircleIcon sx={{ color: "grey.500" }} />
+              <CheckCircleIcon sx={{ fontSize: 22, color: "grey.500" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Prender reprogramación (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="prender-reprogramacion"
               onClick={() => handleFieldToggleAll("reprogramacion", 1)}
               disabled={loadingField !== null}
             >
-              <ReplayIcon sx={{ color: "info.main" }} />
+              <ReplayIcon sx={{ fontSize: 22, color: "info.main" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Apagar reprogramación (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="apagar-reprogramacion"
               onClick={() => handleFieldToggleAll("reprogramacion", 0)}
               disabled={loadingField !== null}
             >
-              <ReplayIcon sx={{ color: "grey.500" }} />
+              <ReplayIcon sx={{ fontSize: 22, color: "grey.500" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Prender cancelación (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="prender-cancelacion"
               onClick={() => handleFieldToggleAll("cancelacion", 1)}
               disabled={loadingField !== null}
             >
-              <CancelIcon sx={{ color: "error.main" }} />
+              <CancelIcon sx={{ fontSize: 22, color: "error.main" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Apagar cancelación (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="apagar-cancelacion"
               onClick={() => handleFieldToggleAll("cancelacion", 0)}
               disabled={loadingField !== null}
             >
-              <CancelIcon sx={{ color: "grey.500" }} />
+              <CancelIcon sx={{ fontSize: 22, color: "grey.500" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Prender recordatorio (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="prender-recordatorio"
               onClick={() => handleFieldToggleAll("recordatorio", 1)}
               disabled={loadingField !== null}
             >
-              <NotificationsIcon sx={{ color: "warning.main" }} />
+              <NotificationsIcon sx={{ fontSize: 22, color: "warning.main" }} />
             </IconButton>
           </span>
         </Tooltip>
 
         <Tooltip title="Apagar recordatorio (todas)">
           <span>
-            <IconButton
+            <IconButton size="small"
               aria-label="apagar-recordatorio"
               onClick={() => handleFieldToggleAll("recordatorio", 0)}
               disabled={loadingField !== null}
             >
-              <NotificationsIcon sx={{ color: "grey.500" }} />
+              <NotificationsIcon sx={{ fontSize: 22, color: "grey.500" }} />
             </IconButton>
           </span>
         </Tooltip>

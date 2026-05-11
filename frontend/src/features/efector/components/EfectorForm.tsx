@@ -13,25 +13,46 @@ export const EfectorForm = ({
   selectedEfector,
   setSelectedEfector,
 }: Props) => {
-  
   return (
-    <FormControl size="small" fullWidth>
-      <InputLabel id="efector-label">Efector</InputLabel>
+    <FormControl
+      size="small"
+      fullWidth
+      sx={{
+        minWidth: 0,
+      }}
+    >
+      <InputLabel
+        id="efector-label"
+        sx={{
+          fontSize: 13,
+        }}
+      >
+        Efector
+      </InputLabel>
+
       <Select
         labelId="efector-label"
         label="Efector"
         value={selectedEfector?.id ?? ""}
         onChange={(e) => {
-            const id = Number(e.target.value);
-            const ef = efectores.find((x) => x.id === id) ?? null;
-            setSelectedEfector(ef);
-          }}>
-        <MenuItem value="">
+          const id = Number(e.target.value);
+          const ef = efectores.find((x) => x.id === id) ?? null;
+          setSelectedEfector(ef);
+        }}
+        sx={{
+          fontSize: 13,
+          height: 36,
+          '& .MuiSelect-select': {
+            py: 0.5, 
+          },
+        }}
+      >
+        <MenuItem value="" sx={{ fontSize: 13 }}>
           <em>Seleccioná un efector</em>
         </MenuItem>
 
         {efectores.map((ef) => (
-          <MenuItem key={ef.id} value={ef.id}>
+          <MenuItem key={ef.id} value={ef.id} sx={{ fontSize: 13 }}>
             {ef.nombre}
           </MenuItem>
         ))}

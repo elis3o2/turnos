@@ -40,12 +40,36 @@ export const TableComponent = React.memo(function TableComponent<T>({
   );
 
   return (
-    <TableContainer component={Paper} elevation={4}>
-      <Table stickyHeader size="small">
+    <TableContainer component={Paper} elevation={2}>
+    <Table
+      stickyHeader
+      size="small"
+      sx={{
+        '& .MuiTableCell-root': {
+          py: 0.5,
+          px: 1,
+          fontSize: 13,
+          height: 50,
+          minHeight: 50,
+          boxSizing: 'border-box',
+        },
+        '& .MuiTableRow-root': {
+          height: 50,
+        },
+      }}
+    >
         <TableHead>
           <TableRow>
             {visible.map(col => (
-              <TableCell key={col.key} sx={{ fontWeight: 700 }}>
+              <TableCell
+                key={col.key}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: 12,
+                  py: 0.5,
+                  backgroundColor: 'background.paper',
+                }}
+              >
                 {col.label}
               </TableCell>
             ))}
@@ -64,8 +88,10 @@ export const TableComponent = React.memo(function TableComponent<T>({
           ) : data.length === 0 ? (
             <TableRow>
               <TableCell colSpan={visible.length}>
-                <Box sx={{ p: 3, textAlign: "center" }}>
-                  <Typography>{emptyMessage}</Typography>
+                <Box sx={{ p: 2, textAlign: "center" }}>
+                  <Typography sx={{ fontSize: 13 }}>
+                    {emptyMessage}
+                  </Typography>
                 </Box>
               </TableCell>
             </TableRow>
@@ -75,11 +101,14 @@ export const TableComponent = React.memo(function TableComponent<T>({
                 key={(row as any).id ?? i}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileHover={{ backgroundColor: 'rgba(0,0,0,0.03)' }} 
               >
                 {visible.map(col => (
-                  <TableCell key={col.key}>
+                <TableCell key={col.key}>
+                  <Box sx={{ fontSize: 12 }}>
                     {renderCell(col.key, row)}
-                  </TableCell>
+                  </Box>
+                </TableCell>
                 ))}
               </MotionTableRow>
             ))

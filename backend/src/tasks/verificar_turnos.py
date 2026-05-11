@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.db import connections
 from django.core.cache import cache
 from celery import shared_task
-
+import datetime
 from src.apps.turno.models import LastMod
 from src.apps.efector.models import EfeSerEsp
 from .utils import enviar_whatsapp, decode_res
@@ -57,26 +57,26 @@ def _enriquecer_con_ese(t, id_efe_ser_esp):
     desde Django ORM (EfeSerEsp). Retorna un dict con los campos o lanza excepción.
     """
     if id_efe_ser_esp is None:
-        id_efe_ser_esp = getattr(t, "id_efe_ser_esp_id", None)
+        id_efe_ser_esp = getattr(t, "efe_ser_esp_id", None)
 
     ese_obj = (
         EfeSerEsp.objects
         .select_related(
-            "id_efector",
-            "id_ser_esp__id_servicio",
-            "id_ser_esp__id_especialidad",
+            "efector",
+            "ser_esp__servicio",
+            "ser_esp__especialidad",
         )
         .get(pk=id_efe_ser_esp)
     )
 
     return {
         "id_efe_ser_esp":    id_efe_ser_esp,
-        "id_efector":        ese_obj.id_efector_id,
-        "id_servicio":       ese_obj.id_ser_esp.id_servicio_id,
-        "id_especialidad":   ese_obj.id_ser_esp.id_especialidad_id,
-        "nombre_efector":    ese_obj.id_efector.nombre,
-        "nombre_servicio":   ese_obj.id_ser_esp.id_servicio.nombre,
-        "nombre_especialidad": ese_obj.id_ser_esp.id_especialidad.nombre,
+        "id_efector":        ese_obj.efector.id,
+        "id_servicio":       ese_obj.ser_esp.servicio.id,
+        "id_especialidad":   ese_obj.ser_esp.especialidad.id,
+        "nombre_efector":    ese_obj.efector.nombre,
+        "nombre_servicio":   ese_obj.ser_esp.servicio.nombre,
+        "nombre_especialidad": ese_obj.ser_esp.especialidad.nombre,
     }
 
 
@@ -279,9 +279,17 @@ def verificar_turnos() -> None:
 
             for r in rows:
                 idturno, idpaciente, idestadoturno, last_modf_val = r
-                este_raw = str(last_modf_val).split(".")[0]
 
-                print(f"[DEBUG] Procesando idturno={idturno} estado={idestadoturno} last_mod={este_raw}")
+                if isinstance(last_modf_val, datetime.datetime):
+                    este_dt = last_modf_val.replace(microsecond=0)
+                    if timezone.is_aware(este_dt):
+                        este_dt = timezone.make_naive(este_dt)  # quitar tz si tiene
+                else:
+                    # Si viene como string
+                    este_raw = str(last_modf_val).split(".")[0]
+                    este_dt = datetime.datetime.strptime(este_raw, "%Y-%m-%d %H:%M:%S")
+
+                print(f"[DEBUG] Procesando idturno={idturno} estado={idestadoturno} last_mod={este_dt}")
 
                 try:
                     _procesar_fila(cur, idturno, idpaciente, idestadoturno)
@@ -291,9 +299,9 @@ def verificar_turnos() -> None:
                     continue
 
                 # Avanzar LastMod solo si la fila se procesó sin errores
-                last_mod_obj.fecha = este_raw
+                last_mod_obj.fecha = este_dt
                 last_mod_obj.save(update_fields=['fecha'])
-                print(f"[DEBUG] LastMod actualizado a {este_raw}")
+                print(f"[DEBUG] LastMod actualizado a {este_dt}")
 
     finally:
         cache.delete(lock_id)

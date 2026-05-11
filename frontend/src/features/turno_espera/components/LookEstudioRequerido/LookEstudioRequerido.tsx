@@ -13,12 +13,12 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import type { EstudioRequerido } from "../../types";
+import type { Estudio} from "../../types";
 import { useLookEstudioRequerido } from "./useLookEstudioRequerido";
 
 interface Props {
-  estudioRequerido: EstudioRequerido[];
-  setEstudioRequerido: React.Dispatch<React.SetStateAction<EstudioRequerido[]>>;
+  estudioRequerido: Estudio[];
+  setEstudioRequerido: React.Dispatch<React.SetStateAction<Estudio[]>>;
   setFinishEstudioRequerido: React.Dispatch<React.SetStateAction<boolean>>;
 }
 

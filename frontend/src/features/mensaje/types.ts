@@ -11,7 +11,7 @@ export interface EstadoMsj {
 export interface Plantilla {
     id: number;
     contenido: string;
-    tipo: number;
+    tipo: string;
 }
 
 

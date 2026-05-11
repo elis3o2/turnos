@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { getEstudioRequeridoAll } from "../../api";
-import type { EstudioRequerido } from "../../types";
+import type { Estudio } from "../../types";
 import { getErrorMessage, filterEstudios } from "./utilsLookEstudioRequerido";
 
 interface Props {
-  estudioRequerido: EstudioRequerido[];
-  setEstudioRequerido: Dispatch<SetStateAction<EstudioRequerido[]>>;
+  estudioRequerido: Estudio[];
+  setEstudioRequerido: Dispatch<SetStateAction<Estudio[]>>;
   setFinishEstudioRequerido: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -15,7 +15,7 @@ export function useLookEstudioRequerido({
   setEstudioRequerido,
   setFinishEstudioRequerido,
 }: Props) {
-  const [estudios, setEstudios] = useState<EstudioRequerido[]>([]);
+  const [estudios, setEstudios] = useState<Estudio[]>([]);
   const [selectedIds, setSelectedIds] = useState<number[]>(
     () => estudioRequerido?.map((e) => e.id) ?? []
   );
@@ -35,6 +35,7 @@ export function useLookEstudioRequerido({
         if (!mounted) return;
 
         setEstudios(data);
+        console.log("DATA", data)
         setSelectedIds(estudioRequerido?.map((e) => e.id) ?? []);
       } catch (e: unknown) {
         setError(getErrorMessage(e, "Error al obtener estudios."));

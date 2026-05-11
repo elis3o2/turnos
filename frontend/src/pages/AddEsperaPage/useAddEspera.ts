@@ -2,11 +2,11 @@ import  { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Efector, EfeSerEspCompleto } from "../../features/efector/types";
 import type { Paciente, Profesional } from "../../features/persona/types";
-import type { EstudioRequerido } from "../../features/turno_espera/types";
+import type { Estudio } from "../../features/turno_espera/types";
 import type { AlertSeverity } from "../../common/types";
 import { getEfectorById } from "../../features/efector/api";
 import { postTurnoEspera } from "../../features/turno_espera/api";
-import { mapPriority } from "./utilsAddEspera";
+import { mapPriorityNameId } from "../../features/turno_espera/utils";
 
 export function useAddEspera(efectorId: number | null) {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export function useAddEspera(efectorId: number | null) {
   const [finishEfeSerEsp, setFinishEfeSerEsp] = useState(false);
   const [cupo, setCupo] = useState(false);
 
-  const [estudioRequerido, setEstudioRequerido] = useState<EstudioRequerido[]>([]);
+  const [estudioRequerido, setEstudioRequerido] = useState<Estudio[]>([]);
   const [finishEstudioRequerido, setFinishEstudioRequerido] = useState(false);
 
   const [priority, setPriority] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export function useAddEspera(efectorId: number | null) {
         efeSerEspSeleccionado.id, profesional.id,
         efector ? efector.id : efectorId,
         paciente.id, estudioRequerido.map(e => e.id),
-        mapPriority[priority], cupo
+        mapPriorityNameId[priority], cupo
       );
       setAlert({ open: true, msg: "Turno en espera creado correctamente.", severity: "success" });
       setShowRepeatOptions(true);
@@ -88,7 +88,7 @@ export function useAddEspera(efectorId: number | null) {
     paciente, setPaciente, finishPaciente, setFinishPaciente, resetPaciente,
     profesional, setProfesional, finishProfesional, setFinishProfesional, resetProfesional,
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
-    cupo, setCupo,
+    setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
     priority, setPriority,
     alert, setAlert,

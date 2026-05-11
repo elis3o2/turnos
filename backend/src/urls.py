@@ -7,7 +7,6 @@ from src.views import CustomTokenObtainPairView, SendWSP, TokenObtainPairView
 # src/urls.py
 urlpatterns = [
     # APIs
-    path('send_wsp/', SendWSP.as_view(), name='send_mensaje'),
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 

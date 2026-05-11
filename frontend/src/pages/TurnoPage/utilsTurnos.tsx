@@ -101,7 +101,7 @@ export function mensajeChip(m?: Mensaje | null) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, maxWidth: 120 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography variant="body2">{m.estado}</Typography>
+        <Typography fontSize={12}variant="body2">{m.estado}</Typography>
         {m.fecha_envio ? <DateTimeStack value={m.fecha_envio} /> : null}
       </Box>
     </Box>
@@ -113,12 +113,17 @@ export function renderCell(columnKey: string, t: TurnoMerged) {
     case "id":        return t.id_sisr;
     case "respuesta":
       return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, width: "fit-content" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, width: "fit-content" }}>
           <Chip
-            size="small"
             label={t.estado_paciente ?? "-"}
             color={estadoRespChipColor(t) as any}
             variant="outlined"
+            sx={{
+              height: 20,
+              "& .MuiChip-label": {
+                px: 0.75,
+              },
+            }}
           />
           {t.fecha_estado_paciente ? <DateTimeStack value={t.fecha_estado_paciente} /> : null}
         </Box>
@@ -138,6 +143,12 @@ export function renderCell(columnKey: string, t: TurnoMerged) {
           label={t.estado}
           color={estadoChipColor(t) as any}
           variant="outlined"
+          sx={{
+              height: 20,
+              "& .MuiChip-label": {
+                px: 0.75,
+              },
+            }}
         />
       );
     case "fecha":          return <DateStack value={t.fecha} />;

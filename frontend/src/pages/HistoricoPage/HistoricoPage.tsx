@@ -109,7 +109,7 @@ export default function HistoricoPage(): React.ReactElement {
         visibleColumns={visibleColumns}
         data={filteredTurnos}
         loading={loading}
-        renderCell={renderCell}
+        renderCell={renderCell as (key: string, row: unknown) => React.ReactNode}
       />
     </Box>
   );

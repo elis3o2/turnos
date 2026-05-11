@@ -7,6 +7,7 @@ import emoji
 
 class PlantillaSerializer(serializers.ModelSerializer):
     contenido = serializers.SerializerMethodField()
+    tipo = serializers.CharField(source='tipo.nombre')
     class Meta:
         model = Plantilla
         fields = '__all__'

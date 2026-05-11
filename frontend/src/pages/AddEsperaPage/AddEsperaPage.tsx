@@ -18,7 +18,7 @@ export default function AddEspera(): React.ReactElement {
     paciente, setPaciente, finishPaciente, setFinishPaciente, resetPaciente,
     profesional, setProfesional, finishProfesional, setFinishProfesional, resetProfesional,
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
-    cupo, setCupo,
+    setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
     priority, setPriority,
     alert, setAlert,

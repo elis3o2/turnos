@@ -21,7 +21,7 @@ import { useMensajesDashboard } from './useMensajeDashboard'
 import { EstadoRecordatorioCard } from './components/EstadoRecordatorioCard'
 import { FilterIcon } from './components/FilterIcon'
 import { StatCard } from './components/StatCard'
-
+import { ActualizacionComponent } from './components/ActualizacionesComponent'
 
 export function MensajesDashboard() {
   const {
@@ -201,12 +201,13 @@ export function MensajesDashboard() {
             sx={{ width: 155 }}
           />
         </Stack>
+        <ActualizacionComponent />
       </Box>
 
       {/* ── TARJETAS RESUMEN ─────────────────────── */}
       <Box
         sx={{
-          width: '80%',
+          width: '70%',
           minWidth: 400,
           mx: 'auto',
           display: 'flex',
@@ -219,7 +220,7 @@ export function MensajesDashboard() {
             <Typography variant="overline" color="text.secondary" letterSpacing={2}>
               Total de mensajes
             </Typography>
-            <Typography variant="h2" fontWeight={700} sx={{ mt: 1 }}>
+            <Typography variant="h2" fontSize={35} fontWeight={700} sx={{ mt: 1 }}>
               {resumen.total.toLocaleString()}
             </Typography>
           </CardContent>
@@ -243,8 +244,8 @@ export function MensajesDashboard() {
       {/* ── RECORDATORIOS + ESTADOS ─────────────── */}
       <Box
         sx={{
-          width: '80%',
-          minWidth: 400,
+          width: '70%',
+          minWidth: 300,
           display: 'flex',
           gap: 2,
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 260px))',
@@ -270,7 +271,7 @@ export function MensajesDashboard() {
             <Typography variant="overline" color="text.secondary" letterSpacing={1.5} fontSize={11}>
               Recordatorios enviados
             </Typography>
-            <Typography variant="h3" fontWeight={700} sx={{ mt: 1 }}>
+            <Typography variant="h3" fontSize={40} fontWeight={700} sx={{ mt: 1 }}>
               {resumen.total_recordatorio.toLocaleString()}
             </Typography>
           </CardContent>

@@ -51,9 +51,9 @@ export const getTurnosCount = (
 
 
 export const getTurnoPaciente = (id: string): Promise<TurnoPacienteResp> => {
-  return http.get(`turno-paciente/`,{params: {id }}).then(res => res.data)
+  return http.get(`turno/turno-paciente/`,{params: {id }}).then(res => res.data)
 }
 
 export const putTurnoPaciente = (id: string, estado:number) => {
-  return http.put(`turno-paciente/`, { id, estado} )
+  return http.put(`turno/turno-paciente/`, { id, estado} )
 }

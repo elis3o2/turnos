@@ -12,7 +12,9 @@ export function useHistorico() {
   const [selectedEfector, setSelectedEfector] = useState<string>('ALL');
 
   const efectores = useMemo(
-    () => [...new Set(turnos.map(t => t.efector).filter(Boolean))],
+    () =>
+      [...new Set(turnos.map(t => t.efector).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b)),
     [turnos]
   );
 

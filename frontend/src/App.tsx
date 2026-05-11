@@ -1,4 +1,3 @@
-// En App.tsx
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './common/contex';
 import AppRoutes from './routes/AppRoutes';

@@ -1,6 +1,6 @@
 import requests
 from src.apps.mensaje.models import Mensaje
-from core.settings import HORA_INICIO, HORA_FIN
+from core.settings import HORA_INICIO, HORA_FIN, TZ
 from decouple import config
 from django.utils import timezone
 from django.core import signing
@@ -13,9 +13,9 @@ def enviar_whatsapp(numero: str, mensaje: str) -> Response:
     sesion = (
         Mensaje.objects
         .filter(numero=numero)
-        .exclude(id_sesion_id__isnull=True)
+        .exclude(sesion_id__isnull=True)
         .order_by("-fecha_envio")
-        .values_list("id_sesion_id", flat=True)
+        .values_list("sesion_id", flat=True)
         .first()
     )
 

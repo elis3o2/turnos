@@ -1,12 +1,8 @@
 from rest_framework import viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.db.models import Count,  Q, Subquery, OuterRef
-from django.db import connections, DatabaseError
-from typing import TypedDict
 from .serializers import CustomTokenObtainPairSerializer
 
 
@@ -14,35 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class KeyLabelMixin:
-    key_field = "id"
-    label_field = "nombre"
-
-    @action(detail=False, methods=["get"], url_path="options")
-    def options(self, request):
-        queryset = self.get_queryset()
-
-        data = queryset.values(self.value_field, self.label_field)
-
-        result = [
-            {
-                "key": item[self.value_field],
-                "label": item[self.label_field],
-            }
-            for item in data
-        ]
-
-        return Response(result)
-
         
-
-class InformixData(TypedDict, total=False):
-    paciente_id: int
-    paciente_nombre: str
-    paciente_apellido: str
-    paciente_dni: str
-    profesional_nombre: str
-    profesional_apellido: str
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

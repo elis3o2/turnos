@@ -1,8 +1,6 @@
 import type { Efector, EfeSerEspCompleto } from "../../features/efector/types";
 import type { Paciente, Profesional } from "../../features/persona/types";
 
-export const mapPriority: Record<string, number> = { baja: 2, media: 1, alta: 0 };
-
 export const canSelectPriority = (
   efector: Efector | null,
   efectorId: number | null,

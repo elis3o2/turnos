@@ -50,6 +50,7 @@ export default function TurnosPage() {
     handleToggleErrorMode,
     handleSelectCategory,
   } = useTurno();
+
   return (
     <Box sx={{ p: 2 }}>
       <RespuestaComponent

@@ -13,14 +13,48 @@ export const getDefaultDesde = (): string => {
 // ─────────────────────────────────────────────
 
 export const ESTADO_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  "LEIDO":    { bg: '#e3f2fd', color: '#0d47a1', border: '#90caf9' },
-  "RECIBIDO":   { bg: '#e8f5e9', color: '#1b5e20', border: '#a5d6a7' },
-  "ENVIADO":      { bg: '#f3e5f5', color: '#4a148c', border: '#ce93d8' },
-  "PENDIENTE":  { bg: '#fff8e1', color: '#e65100', border: '#ffe082' },
-  "SIN WHATSAPP": { bg: '#fff3e0', color: '#e65100', border: '#ffcc80' },
-  "SERVER ERROR":{ bg: '#ffebee', color: '#b71c1c', border: '#ef9a9a' },
-}
+  "SERVER ERROR": { bg: '#ffebee', color: '#b71c1c', border: '#ef9a9a' },
+
+  "FALTAN DATOS": { bg: '#fce4ec', color: '#880e4f', border: '#f48fb1' },
+
+  "NUMERO INVALIDO": { bg: '#f3e5f5', color: '#6a1b9a', border: '#ce93d8' },
+
+  "SIN WHATSAPP": { bg: '#eceff1', color: '#37474f', border: '#b0bec5' }, // gris neutro
+
+  "FALLIDO": { bg: '#ede7f6', color: '#4527a0', border: '#b39ddb' },
+
+  "PENDIENTE": { bg: '#fff8e1', color: '#e65100', border: '#ffe082' }, // amarillo
+
+  "ENVIADO": { bg: '#e0f2f1', color: '#004d40', border: '#80cbc4' },
+
+  "RECIBIDO": { bg: '#e8f5e9', color: '#1b5e20', border: '#a5d6a7' },
+
+  "LEIDO": { bg: '#e3f2fd', color: '#0d47a1', border: '#90caf9' },
+};
 
 export const DEFAULT_ESTADO_COLOR = { bg: '#f5f5f5', color: '#424242', border: '#e0e0e0' }
 
 
+
+export const ACTUALIZACIONES = [
+  {
+    titulo: "Página de inicio",
+    detalle:
+      "Se muestra la cantidad de mensajes enviados y el estado de los mensajes de recordatorio. Al hacer clic sobre el cuadro de color se pueden ver los estados de los turnos asociados.",
+  },
+  {
+    titulo: "Página de turnos",
+    detalle:
+      "En ciertos efectores, los mensajes de recordatorio incluyen un link donde el paciente puede confirmar, rechazar o indicar número incorrecto. Si el turno se rechaza, se libera en SISR. Si estaba en lista de espera, se vuelve a agregar. Además, se puede filtrar por: Confirmado · Rechazado · Sin Respuesta · Sin Datos.",
+  },
+  {
+    titulo: "Página de lista de espera",
+    detalle:
+      'Cuando se asigna un turno en SISR que coincide con uno en lista de espera (efector, servicio, especialidad y persona), se quita automáticamente. Nueva vista de detalle de turno. Al agregar un turno, aparece el botón "Agregar Otro" que precarga el efector, la persona y el médico solicitante.',
+  },
+  {
+    titulo: "Cambio en la navegación",
+    detalle:
+      "Para moverse entre pantallas se debe usar el botón de menú (☰) en la esquina superior izquierda, que despliega las opciones de navegación.",
+  },
+];

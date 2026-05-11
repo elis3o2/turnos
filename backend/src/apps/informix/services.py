@@ -2,10 +2,11 @@
 
 from typing import Any, Dict, List
 from django.db.models import QuerySet
-
+from decouple import config
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
 from src.apps.mensaje.services import update_msg_state
 import emoji
+import requests
 
 
 def procesar_mensaje(m: Mensaje) -> dict:
@@ -40,36 +41,40 @@ def build_mensajes_map(turnos: List[Any]) -> Dict[int, list]:
     return result
 
 
-def build_fecha_estado_map(turnos: List[Any]) -> Dict[int, Any]:
-    turno_ids = [t.id for t in turnos]
 
-    flows = TurnoFlow.objects.filter(turno_id__in=turno_ids)
 
-    flow_map = {}
-    for f in flows:
-        flow_map.setdefault(f.turno_id, []).append(f.flow_id)
+def liberar_turno(id: int) -> bool:
+    api_url = config('URL_LIBERAR_TURNO')
 
-    all_flow_ids = [fid for ids in flow_map.values() for fid in ids]
+    session_req = requests.Session()
+    session_req.trust_env = False  
 
-    flows_qs = Flow.objects.filter(id__in=all_flow_ids, plantilla_flow_id=1)
+    payload = {
+        "idturno": id,
+        "clave": config('CLAVE_LIBERAR_TURNO'),
+    }
 
-    flow_by_id = {f.id: f for f in flows_qs}
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
 
-    result = {}
+    try:
+        response = session_req.post(
+            api_url,
+            json=payload,
+            headers=headers,
+            timeout=15
+        )
 
-    for turno in turnos:
-        ids = flow_map.get(turno.id, [])
-        flows = [flow_by_id.get(fid) for fid in ids if fid in flow_by_id]
+        # Si la API responde (aunque sea error HTTP)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get("success", False)
 
-        if not flows:
-            result[turno.id] = None
-            continue
+        # Si devuelve 403, 500, etc → lo tomamos como False
+        return False
 
-        if turno.estado_id in (1, 2):
-            flow = min(flows, key=lambda x: x.fecha_cierre or x.fecha_inicio)
-            result[turno.id] = flow.fecha_cierre
-        else:
-            flow = min(flows, key=lambda x: x.fecha_inicio)
-            result[turno.id] = flow.fecha_inicio
-
-    return result
+    except requests.RequestException:
+        # Error de red, timeout, conexión, etc
+        return False

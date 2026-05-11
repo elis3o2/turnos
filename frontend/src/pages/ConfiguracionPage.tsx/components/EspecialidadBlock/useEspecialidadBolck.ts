@@ -1,45 +1,26 @@
 import React from "react";
-import type { Efector } from "../../../../features/efector/types";
 import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { Setter} from "../../../../common/types";
 import type { FieldName } from "../../utilsConfiguracion";
 
 type Props = {
-  open: boolean;
   setOpen: Setter<boolean>;
   especialidades: EfeSerEspPlantillaExtend[];
   setEspecialidades: Setter<EfeSerEspPlantillaExtend[]>;
-  efectorSeleccionado: Efector[];
-  confirmEspecialidades: EfeSerEspPlantillaExtend[];
   setConfirmEspecialidades: Setter<EfeSerEspPlantillaExtend[]>;
-  confirmField: FieldName;
   setConfirmField: Setter<FieldName>;
-  confirmValue: 0 | 1;
   setConfirmValue: Setter<0 | 1>;
-  efecServEspecialidades: Record<number, Record<number, EfeSerEspPlantillaExtend[]>>;
   setEfecServEspecialidades: Setter<Record<number, Record<number, EfeSerEspPlantillaExtend[]>>>;
-  setAlertOpen: Setter<boolean>;
-  setAlertMsg: Setter<string>;
-  setAlertSeverity: Setter<AlertSeverity>;
 };
 
 export const useEspecialidadBlock = ({
-  open,
   setOpen,
   especialidades,
   setEspecialidades,
-  efectorSeleccionado,
-  confirmEspecialidades,
   setConfirmEspecialidades,
-  confirmField,
   setConfirmField,
-  confirmValue,
   setConfirmValue,
-  efecServEspecialidades,
   setEfecServEspecialidades,
-  setAlertOpen,
-  setAlertMsg,
-  setAlertSeverity,
 }: Props) => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [hovered, setHovered] = React.useState<{ espId: number; field: FieldName } | null>(null);

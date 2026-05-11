@@ -10,11 +10,10 @@ import {
   validateDiasAntes,
   buildPlantillaPayload,
   type AlertSeverity,
-  type StateShape
-} from "./utilsPlantillas"
+  type StateShape,
+} from './utilsPlantillas';
 
-
-// ---------------------- Hook ----------------------
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 export function usePlantillas() {
   const location  = useLocation();
   const navigate  = useNavigate();
@@ -24,13 +23,13 @@ export function usePlantillas() {
   const especialidadesIds = state.especialidades ?? [];
   const isModificationMode = Boolean(tipo) && especialidadesIds.length > 0;
 
-  // --- Datos ---
+  // ── Estado ──────────────────────────────────────────────────────────────────
   const [plantillas, setPlantillas] = useState<Plantilla[]>([]);
   const [loading,    setLoading]    = useState(false);
   const [updating,   setUpdating]   = useState(false);
   const [diasAntes,  setDiasAntes]  = useState('');
 
-  // --- Alerta ---
+  // ── Alertas ─────────────────────────────────────────────────────────────────
   const [alertOpen,     setAlertOpen]     = useState(false);
   const [alertMsg,      setAlertMsg]      = useState('');
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>('info');
@@ -43,7 +42,7 @@ export function usePlantillas() {
 
   const closeAlert = useCallback(() => setAlertOpen(false), []);
 
-  // --- Fetch plantillas ---
+  // ── Fetch ───────────────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchPlantillas = async () => {
       setLoading(true);
@@ -63,10 +62,10 @@ export function usePlantillas() {
     fetchPlantillas();
   }, [tipo, showAlert]);
 
-  // --- Agrupado memoizado ---
+  // ── Agrupado memoizado ──────────────────────────────────────────────────────
   const grouped = useMemo(() => groupPlantillasByType(plantillas), [plantillas]);
 
-  // --- Asignar plantilla ---
+  // ── Asignar plantilla ───────────────────────────────────────────────────────
   const handleCardAssign = useCallback(async (plantillaId: number) => {
     if (!tipo || especialidadesIds.length === 0) {
       showAlert('No está en modo de modificación o no hay especialidades seleccionadas.', 'warning');
@@ -74,9 +73,9 @@ export function usePlantillas() {
     }
 
     if (tipo === 'recordatorio') {
-      const validationError = validateDiasAntes(diasAntes);
-      if (validationError) {
-        showAlert(validationError, 'warning');
+      const error = validateDiasAntes(diasAntes);
+      if (error) {
+        showAlert(error, 'warning');
         return;
       }
     }
@@ -89,7 +88,7 @@ export function usePlantillas() {
 
     setUpdating(true);
     try {
-      await Promise.all(especialidadesIds.map(id => updateEfectorPlantilla(id, payload)));
+      await Promise.all(especialidadesIds.map((id) => updateEfectorPlantilla(id, payload)));
       showAlert('Plantillas asignadas con éxito.', 'success');
       setTimeout(() => {
         setUpdating(false);

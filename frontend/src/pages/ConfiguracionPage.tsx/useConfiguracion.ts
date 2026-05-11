@@ -6,7 +6,7 @@ import { getServiciosByEfector } from '../../features/efector/api';
 import type { Efector, Servicio } from '../../features/efector/types';
 import type { AlertSeverity } from '../../common/types';
 import type { EfeSerEspPlantillaExtend } from '../../features/mensaje/types';
-
+import { hasConfiguracion } from '../../common/utils/permissions';
 import {
   mergeServiciosUnique,
   addEfectorToServicios,
@@ -18,7 +18,7 @@ export type ConfirmField = 'asignacion' | 'reprogramacion' | 'cancelacion' | 're
 
 // ---------------------- Hook ----------------------
 export function useConfiguracion() {
-  const { efectores } = useContext(AuthContext);
+  const { efectores, groups } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // --- Selección ---
@@ -44,6 +44,7 @@ export function useConfiguracion() {
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>('info');
 
   const closeAlert = useCallback(() => setAlertOpen(false), []);
+  const permiso = hasConfiguracion(groups)
 
   // --- Efector click ---
   const handleEfectorClick = useCallback(async (efector: Efector) => {
@@ -96,6 +97,7 @@ export function useConfiguracion() {
 
   return {
     efectores,
+    permiso,
     efectorSeleccionado,
     servicios,
     servicioSeleccionado,

@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  Box, Button, Paper, Typography,
-  CircularProgress, Tooltip, IconButton, Chip,
-} from '@mui/material';
-import SearchIcon      from '@mui/icons-material/Search';
+import {Box, Button, Paper, Typography, Tooltip, IconButton, Chip} from '@mui/material';
 import ClearIcon       from '@mui/icons-material/Clear';
 import DownloadIcon    from '@mui/icons-material/Download';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -14,13 +10,15 @@ import { TableComponent } from '../../common/components/TableComponent';
 import type { TurnoEspera } from '../../features/turno_espera/types';
 
 import { useEsperaHistorico }                from './useEsperaHistorico';
-import { ALL_COLUMNS, safeFormat, estadoColor } from './utilsEsperaHistorico';
+import { ALL_COLUMNS, estadoColor } from './utilsEsperaHistorico';
+import { mapPriorityIdName } from '../../features/turno_espera/utils';
+import { DateTimeStack } from '../../common/components/DateTimeStack';
 
 // ---------------------- Render de celda ----------------------
 function renderCell(columnKey: string, t: TurnoEspera): React.ReactNode {
   switch (columnKey) {
-    case 'fecha_hora_creacion': return safeFormat(t.fecha_hora_creacion);
-    case 'fecha_hora_cierre':   return safeFormat(t.fecha_hora_cierre);
+    case 'fecha_hora_creacion': return <DateTimeStack value={t.fecha_hora_creacion}/>;
+    case 'fecha_hora_cierre':   return <DateTimeStack value={t.fecha_hora_cierre}/>
     case 'estado':
       return t.estado?.significado ? (
         <Tooltip title={t.estado.significado}>
@@ -36,7 +34,7 @@ function renderCell(columnKey: string, t: TurnoEspera): React.ReactNode {
     case 'efector':     return t.efector?.nombre      ?? '—';
     case 'servicio':    return t.servicio?.nombre     ?? '—';
     case 'especialidad':return t.especialidad?.nombre ?? '—';
-    case 'prioridad':   return t.prioridad            ?? '—';
+    case 'prioridad':   return mapPriorityIdName[t.prioridad]  ?? '—';
     default:            return '—';
   }
 }
@@ -48,7 +46,7 @@ export default function EsperaHistorico(): React.ReactElement {
     finishPaciente, setFinishPaciente,
     displayedRows, loading, error,
     sortDesc, toggleSort,
-    handleClear, handleDeselect, handleFetch, handleDownloadCSV,
+     handleDeselect, handleDownloadCSV,
   } = useEsperaHistorico();
 
   const canDownload = !loading && displayedRows.length > 0;
@@ -61,19 +59,19 @@ export default function EsperaHistorico(): React.ReactElement {
         <Typography variant="h5" fontWeight={700}>Turnos en Espera</Typography>
 
         <Box display="flex" gap={1} alignItems="center">
-
-          <Tooltip title="Descargar CSV">
-            <span>
-              <IconButton onClick={handleDownloadCSV} disabled={!canDownload}>
-                <DownloadIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
+          <Button
+            size='small'
+            onClick={handleDownloadCSV}
+            disabled={!canDownload}
+            startIcon={<DownloadIcon />}
+          >
+            Descargar CSV
+          </Button>
         </Box>
       </Box>
 
       {/* Buscador / resumen de paciente */}
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper sx={{ p: 1, mb: 2 }}>
         {!finishPaciente ? (
           <LookPaciente
             paciente={paciente}
@@ -94,6 +92,7 @@ export default function EsperaHistorico(): React.ReactElement {
 
             <Box display="flex" gap={1} alignItems="center">
               <Button
+                size='small'
                 variant="outlined"
                 startIcon={<ClearIcon />}
                 onClick={handleDeselect}
@@ -134,13 +133,6 @@ export default function EsperaHistorico(): React.ReactElement {
         <Typography variant="body2">
           Mostrando {displayedRows.length} registros.
         </Typography>
-        <Button
-          onClick={handleDownloadCSV}
-          disabled={!canDownload}
-          startIcon={<DownloadIcon />}
-        >
-          Descargar CSV
-        </Button>
       </Box>
     </Box>
   );

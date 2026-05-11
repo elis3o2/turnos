@@ -22,7 +22,6 @@ type Props = {
 export const useConfirmacion = ({
   onSuccess,
   onClosed,
-  open,
   setOpen,
   field,
   value,

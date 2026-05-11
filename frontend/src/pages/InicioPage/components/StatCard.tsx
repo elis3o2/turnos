@@ -5,7 +5,7 @@ export function StatCard({label, value,}: {label: string, value: number}) {
     <Card
       sx={{
         flex: '1 1 220px',
-        minWidth: 220,
+        minWidth: 120,
         textAlign: 'center',
         borderRadius: 4,
         boxShadow: 4,
@@ -13,10 +13,10 @@ export function StatCard({label, value,}: {label: string, value: number}) {
       }}
     >
       <CardContent>
-        <Typography variant="overline" color="text.secondary" letterSpacing={2}>
+        <Typography fontSize={10} variant="overline" color="text.secondary" letterSpacing={2}>
           {label}
         </Typography>
-        <Typography variant="h3" fontWeight={700} sx={{ mt: 1 }}>
+        <Typography variant="h3" fontSize={35} fontWeight={700} sx={{ mt: 1 }}>
           {value.toLocaleString()}
         </Typography>
       </CardContent>

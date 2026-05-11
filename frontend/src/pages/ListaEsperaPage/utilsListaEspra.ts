@@ -23,8 +23,11 @@ export function buildEspecialidadesOptions(turnos: TurnoEspera[]) {
     }
   }
 
-  return Array.from(map.entries()).map(([id, nombre]) => ({ id, nombre }));
+  return Array.from(map.entries())
+    .sort((a, b) => a[1].localeCompare(b[1], 'es', { sensitivity: 'base' }))
+    .map(([id, nombre]) => ({ id, nombre }));
 }
+
 
 export function filterAndSortTurnos(
   turnos: TurnoEspera[],

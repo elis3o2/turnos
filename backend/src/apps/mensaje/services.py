@@ -1,9 +1,13 @@
+from django.utils.timezone import now
 import requests
 from .models import Mensaje, EfeSerEspPlantilla
 from datetime import datetime
 from .models import Plantilla
 from src.apps.turno.models import Turno
 from decouple import config
+import emoji
+import re
+import json
 
 def create_Mensaje(
     id: str | None = None,
@@ -36,7 +40,7 @@ def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
     """
     try:
         turno = EfeSerEspPlantilla.objects.filter(
-            id_efe_ser_esp=efe_ser_esp,
+            efe_ser_esp=efe_ser_esp,
         ).first()
         
         if not turno:
@@ -64,7 +68,6 @@ def check_turno(efe_ser_esp: int, estado: int) -> (bool, Plantilla | None):
         return False, None
     
     except Exception as e:
-        print(f"Error en check_turno: {e}")
         return False, None
 
 
@@ -83,47 +86,60 @@ def format_plantilla(contenido: str, valores) -> str:
 
 
 
+
 def update_msg_state(mensaje: Mensaje) -> Mensaje:
     """
-    Consulta la API externa por el estado del mensaje y actualiza Mensaje(pk=mensaje_id).
+    Consulta la API externa por el estado del mensaje y actualiza Mensaje.
     Devuelve el Mensaje actualizado o el original si hay error.
     """
-    api_url = f'{config("API_ESTADO_WHATSAPP")}/{mensaje.sesion_id}/{mensaje.id_mensaje}/{mensaje.numero}'
+
+    api_url = (
+        f'{config("API_ESTADO_WHATSAPP")}/'
+        f'{mensaje.sesion_id}/{mensaje.id_mensaje}/{mensaje.numero}'
+    )
 
     session = requests.Session()
-    session.trust_env = False 
+    session.trust_env = False
 
     try:
         resp = session.get(
             api_url,
             headers={
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Accept": "application/json",
             },
-            timeout=5
+            timeout=5,
         )
 
         content_type = resp.headers.get("Content-Type", "")
 
         if "application/json" not in content_type:
+            print("Content-Type inválido:", content_type)
             return mensaje
 
         data = resp.json()
 
-    except requests.exceptions.RequestException:
-        return mensaje
-    except ValueError:
+        if isinstance(data, str):
+            data = json.loads(data)
+
+    except requests.exceptions.RequestException as e:
         return mensaje
 
-    # Actualizar Mensaje local si existe
+    except ValueError as e:
+        return mensaje
+
+    # Actualizar mensaje
     try:
         mensaje.fecha_last_ack = now()
-        if isinstance(data, dict) and "ack" in data:
-            mensaje.id_estado_id = data["ack"]
 
-        mensaje.save(update_fields=["fecha_last_ack", "id_estado"])
+        if isinstance(data, dict):
+            if "ack" in data:
+                mensaje.estado_id = int(data["ack"])
+
+        mensaje.save(update_fields=["fecha_last_ack", "estado_id"])
+
         return mensaje
 
-    except Exception:
+    except Exception as e:
+        print("SAVE ERROR:", e)
         return mensaje
-

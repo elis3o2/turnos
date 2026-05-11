@@ -78,17 +78,17 @@ export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}:
           <Paper
             variant="outlined"
             sx={{ display: "flex", alignItems: "center", justifyContent: "space-between",
-              overflow: "hidden", px: 1.5, height: 72, cursor: "pointer" }}
+              overflow: "hidden", px: 1, height: 64, cursor: "pointer" }}
             onClick={() => handleOpenDialog(t)}
             role="button" tabIndex={0}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpenDialog(t); }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", width: "100%", gap: 2 }}>
-              <Box sx={{ width: 10, height: 52, backgroundColor: bg, borderRadius: 1,
+            <Box sx={{ display: "flex", alignItems: "center", width: "100%", gap: 1 }}>
+              <Box sx={{ width: 10, height: 40, backgroundColor: bg, borderRadius: 1,
                 flexShrink: 0, boxShadow: "0 1px 2px rgba(0,0,0,0.08)" }} aria-hidden />
               <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <Typography variant="body2"
-                  sx={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  sx={{ fontSize: 13,fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {pacienteLabel(t)}
                 </Typography>
                 <Typography variant="caption"
@@ -105,11 +105,10 @@ export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}:
                   <Chip label="CUPO" size="small"
                     sx={{ fontWeight: 700, height: 20, lineHeight: "20px", px: 0.7 }} />
                 )}
-                <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: "nowrap" }}>
+                <Typography variant="body2" sx={{ fontSize:13, fontWeight: 600, whiteSpace: "nowrap" }}>
                   {diasEnEsperaLabel(t)}
                 </Typography>
               </Box>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>Espera</Typography>
             </Box>
           </Paper>
         </Tooltip>

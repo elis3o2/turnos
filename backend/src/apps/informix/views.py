@@ -39,7 +39,6 @@ class GetPacienteAPIView(APIView):
 
             pacientes = fetch_paciente(dni=dni)
             ser = PacienteSerializer(instance=pacientes, many=True)
-            print(ser.data)
             return Response(ser.data, status=status.HTTP_200_OK)
 
         except DatabaseError:
@@ -88,7 +87,7 @@ class GetProfesionalAPIView(APIView):
 
 class BaseTurnosMerged(GenericAPIView):
     serializer_class = TurnoMergedSerializer
-    permission_classes = [EfectorPermission]
+    permission_classes = [EfectorPermission, ReadOnly]
 
     efector_field = "efe_ser_esp__efector"
 

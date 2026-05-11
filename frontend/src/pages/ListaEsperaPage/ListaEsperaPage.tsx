@@ -19,9 +19,11 @@ import ListaEsperaComponent from "../../features/turno_espera/components/ListaEs
 import { useListaEspera } from "./useListaEspera";
 import type { SortBy } from "./utilsListaEspra";
 
+
 export default function ListaEsperaPage(): React.ReactElement {
   const {
     efectores,
+    permiso,
     selectedEfector,
     setSelectedEfector,
     selectedEspecialidad,
@@ -52,19 +54,21 @@ export default function ListaEsperaPage(): React.ReactElement {
   } = useListaEspera();
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
+    <Box sx={{ p: 3, maxWidth: 1000, mx: "auto" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Lista de espera</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
+          {permiso && <Button 
+            size="small"
             variant="contained"
             disableElevation
             onClick={handleGoToAddEspera}
             disabled={!selectedEfector}
           >
             Agregar
-          </Button>
+          </Button>}
           <Button
+            size="small"
             variant="contained"
             disableElevation
             onClick={handleGoToBuscarPaciente}
@@ -85,17 +89,24 @@ export default function ListaEsperaPage(): React.ReactElement {
 
         <Grid item xs={12} sm={4} md={3}>
           <FormControl size="small" fullWidth>
-            <InputLabel>Especialidad</InputLabel>
+            <InputLabel sx={{ fontSize: 13 }}>Especialidad</InputLabel>
             <Select
               value={String(selectedEspecialidad) ?? ""}
               label="Especialidad"
               onChange={(e: SelectChangeEvent) =>
                 setSelectedEspecialidad(e.target.value === "" ? null : Number(e.target.value))
               }
+              sx={{
+                fontSize: 13,
+                height: 36,
+                '& .MuiSelect-select': {
+                  py: 0.5,
+                },
+              }}
             >
-              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="" sx={{ fontSize: 13 }}>Todos</MenuItem>
               {especialidadesOptions.map((s) => (
-                <MenuItem key={s.id} value={s.id}>
+                <MenuItem key={s.id} value={s.id} sx={{ fontSize: 13 }}>
                   {s.nombre}
                 </MenuItem>
               ))}
@@ -105,21 +116,28 @@ export default function ListaEsperaPage(): React.ReactElement {
 
         <Grid item xs={12} sm={6} md={3}>
           <FormControl size="small" fullWidth>
-            <InputLabel>Ordenar por</InputLabel>
+            <InputLabel sx={{ fontSize: 13 }}>Ordenar por</InputLabel>
             <Select
               value={sortBy}
               label="Ordenar por"
               onChange={(e) => setSortBy(e.target.value as SortBy)}
+              sx={{
+                fontSize: 13,
+                height: 36,
+                '& .MuiSelect-select': {
+                  py: 0.5,
+                },
+              }}
             >
-              <MenuItem value="priority">Prioridad</MenuItem>
-              <MenuItem value="dias">Días en espera</MenuItem>
+              <MenuItem value="priority" sx={{ fontSize: 13 }}>Prioridad</MenuItem>
+              <MenuItem value="dias" sx={{ fontSize: 13 }}>Días en espera</MenuItem>
             </Select>
           </FormControl>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <FormControl size="small" fullWidth>
-            <InputLabel>Derivación</InputLabel>
+            <InputLabel sx={{ fontSize: 13 }}>Derivación</InputLabel>
             <Select
               value={selectedDerivacion ? String(selectedDerivacion.id) : ""}
               label="Derivación"
@@ -129,12 +147,19 @@ export default function ListaEsperaPage(): React.ReactElement {
                   val === "" ? null : derivaciones.find((x) => x.id === Number(val)) ?? null
                 );
               }}
+              sx={{
+                fontSize: 13,
+                height: 36,
+                '& .MuiSelect-select': {
+                  py: 0.5,
+                },
+              }}
             >
-              <MenuItem value="">
+              <MenuItem value="" sx={{ fontSize: 13 }}>
                 <em>Ninguna</em>
               </MenuItem>
               {derivaciones.map((ef) => (
-                <MenuItem key={ef.id} value={ef.id}>
+                <MenuItem key={ef.id} value={ef.id} sx={{ fontSize: 13 }}>
                   {ef.nombre}
                 </MenuItem>
               ))}
@@ -178,6 +203,7 @@ export default function ListaEsperaPage(): React.ReactElement {
       )}
 
       <DetalleTurno
+        permiso={permiso}
         activeTurno={activeTurno}
         openDialog={openDialog}
         handleCloseDialog={handleCloseDialog}
