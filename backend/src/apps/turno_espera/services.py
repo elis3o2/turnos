@@ -39,7 +39,6 @@ def lista_espera_look(turno: Turno):
         cur.execute(query_turno_fecha(), (turno.id_sisr,))
         row = cur.fetchone()
 
-    print(row)
     if not row:
         return  # no hay fecha
 
