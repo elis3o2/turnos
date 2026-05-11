@@ -52,7 +52,7 @@ class DerivaSerializer(serializers.ModelSerializer):
     efector = EfectorSerializer(read_only=True)
     efector_deriva = EfectorSerializer(source='efe_ser_esp_deriva.efector', read_only=True)
     servicio_deriva = ServicioSerializer(source='efe_ser_esp_deriva.ser_esp.servicio', read_only=True)
-    especialidad_deriva = EspecialidadSerializer(source='efe_ser_esp_deriva.ser_esp.iespecialidad', read_only=True)
+    especialidad_deriva = EspecialidadSerializer(source='efe_ser_esp_deriva.ser_esp.especialidad', read_only=True)
     class Meta:
         model = Deriva
         fields = '__all__'
