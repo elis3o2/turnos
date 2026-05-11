@@ -34,8 +34,8 @@ def get_params(request) -> tuple[Optional[int], int, Optional[str], Optional[str
         cantidad = safe_int(request.query_params.get("cantidad"), default=None)
         offset = safe_int(request.query_params.get("offset"), default=0) or 0
 
-        fecha_desde = request.query_params.get("fechaDesde")
-        fecha_hasta = request.query_params.get("fechaHasta")
+        fecha_desde = request.query_params.get("fecha_desde")
+        fecha_hasta = request.query_params.get("fecha_hasta")
 
         efectores_param = request.query_params.getlist("ids_efec[]")
         servicios_param = request.query_params.getlist("ids_serv[]")
