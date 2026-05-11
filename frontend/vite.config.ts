@@ -1,13 +1,12 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite"
+import react from "@vitejs/plugin-react"
 
 export default defineConfig({
-  base: '/turnos/',           // <-- importante: slashes al inicio y final
+  plugins: [react()],
+  base: "/turnos/",       
   build: {
-    outDir: 'dist/turnos'     // <-- ahora coincide con serve.cjs (DIST + 'turnos')
-    },
-  server: {
-    host: true,
-    port: 5173,
-  }
-
+    outDir: "dist",
+    manifest: "manifest.json",
+    emptyOutDir: true,
+  },
 })
