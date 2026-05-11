@@ -10,8 +10,8 @@ import requests
 
 
 def procesar_mensaje(m: Mensaje) -> dict:
-    if 0 <= m.estado_id < 3:
-        update_msg_state(m)
+    #if 0 <= m.estado_id < 3:
+    #    update_msg_state(m)
 
     return {
         "id": m.id,
