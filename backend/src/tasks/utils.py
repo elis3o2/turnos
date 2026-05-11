@@ -1,11 +1,12 @@
 import requests
+from rest_framework import status
 from src.apps.mensaje.models import Mensaje
 from core.settings import HORA_INICIO, HORA_FIN, TZ
 from decouple import config
 from django.utils import timezone
 from django.core import signing
 from rest_framework.response import Response
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
