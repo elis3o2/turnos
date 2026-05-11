@@ -196,11 +196,11 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
 CELERY_BEAT_SCHEDULE = {
     "verificar-turnos-cada-1min": {
-        "task": "src.tasks.verificar_turnos",
+        "task": "src.tasks.verificar_turnos.verificar_turnos",
         "schedule": 60.0,
     },
     "recordatorios-diarios": {
-        "task": "src.tasks.programar_recordatorios",
+        "task": "src.tasks.recordatorios.programar_recordatorios",
         "schedule": crontab(hour=9, minute=50),
     },
 }
