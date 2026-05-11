@@ -28,4 +28,4 @@ export const getEfeSerEspPlantillaAll = (): Promise<EfeSerEspPlantillaExtend[]> 
   http.get<EfeSerEspPlantillaExtend[]>(`mensaje/efe_ser_esp_plantilla/buscar`).then(res => res.data); 
 
 export const getMensajesCount = (ids_efe: number[], ids_ser: number[], ids_esp: number[], fecha_desde: string | null, fecha_hasta: string | null) : Promise<MensajeCount> =>
-  http.get<MensajeCount>(`mensaje/mensajes/count`,{params: {ids_efe, ids_ser, ids_esp, fecha_desde, fecha_hasta}}).then(res => res.data);
+  http.get<MensajeCount>(`mensaje/mensajes/count/`,{params: {ids_efe, ids_ser, ids_esp, fecha_desde, fecha_hasta}}).then(res => res.data);
