@@ -39,6 +39,9 @@ class TurnoEsperaUpdatePermission(BasePermission):
         cupo = obj.cupo
 
         # 🔹 CERRAR TURNO
+        if view.action == "close_turno" and cupo:
+            return efector_solicitante in efectores_usuario
+        
         if view.action == "close_turno":
             return efector_turno in efectores_usuario
 
