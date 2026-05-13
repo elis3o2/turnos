@@ -345,35 +345,35 @@ def send_reminder_task(
                 )
                 return
 
-                if ack in (-1, -5):
-                    eta = calcular_proximo_retry(now)
-                    if eta < turno_dt:
-                        print(f"[RETRY] turno={id_turno} ack={ack}, próximo intento: {eta}")
-                        raise self.retry(eta=eta)
-                    # Sin tiempo: registrar fallo definitivo
-                    print(f"[STOP] Sin tiempo para reintentar turno={id_turno} ack={ack}, registrando.")
-                    create_Mensaje(
-                        id=envio_id, turno=turno, numero=telefono,
-                        plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
-                    )
-                    return
-
-                if ack < 0:
-                    # Fallo definitivo para cualquier otro código negativo
-                    print(f"[STOP] Fallo definitivo turno={id_turno} ack={ack}, registrando.")
-                    create_Mensaje(
-                        id=envio_id, turno=turno, numero=telefono,
-                        plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
-                    )
-                    return
-
-                # --- Éxito ---
+            if ack in (-1, -5):
+                eta = calcular_proximo_retry(now)
+                if eta < turno_dt:
+                    print(f"[RETRY] turno={id_turno} ack={ack}, próximo intento: {eta}")
+                    raise self.retry(eta=eta)
+                # Sin tiempo: registrar fallo definitivo
+                print(f"[STOP] Sin tiempo para reintentar turno={id_turno} ack={ack}, registrando.")
                 create_Mensaje(
                     id=envio_id, turno=turno, numero=telefono,
                     plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
                 )
-                _marcar_recordatorio_enviado(turno, id_efector, id_servicio, id_especialidad)
-                print(f"[OK] Recordatorio enviado turno={id_turno} ack={ack}")
+                return
+
+            if ack < 0:
+                # Fallo definitivo para cualquier otro código negativo
+                print(f"[STOP] Fallo definitivo turno={id_turno} ack={ack}, registrando.")
+                create_Mensaje(
+                    id=envio_id, turno=turno, numero=telefono,
+                    plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
+                )
+                return
+
+            # --- Éxito ---
+            create_Mensaje(
+                id=envio_id, turno=turno, numero=telefono,
+                plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
+            )
+            _marcar_recordatorio_enviado(turno, id_efector, id_servicio, id_especialidad)
+            print(f"[OK] Recordatorio enviado turno={id_turno} ack={ack}")
 
     except self.MaxRetriesExceededError:
         print(f"[WARN] Max retries alcanzado turno={id_turno}")
