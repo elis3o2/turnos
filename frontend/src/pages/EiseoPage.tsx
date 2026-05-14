@@ -7,7 +7,7 @@ const services = [
   { icon: "🛠️", title: "Soporte Técnico", desc: "Asistencia personalizada para empresas y particulares." },
 ];
 
-export default function App() {
+export default function Eliseo() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function App() {
           backgroundClip: "text",
           letterSpacing: "-0.02em",
         }}>
-          Eliseo<br />Feuli
+          Feuli<br />Eliseo
         </h1>
 
         <div style={{
