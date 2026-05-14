@@ -11,6 +11,7 @@ import AddEspera from '../pages/AddEsperaPage/AddEsperaPage';
 import PlantillasPage from '../pages/PlantillasPage/PlantillasPage';
 import ConfirmPage from '../pages/ConfirmPage/ConfirmPage';
 import EsperaHistorico from '../pages/EsperaHistoricoPage/EsperaHistoricoPage';
+import Eliseo from '../pages/EiseoPage';
 
 const AppRoutes = () => {
   return (
@@ -18,7 +19,7 @@ const AppRoutes = () => {
       {/* Ruta pública */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/confirma" element={<ConfirmPage />} />
-      <Route path="/private-route-secret/eliseo-feuli" element={<ConfirmPage />} />
+      <Route path="/private-route-secret/eliseo-feuli" element={<Eliseo />} />
       {/* Rutas privadas con Layout */}
       <Route
         element={
