@@ -48,9 +48,9 @@ class WhatsAppWebhookView(APIView):
     APP_SECRET = "TU_APP_SECRET"  # secret de la app de Meta
 
     def get(self, request):
-        mode = request.data.get("hub.mode")
-        challenge = request.data.get("hub.challenge")
-        verify_token = request.data.get("hub.verify_token")
+        mode = request.GET.get("hub.mode")
+        challenge = request.GET.get("hub.challenge")
+        verify_token = request.GET.get("hub.verify_token")
 
         if mode == "subscribe" and verify_token == self.VERIFY_TOKEN:
             return Response(challenge, status=status.HTTP_200_OK)
