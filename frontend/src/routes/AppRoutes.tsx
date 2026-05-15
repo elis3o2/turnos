@@ -12,6 +12,7 @@ import PlantillasPage from '../pages/PlantillasPage/PlantillasPage';
 import ConfirmPage from '../pages/ConfirmPage/ConfirmPage';
 import EsperaHistorico from '../pages/EsperaHistoricoPage/EsperaHistoricoPage';
 import Eliseo from '../pages/EiseoPage';
+import { PoliticaPrivacidad } from '../pages/PoliticaComponent';
 
 const AppRoutes = () => {
   return (
@@ -20,6 +21,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/confirma" element={<ConfirmPage />} />
       <Route path="/private-route-secret/Feuli-Eliseo" element={<Eliseo />} />
+       <Route path="/private-route-secret/policity" element={<PoliticaPrivacidad/>} />
       {/* Rutas privadas con Layout */}
       <Route
         element={
