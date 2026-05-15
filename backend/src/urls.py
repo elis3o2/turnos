@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from src.views import CustomTokenObtainPairView, SendWSP, TokenObtainPairView
+from src.views import CustomTokenObtainPairView, SendWSP, TokenObtainPairView, WhatsAppWebhookView
 
 
 
@@ -10,6 +10,7 @@ urlpatterns = [
     path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    path("webhook/", WhatsAppWebhookView.as_view(), name='whatsapp'),
     # Apps
     path("turno/", include("src.apps.turno.urls")),
     path("turno_espera/", include("src.apps.turno_espera.urls")),
