@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from django.http import HttpResponse
 from .serializers import CustomTokenObtainPairSerializer
 from django.shortcuts import render
 from django.conf import settings
@@ -53,11 +54,11 @@ class WhatsAppWebhookView(APIView):
         verify_token = request.GET.get("hub.verify_token")
 
         if mode == "subscribe" and verify_token == self.VERIFY_TOKEN:
-            return Response(challenge, status=status.HTTP_200_OK)
+            return HttpResponse(challenge, content_type="text/plain")
 
-        return Response(
-            {"error": "Token inválido"},
-            status=status.HTTP_403_FORBIDDEN
+        return HttpResponse(
+            "Token inválido",
+            status=403
         )
 
     def post(self, request):
