@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import F
 from .models import Efector, Servicio, Especialidad, EfeSerEsp, Deriva
 from .serializers import (EfectorSerializer, ServicioSerializer, EspecialidadSerializer, 
@@ -11,20 +12,20 @@ from collections import OrderedDict
 class EfectorViewSet(viewsets.ModelViewSet):
     queryset = Efector.objects.all()
     serializer_class = EfectorSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
 
 class ServicioViwSet(viewsets.ModelViewSet):
     queryset = Servicio.objects.all()
     serializer_class = ServicioSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
 
 
 class EspecialidadViewSet(viewsets.ModelViewSet):
     queryset = Especialidad.objects.all()
     serializer_class = EspecialidadSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -37,7 +38,7 @@ class EspecialidadViewSet(viewsets.ModelViewSet):
 class EfeSerEspViewSet(viewsets.ModelViewSet):
     queryset = EfeSerEsp.objects.all()
     serializer_class = EfeSerEspListSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
     @action(detail=False, methods=["get"], url_path="servicios")
     def servicios_por_efector(self, request):
@@ -177,7 +178,7 @@ class EfeSerEspViewSet(viewsets.ModelViewSet):
 
 class DerivaViewSet(viewsets.ModelViewSet):
     serializer_class = DerivaSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
     def get_queryset(self):
         queryset = Deriva.objects.all()

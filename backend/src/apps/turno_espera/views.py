@@ -3,6 +3,7 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import  EstudioRequerido, TurnoEspera, TurnoEsperaEstudio
 from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer, TurnoEsperaEstudioSerializer
 from src.permissions import ReadOnly
@@ -13,7 +14,7 @@ from src.utils.utils import fetch_paciente, fetch_profesional
 class EstudioRequeridoViewSet(viewsets.ModelViewSet):
     serializer_class = EstudioRequeridoSerializer
     queryset = EstudioRequerido.objects.all()
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
 
 class TurnoEsperaViewSet(viewsets.ModelViewSet):

@@ -5,7 +5,7 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import EstadoTurno, Turno
 from .serializers import EstadoTurnoSerializer, TurnoSerializer
 from src.permissions import ReadOnly, EfectorPermission
@@ -18,13 +18,13 @@ from src.apps.informix.services import liberar_turno
 class EstadoTurnoViewSet(viewsets.ModelViewSet):
     queryset = EstadoTurno.objects.all()
     serializer_class = EstadoTurnoSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
 
 class TurnoViewSet(viewsets.ModelViewSet):
     queryset = Turno.objects.all()
     serializer_class = TurnoSerializer
-    permission_classes = [ReadOnly, EfectorPermission]
+    permission_classes = [IsAuthenticated, ReadOnly, EfectorPermission]
     efector_fields = "efe_ser_esp__efector"
 
     def _parse_csv_param(self, name: str) -> [int]:

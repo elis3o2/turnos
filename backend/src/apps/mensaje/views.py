@@ -2,6 +2,7 @@ from collections import defaultdict
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import EstadoMsj, Mensaje, Plantilla, EfeSerEspPlantilla
 from .serializers import (EstadoMsjSerializer, MensajeSerializer, PlantillaSerializer,
                         EfeSerEspPlantilla, EfeSerEspPlantillaDetailSerializer)
@@ -12,13 +13,13 @@ from src.utils.utils import parse_int_list
 class EstadoMsjViewSet(viewsets.ModelViewSet):
     queryset = EstadoMsj.objects.all()
     serializer_class = EstadoMsjSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
 
 class MensajeViewSet(viewsets.ModelViewSet):
     queryset = Mensaje.objects.all()
     serializer_class = MensajeSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
     @action(detail=False, methods=["get"], url_path="count")
     def count(self, request) -> Response:
@@ -123,7 +124,7 @@ class MensajeViewSet(viewsets.ModelViewSet):
 class PlantillaViewSet(viewsets.ModelViewSet):
     queryset = Plantilla.objects.all()
     serializer_class = PlantillaSerializer
-    permission_classes = [ReadOnly]
+    permission_classes = [IsAuthenticated, ReadOnly]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -136,7 +137,7 @@ class PlantillaViewSet(viewsets.ModelViewSet):
 class EfeSerEspPlantillaViewSet(viewsets.ModelViewSet):
     queryset = EfeSerEspPlantilla.objects.all()
     serializer_class = EfeSerEspPlantillaDetailSerializer
-    permission_classes = [OnlyConfiguracionUpdatePermission]
+    permission_classes = [IsAuthenticated, OnlyConfiguracionUpdatePermission]
 
     @action(detail=False, methods=["get"], url_path="buscar")
     def search(self, request) -> Response:
