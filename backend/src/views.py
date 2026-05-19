@@ -10,6 +10,7 @@ from django.conf import settings
 import json
 import hmac
 import hashlib
+import requests
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,8 +46,10 @@ class WhatsAppWebhookView(APIView):
     authentication_classes = []
     permission_classes = []
 
-    VERIFY_TOKEN = "vibecoding"   # el mismo que pongas en Meta
-    APP_SECRET = "TU_APP_SECRET"  # secret de la app de Meta
+    VERIFY_TOKEN = "vibecoding"
+    APP_SECRET = "TU_APP_SECRET"
+
+    FORWARD_URL = "http://127.0.0.1:2880/webhook"
 
     def get(self, request):
         mode = request.GET.get("hub.mode")
@@ -54,7 +57,10 @@ class WhatsAppWebhookView(APIView):
         verify_token = request.GET.get("hub.verify_token")
 
         if mode == "subscribe" and verify_token == self.VERIFY_TOKEN:
-            return HttpResponse(challenge, content_type="text/plain")
+            return HttpResponse(
+                challenge,
+                content_type="text/plain"
+            )
 
         return HttpResponse(
             "Token inválido",
@@ -62,6 +68,7 @@ class WhatsAppWebhookView(APIView):
         )
 
     def post(self, request):
+
         signature = request.headers.get("X-Hub-Signature-256")
 
         if not signature:
@@ -88,20 +95,28 @@ class WhatsAppWebhookView(APIView):
             )
 
         try:
-            payload = json.loads(raw_body.decode("utf-8"))
 
-            print(payload)
+            response = requests.post(
+                self.FORWARD_URL,
+                data=raw_body,
+                headers={
+                    "Content-Type": "application/json"
+                },
+                timeout=5
+            )
 
             return Response(
-                {"status": "ok"},
-                status=status.HTTP_200_OK
+                {
+                    "status": "forwarded",
+                    "target_status": response.status_code
+                },
+                status=200
             )
 
         except Exception as e:
             return Response(
                 {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                status=500
             )
-
 
 
