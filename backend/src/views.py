@@ -47,7 +47,7 @@ class WhatsAppWebhookView(APIView):
     permission_classes = []
 
     VERIFY_TOKEN = "vibecoding"
-    APP_SECRET = "TU_APP_SECRET"
+    APP_SECRET = "a1e8af91b557425aa316d86887228db0"
 
     FORWARD_URL = "http://127.0.0.1:2880/webhook"
 
