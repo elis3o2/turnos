@@ -16,11 +16,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def frontend(request):
-    return render(request, "index.html")
-
-
-        
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

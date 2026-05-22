@@ -8,7 +8,6 @@ from django.db.models import OuterRef, Q, QuerySet, Subquery
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 import json
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje, TurnoFlow, Flow
@@ -87,7 +86,7 @@ class GetProfesionalAPIView(APIView):
 
 class BaseTurnosMerged(GenericAPIView):
     serializer_class = TurnoMergedSerializer
-    permission_classes = [IsAuthenticated, EfectorPermission, ReadOnly]
+    permission_classes = [ EfectorPermission, ReadOnly]
 
     efector_field = "efe_ser_esp__efector"
 
