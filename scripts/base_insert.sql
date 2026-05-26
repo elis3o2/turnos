@@ -19,23 +19,26 @@ Queremos recordarle que tiene el siguiente turno programado:
 ¡Lo esperamos! :raising_hands:', 4),
 
 
-(2, '¡Hola {nompac} {apepac}!
-Se confirmo el siguiente turno:
+(2, 'Hola {{pac_nombre}} {{pac_apellido}}
 
-:calendar: Fecha: {fecha}
-:alarm_clock: Hora: {horaturno}
-:man_health_worker: Profesional: {nomprof} {apeprof}
-:stethoscope: Especialidad: {especialidad}
-:hospital: Efector: {efector}
+Te informamos que tu turno ya quedó confirmado :check_mark_button:
 
-¡Lo esperamos! :raising_hands:', 1),
+:calendar: Día: {{fecha}}
+:alarm_clock: Horario: {{hora}}
+:man_health_worker: Profesional: {{prof_nombre}} {{prof_apellido}}
+:stethoscope: Especialidad: {{especialidad}}
+:hospital: Efector: {{efector}}
+
+¡Te estaremos esperando!', 1),
 
 
-(3, 'Hola {nompac} {apepac},
-Su turno programado ha sido cancelado', 2),
+(3, 'Hola {{pac_nombre}} {{pac_apellido}},
+Su turno programado para el día {{fecha}} a las {{hora}} ha sido cancelado :cross_mark:', 2),
 
-(4, 'Hola {nompac} {apepac},
-Su turno para el día {fecha} sera reprogramado.', 3);
+
+
+(4, 'Hola {{pac_nombre}} {{pac_apellido}},
+Su turno programado para el día {{fecha}} a las {{hora}} será reprogramado :counterclockwise_arrows_button:', 3);
 
 
 
