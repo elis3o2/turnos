@@ -132,7 +132,7 @@ def decode_res_meta(res: dict) -> tuple[Optional[str], int, datetime, str]:
 
     try:
         envio_id = res["messages"][0]["id"]
-        return (envio_id, 0, fecha, ins)
+        return (envio_id, 1, fecha, ins)
 
     except (KeyError, IndexError, TypeError):
         return (None, -1, fecha, ins)
