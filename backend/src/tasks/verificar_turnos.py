@@ -5,7 +5,7 @@ from celery import shared_task
 import datetime
 from src.apps.turno.models import LastMod
 from src.apps.efector.models import EfeSerEsp
-from .utils import enviar_whatsapp, decode_res
+from .utils import enviar_whatsapp, decode_res, format_message_meta, send_message_meta, decode_res_meta
 from src.apps.turno.services import create_Turno, update_estado_Turno
 from src.apps.mensaje.services import create_Mensaje, check_turno, format_plantilla
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
@@ -99,29 +99,28 @@ def _enviar_mensaje(t, idturno, estado, datos):
         telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
 
         datos_plantilla = {
-            "nompac":       datos.get("nom_pac", ""),
-            "apepac":       datos.get("ape_pac", ""),
-            "fecha":        datos.get("fecha", ""),
-            "horaturno":    datos.get("hora", ""),
-            "nomprof":      datos.get("nom_prof", ""),
-            "apeprof":      datos.get("ape_prof", ""),
-            "especialidad": datos.get("nombre_especialidad", ""),
-            "efector":      datos.get("nombre_efector", ""),
-            "servicio":     datos.get("nombre_servicio", ""),
-            "calle":        datos.get("calle", ""),
-            "altura":       datos.get("altura", ""),
-            "letra":        datos.get("letra", ""),
-            "coordx":       datos.get("coordx", ""),
-            "coordy":       datos.get("coordy", ""),
-            "tel_efe":      datos.get("tel_efe", ""),
-            "calle_nom":    datos.get("calle_nom", ""),
+            "pac_nombre":    datos.get("nom_pac", ""),
+            "pac_apellido":  datos.get("ape_pac", ""),
+            "fecha":         datos.get("fecha", ""),
+            "hora":          datos.get("hora", ""),
+            "prof_nombre":   datos.get("nom_prof", ""),
+            "prof_apellido": datos.get("ape_prof", ""),
+            "especialidad":  datos.get("nombre_especialidad", ""),
+            "efector":       datos.get("nombre_efector", ""),
+            "servicio":      datos.get("nombre_servicio", ""),
+            "calle":         datos.get("calle", ""),
+            "altura":        datos.get("altura", ""),
+            "letra":         datos.get("letra", ""),
+            "coordx":        datos.get("coordx", ""),
+            "coordy":        datos.get("coordy", ""),
+            "tel_efe":       datos.get("tel_efe", ""),
+            "calle_nom":     datos.get("calle_nom", ""),
         }
 
-        mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
-        res     = enviar_whatsapp(telefono, mensaje)
-
+        parameters = format_message_meta(plantilla, datos_plantilla)
+        res        = send_message_meta(telefono, plantilla.nombre, parameters)
         try:
-            (envio_id, ack, fecha_msj, ins) = decode_res(res)
+            (envio_id, ack, fecha_msj, ins) = decode_res_meta(res.data)
             create_Mensaje(
                 id=envio_id, turno=t, numero=telefono,
                 plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
