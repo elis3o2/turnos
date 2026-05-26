@@ -17,6 +17,24 @@ class Plantilla(models.Model):
     contenido = models.TextField()
     tipo = models.ForeignKey(
         TipoPlantilla, models.DO_NOTHING, db_column='id_tipo')
+    nombre = models.CharField(max_length=32)
+    pac_nombre = models.BooleanField()
+    pac_apellido = models.BooleanField()
+    fecha = models.BooleanField()
+    hora = models.BooleanField()
+    prof_nombre = models.BooleanField()
+    prof_apellido = models.BooleanField()
+    especialidad = models.BooleanField()
+    efector = models.BooleanField()
+    servicio = models.BooleanField()
+    calle = models.BooleanField()
+    altura = models.BooleanField()
+    letra = models.BooleanField()
+    coordx = models.BooleanField()
+    coordy = models.BooleanField()
+    tel_efe = models.BooleanField()
+    calle_nom = models.BooleanField()
+    url = models.CharField(max_length=128, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -81,7 +99,7 @@ class Sesion(models.Model):
 
 class Mensaje(models.Model):
     id = models.AutoField(primary_key=True)
-    id_mensaje = models.CharField(max_length=40, null=True, blank=True)
+    id_mensaje = models.CharField(max_length=255, null=True, blank=True)
     turno = models.ForeignKey(
         Turno, models.DO_NOTHING, db_column='id_turno', null=True, blank=True)
     numero = models.CharField(max_length=20)
