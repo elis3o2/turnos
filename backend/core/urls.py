@@ -8,5 +8,5 @@ urlpatterns = [
 
     # Catch-all: Cualquier cosa que empiece con /turnos/ y no haya 
     # entrado en las rutas anteriores, se lo enviamos a React.
-    re_path(r"^turnos/.*$", frontend), 
+    re_path(r"^turnos/", frontend), 
 ]

@@ -9,7 +9,7 @@ const PrivateRoute = ({ children }: { children: ReactElement }): ReactElement | 
 
   useEffect(() => {
     if (!authTokens) {
-      navigate('/login', { replace: true }); // ← se ejecuta post-mount, basename ya activo
+      navigate('/turnos/login', { replace: true }); // ← se ejecuta post-mount, basename ya activo
     }
   }, [authTokens, navigate]);
 
