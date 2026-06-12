@@ -38,14 +38,16 @@ export function formatPacienteTelefono(p: Paciente | null): string {
   return `${p.carac_telef ?? "-"} · ${p.nro_telef ?? "-"}`;
 }
 
+
+
 export function getPhoneAlert(paciente: Paciente | null): PhoneAlert {
   if (!paciente) return null;
 
-  const carac = paciente.carac_telef;
-  const nro = paciente.nro_telef;
+  const carac = paciente.carac_telef?.trim() ?? "";
+  const nro = paciente.nro_telef?.trim() ?? "";
 
-  const caracBlank = carac === undefined || carac === null || carac === "";
-  const nroBlank = nro === undefined || nro === null || nro === "";
+  const caracBlank = carac === "";
+  const nroBlank = nro === "";
 
   if (caracBlank && nroBlank) {
     return {
@@ -54,10 +56,13 @@ export function getPhoneAlert(paciente: Paciente | null): PhoneAlert {
     };
   }
 
-  const caracLen = carac?.length;
-  const nroLen = nro?.length;
+  const caracLen = carac.length;
+  const nroLen = nro.length;
 
-  if (caracLen === 3 && nroLen === 7) {
+  const caracValida = caracLen >= 2 && caracLen <= 4;
+  const telefonoValido = caracValida && caracLen + nroLen === 10;
+
+  if (telefonoValido) {
     return {
       severity: "success",
       message: `Teléfono válido: ${carac} - ${nro}`,
@@ -65,8 +70,14 @@ export function getPhoneAlert(paciente: Paciente | null): PhoneAlert {
   }
 
   const messages: string[] = [];
-  if (caracLen !== 3) messages.push("Característica inválida");
-  if (nroLen !== 7) messages.push("Número inválido");
+
+  if (!caracValida) {
+    messages.push("Característica inválida");
+  }
+
+  if (caracLen + nroLen !== 10) {
+    messages.push("Teléfono inválido");
+  }
 
   return {
     severity: "warning",
