@@ -7,7 +7,7 @@ export function getTelefonoEstado(
   nro: string | null | undefined
 ): TelefonoEstado {
   if (carac == null || nro == null) return "missing";
-  if (carac.length === 3 && nro.length === 7) return "valid";
+  if (2 <= carac.length && carac.length <= 4 && (carac.length +  nro.length === 10)) return "valid";
   return "invalid";
 }
 
