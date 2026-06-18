@@ -1,6 +1,6 @@
 import React from "react";
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import type { Setter} from "../../../../common/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
+import type { Setter} from "@/common/types";
 import type { FieldName } from "../../utilsConfiguracion";
 
 type Props = {

@@ -6,6 +6,7 @@ export interface TurnoEspera {
     id: number;
     estado: EstadoMsj;
     profesional_solicitante: Profesional;
+    profesional_deriva: null | Profesional;
     efector: Efector;
     servicio: Servicio;
     especialidad: Especialidad;

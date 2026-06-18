@@ -43,6 +43,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
     estudios_requerido = TurnoEsperaEstudioSerializer(source="estudios_turno", many=True, read_only=True)
     paciente = serializers.SerializerMethodField()
     profesional_solicitante = serializers.SerializerMethodField()
+    profesional_deriva = serializers.SerializerMethodField()
     fecha_hora_creacion = serializers.DateTimeField(read_only=True)
     # ---------- ESCRITURA ----------
     id_estado = serializers.PrimaryKeyRelatedField(source="estado", required=False, queryset=EstadoTurnoEspera.objects.all(), write_only=True)
@@ -52,7 +53,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
 
     id_paciente = serializers.IntegerField(write_only=True)
     id_profesional_solicitante = serializers.IntegerField(write_only=True)
-
+    id_profesional_deriva = serializers.IntegerField(write_only=True)
     class Meta:
         model = TurnoEspera
         fields = [
@@ -63,6 +64,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
             "ids_estudios_requerido",
             "id_paciente",
             "id_profesional_solicitante",
+            "id_profesional_deriva",
             "prioridad",
             "cupo",
 
@@ -75,6 +77,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
             "estudios_requerido",
             "paciente",
             "profesional_solicitante",
+            "profesional_deriva",
 
             "id",
             "fecha_hora_creacion",
@@ -88,5 +91,10 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
     def get_profesional_solicitante(self, obj):
         prof = self.context.get("prof_map", {}).get(obj.id_profesional_solicitante)
         return ProfesionalSerializer(prof).data if prof else None
+    
+    def get_profesional_deriva(self, obj):
+        prof = self.context.get("prof_map", {}).get(obj.id_profesional_solicitante)
+        return ProfesionalSerializer(prof).data if prof else None
+
 
 

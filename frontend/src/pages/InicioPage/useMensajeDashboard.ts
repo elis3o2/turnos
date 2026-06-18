@@ -29,10 +29,6 @@ export function useMensajesDashboard() {
   const [selectedDesde, setSelectedDesde] = useState<string | null>(getDefaultDesde)
   const [selectedHasta, setSelectedHasta] = useState<string | null>(null)
 
-  const [anchorEfector, setAnchorEfector] = useState<null | HTMLElement>(null)
-  const [anchorServicio, setAnchorServicio] = useState<null | HTMLElement>(null)
-  const [anchorEspecialidad, setAnchorEspecialidad] = useState<null | HTMLElement>(null)
-
   const [loading, setLoading] = useState(true)
   const [resumen, setResumen] = useState<MensajeCount>({
     total: 0,
@@ -136,22 +132,6 @@ export function useMensajesDashboard() {
 
   useEffect(() => { fetchResumen() }, [fetchResumen])
 
-  // ── Handlers ──────────────────────────────
-
-  const handleToggleEfector = (id: number) =>
-    setSelectedEfectores(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
-
-  const handleToggleServicio = (id: number) =>
-    setSelectedServicios(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
-
-  const handleToggleEspecialidad = (id: number) =>
-    setSelectedEspecialidades(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id])
-
-  const removeChip = (setter: React.Dispatch<React.SetStateAction<number[]>>, id: number) =>
-    setter(prev => prev.filter(x => x !== id))
-
-  const isServicioDisabled = selectedEfectores.length === 0
-  const isEspecialidadDisabled = selectedServicios.length === 0
 
   return {
     efectores, servicios, especialidades,
@@ -159,13 +139,7 @@ export function useMensajesDashboard() {
     selectedEfectores, selectedServicios, selectedEspecialidades,
     selectedDesde, setSelectedDesde,
     selectedHasta, setSelectedHasta,
-    anchorEfector, setAnchorEfector,
-    anchorServicio, setAnchorServicio,
-    anchorEspecialidad, setAnchorEspecialidad,
     loading, resumen,
-    isServicioDisabled, isEspecialidadDisabled,
-    handleToggleEfector, handleToggleServicio, handleToggleEspecialidad,
-    removeChip,
     setSelectedEfectores, setSelectedServicios, setSelectedEspecialidades,
   }
 }

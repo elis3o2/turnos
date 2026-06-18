@@ -1,17 +1,12 @@
 import { useCallback, useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { AuthContext } from "../../common/contex";
-import { getServiciosByEfector } from "../../features/efector/api";
-import type { TurnoMerged, TurnoMergedFilters } from "../../features/informix/types";
-import type { Efector, Servicio } from "../../features/efector/types";
-import type { RespuestaCategory } from "../../features/informix/types";
-import {
-  resolveEndpoint,
-  resolveDownloadEndpoint,
-  DEFAULT_VISIBLE_COLUMNS,
-} from "./utilsTurnos";
-
+import { AuthContext } from "@/common/contex";
+import { getServiciosByEfector } from "@/features/efector/api";
+import type { TurnoMerged, TurnoMergedFilters } from "@/features/informix/types";
+import type { Efector, Servicio } from "@/features/efector/types";
+import type { RespuestaCategory } from "@/features/informix/types";
+import { resolveEndpoint, resolveDownloadEndpoint, DEFAULT_VISIBLE_COLUMNS } from "./utilsTurnos";
 
 const PAGE_SIZE = 25;
 

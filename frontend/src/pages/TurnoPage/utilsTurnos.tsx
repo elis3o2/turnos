@@ -6,13 +6,11 @@ import {
   downloadTurnosMerged,
   downloadTurnosMergedRespuesta,
   downloadTurnosMergedError
-} from "../../features/informix/api"
-import type { TurnoMerged } from "../../features/informix/types";
-import type { Mensaje } from "../../features/mensaje/types";
-import { DateTimeStack } from "../../common/components/DateTimeStack";
-import { DateStack } from "../../common/components/DateStack";
-
-
+} from "@/features/informix/api"
+import type { TurnoMerged } from "@/features/informix/types";
+import type { Mensaje } from "@/features/mensaje/types";
+import { DateTimeStack } from "@/common/components/DateTimeStack";
+import { DateStack } from "@/common/components/DateStack";
 
 // ─── resolvers de endpoint ───────────────────────────────────────────────────
 

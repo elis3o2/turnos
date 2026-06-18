@@ -1,7 +1,7 @@
 import { Paper, Typography, IconButton } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
-import LookPaciente from "../../../features/persona/components/LookPaciente/LookPaciente";
-import type { Paciente } from "../../../features/persona/types";
+import LookPaciente from "@/features/persona/components/LookPaciente/LookPaciente";
+import type { Paciente } from "@/features/persona/types";
 
 interface Props {
     paciente: Paciente | null;

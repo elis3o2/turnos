@@ -4,7 +4,7 @@ from datetime import datetime
 from src.apps.mensaje.models import Mensaje
 from src.apps.mensaje.services import update_msg_state  # ajustá import
 
-fecha_desde = datetime(2026, 5, 24, 0, 0, 0)
+fecha_desde = datetime(2026, 6, 12, 0, 0, 0)
 
 mensajes = Mensaje.objects.filter(
     fecha_envio__gt=fecha_desde,

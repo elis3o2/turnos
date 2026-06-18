@@ -1,24 +1,20 @@
 import { Paper, IconButton, Typography, Stack, Chip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import type { Estudio } from "../../../features/turno_espera/types";
-import LookEstudioRequerido from "../../../features/turno_espera/components/LookEstudioRequerido/LookEstudioRequerido";
+import type { Estudio } from "@/features/turno_espera/types";
+import LookEstudioRequerido from "@/features/turno_espera/components/LookEstudioRequerido/LookEstudioRequerido";
+import type { Setter } from "@/common/types";
 
 interface Props {
   estudioRequerido: Estudio[];
-  setEstudioRequerido: React.Dispatch<React.SetStateAction<Estudio[]>>;
+  setEstudioRequerido: Setter<Estudio[]>;
   finishEstudioRequerido: boolean;
-  setFinishEstudioRequerido: React.Dispatch<React.SetStateAction<boolean>>;
+  setFinishEstudioRequerido: Setter<boolean>;
   resetEstudioRequerido: () => void;
 }
 
-export const TarjetaEstudio = ({
-  estudioRequerido,
-  setEstudioRequerido,
-  finishEstudioRequerido,
-  setFinishEstudioRequerido,
-  resetEstudioRequerido,
-}: Props) => {
+export const TarjetaEstudio = ({ estudioRequerido, setEstudioRequerido, finishEstudioRequerido,
+                                            setFinishEstudioRequerido, resetEstudioRequerido }: Props) => {
   
     const estudioStyle = {bgcolor: "secondary.light", color: "secondary.contrastText"};
 

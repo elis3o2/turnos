@@ -1,12 +1,12 @@
 import  { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Efector, EfeSerEspCompleto } from "../../features/efector/types";
-import type { Paciente, Profesional } from "../../features/persona/types";
-import type { Estudio } from "../../features/turno_espera/types";
-import type { AlertSeverity } from "../../common/types";
-import { getEfectorById } from "../../features/efector/api";
-import { postTurnoEspera } from "../../features/turno_espera/api";
-import { mapPriorityNameId } from "../../features/turno_espera/utils";
+import type { Efector, EfeSerEspCompleto } from "@/features/efector/types";
+import type { Paciente, Profesional } from "@/features/persona/types";
+import type { Estudio } from "@/features/turno_espera/types";
+import type { AlertSeverity } from "@/common/types";
+import { getEfectorById } from "@/features/efector/api";
+import { postTurnoEspera } from "@/features/turno_espera/api";
+import { mapPriorityNameId } from "@/features/turno_espera/utils";
 
 export function useAddEspera(efectorId: number | null) {
   const navigate = useNavigate();
@@ -55,11 +55,11 @@ export function useAddEspera(efectorId: number | null) {
   }, [efectorId]);
 
   // ── Resets ──────────────────────────────────────────────────
-  const resetPaciente   = () => { setPaciente(null); setFinishPaciente(false); setPriority(null); };
+  const resetPaciente    = () => { setPaciente(null); setFinishPaciente(false); setPriority(null); };
   const resetProfesional = () => { setProfesional(null); setFinishProfesional(false); setPriority(null); };
-  const resetEfeSerEsp  = () => { setEfeSerEspSeleccionado(null); setFinishEfeSerEsp(false); setPriority(null); setEstudioRequerido([]); setFinishEstudioRequerido(false); };
+  const resetEfeSerEsp   = () => { setEfeSerEspSeleccionado(null); setFinishEfeSerEsp(false); setPriority(null); setEstudioRequerido([]); setFinishEstudioRequerido(false); };
   const resetEstudioRequerido = () => { setEstudioRequerido([]); setFinishEstudioRequerido(false); setPriority(null); };
-  const resetForRepeat  = () => { resetEfeSerEsp(); setCupo(false); setShowRepeatOptions(false); };
+  const resetForRepeat   = () => { resetEfeSerEsp(); setCupo(false); setShowRepeatOptions(false); };
 
   // ── Submit ──────────────────────────────────────────────────
   const handleConfirm = async () => {

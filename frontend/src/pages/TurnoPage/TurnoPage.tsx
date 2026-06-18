@@ -16,10 +16,10 @@ import GetAppIcon       from "@mui/icons-material/GetApp";
 import RefreshIcon      from "@mui/icons-material/Refresh";
 import MenuBookIcon     from "@mui/icons-material/MenuBook";
 
-import { TableComponent } from "../../common/components/TableComponent";
-import { ColumnSelector } from "../../common/components/ColumnSelector";
-import { EfectorListForm } from "../../features/efector/components/EfectorListForm";
-import { ServicioListForm } from "../../features/efector/components/ServicioListForm";
+import { TableComponent } from "@/common/components/TableComponent";
+import { ColumnSelector } from "@/common/components/ColumnSelector";
+import { EfectorListForm } from "@/features/efector/components/EfectorListForm";
+import { ServicioListForm } from "@/features/efector/components/ServicioListForm";
 
 import { useTurno } from "./useTurno";
 import { ALL_COLUMNS, renderCell} from "./utilsTurnos";

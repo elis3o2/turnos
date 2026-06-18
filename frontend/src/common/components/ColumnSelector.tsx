@@ -10,7 +10,6 @@ import {
 import type { KeySLabel } from "../types";
 
 
-
 type Props = {
   columns: readonly KeySLabel[];
   value: string[]; // columnas visibles
@@ -22,14 +21,8 @@ type Props = {
   title?: string;
 };
 
-export function ColumnSelector({
-  columns,
-  value,
-  onChange,
-  anchorEl,
-  onClose,
-  title = "Columnas visibles",
-}: Props){
+export function ColumnSelector({ columns, value, onChange,  anchorEl,
+                          onClose, title = "Columnas visibles" }: Props){
   
   const isChecked = (key: string) => value.includes(key);
 

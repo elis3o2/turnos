@@ -26,17 +26,13 @@ import {
   getPhoneAlert,
 } from "./utilsLookPaciente";
 
-interface LookPacienteProps {
+interface Props {
   paciente: Paciente | null;
   setPaciente: (paciente: Paciente | null) => void;
   setFinishPaciente: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function LookPaciente({
-  paciente,
-  setPaciente,
-  setFinishPaciente,
-}: LookPacienteProps) {
+function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
   const {
     dni,
     setDni,

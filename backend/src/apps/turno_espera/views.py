@@ -56,7 +56,12 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             )
 
         # ---- batch ids ----
-        ids_prof = list({t.id_profesional_solicitante for t in queryset if t.id_profesional_solicitante})
+        ids_prof = list({
+            prof_id
+            for t in queryset
+            for prof_id in (t.id_profesional_solicitante, t.id_profesional_deriva)
+            if prof_id
+        })
         ids_pac  = list({t.id_paciente for t in queryset if t.id_paciente})
 
         profesionales = fetch_profesional(ids=ids_prof) if ids_prof else []
@@ -92,7 +97,12 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
             efector_solicitante_id=id_deriva,
         )
 
-        ids_prof = list({t.id_profesional_solicitante for t in queryset if t.id_profesional_solicitante})
+        ids_prof = list({
+            prof_id
+            for t in queryset
+            for prof_id in (t.id_profesional_solicitante, t.id_profesional_deriva)
+            if prof_id
+        })
         ids_pac  = list({t.id_paciente for t in queryset if t.id_paciente})
 
         profesionales = fetch_profesional(ids=ids_prof) if ids_prof else []

@@ -1,26 +1,14 @@
-import type { Efector } from "../../../../features/efector/types";
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import {
-  Box,
-  Typography,
-  Card,
-  IconButton,
-  Popper,
-  Grow,
-  Paper,
-} from "@mui/material";
+import type { Efector } from "@/features/efector/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
+import { Box, Typography, Card, IconButton, Popper, Grow, Paper } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReplayIcon from "@mui/icons-material/Replay";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { Confirmacion } from "../Confirmacion/Confirmacion";
 import SendAll from "../SendAll/SendAll";
-import type { Setter, AlertSeverity } from "../../../../common/types";
-import {
-  isFlagOn,
-  getNombreEfector,
-  getPlantillaPreview
-} from "./utilsEspecialidadBlock";
+import type { Setter, AlertSeverity } from "@/common/types";
+import { isFlagOn, getNombreEfector, getPlantillaPreview } from "./utilsEspecialidadBlock";
 import type { FieldName } from "../../utilsConfiguracion";
 import { useEspecialidadBlock } from "./useEspecialidadBolck";
 
@@ -164,7 +152,7 @@ export const EspecialidadBlock = (props: Props) => {
                       <Box sx={{ display: "flex", alignItems: "stretch", flex: "0 0 65%", height: "100%" }}>
                         <IconButton
                           aria-label="asignacion"
-                          onClick={() => permiso?? handleSectionClick(esp, "asignacion")}
+                          onClick={() => {if (!permiso) return; handleSectionClick(esp, "asignacion")}}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "asignacion", confirmOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
@@ -183,7 +171,7 @@ export const EspecialidadBlock = (props: Props) => {
 
                         <IconButton
                           aria-label="reprogramacion"
-                          onClick={() => handleSectionClick(esp, "reprogramacion")}
+                          onClick={() => {if (!permiso) return; handleSectionClick(esp, "reprogramacion")}}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "reprogramacion", reproOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
@@ -202,7 +190,7 @@ export const EspecialidadBlock = (props: Props) => {
 
                         <IconButton
                           aria-label="cancelacion"
-                          onClick={() =>  handleSectionClick(esp, "cancelacion")}
+                          onClick={() => {if (!permiso) return; handleSectionClick(esp, "cancelacion")}}
                           onMouseEnter={(e) => handleMouseEnter(e, esp.id, "cancelacion", cancOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{
@@ -221,7 +209,7 @@ export const EspecialidadBlock = (props: Props) => {
 
                         <IconButton
                           aria-label="recordatorio"
-                          onClick={() =>  handleSectionClick(esp, "recordatorio")}
+                          onClick={() => {if (!permiso) return; handleSectionClick(esp, "recordatorio")}}
                           onMouseEnter={(e) =>  handleMouseEnter(e, esp.id, "recordatorio", recoOn)}
                           onMouseLeave={handleMouseLeave}
                           sx={{

@@ -8,11 +8,8 @@ type Props = {
 };
 
 
-export const EfectorForm = ({
-  efectores,
-  selectedEfector,
-  setSelectedEfector,
-}: Props) => {
+export const EfectorForm = ({efectores, selectedEfector, setSelectedEfector,}: Props) => {
+
   return (
     <FormControl
       size="small"

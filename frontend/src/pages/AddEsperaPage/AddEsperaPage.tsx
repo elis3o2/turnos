@@ -8,7 +8,7 @@ import { TarjetaEfeSerEsp } from "./components/TarjetaEfeSerEsp";
 import { TarjetaEstudio } from "./components/TarjetaEstudio";
 import { useAddEspera } from "./useAddEspera";
 import { canSelectPriority, canConfirm } from "./utilsAddEspera";
-import { useEfectorIdFromUrl } from "../../features/efector/utils/getUrl";
+import { useEfectorIdFromUrl } from "@/features/efector/utils/getUrl";
 
 export default function AddEspera(): React.ReactElement {
 

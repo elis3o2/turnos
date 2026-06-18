@@ -8,11 +8,7 @@ type Props = {
   handleSelectCategory: (cat: RespuestaCategory) => void;
 };
 
-export const RespuestaComponent = ({
-  activeRespuestaCategory,
-  loading,
-  handleSelectCategory,
-}: Props) => {
+export const RespuestaComponent = ({ activeRespuestaCategory, loading, handleSelectCategory }: Props) => {
 
   const isActive = (cat: RespuestaCategory) => activeRespuestaCategory === cat;
   return (

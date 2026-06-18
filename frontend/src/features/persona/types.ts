@@ -22,3 +22,5 @@ export interface User {
     id: number;
     name: string;
 }
+
+export type TelefonoEstado = "missing" | "valid" | "invalid";

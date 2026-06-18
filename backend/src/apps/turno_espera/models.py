@@ -24,6 +24,7 @@ class TurnoEspera(models.Model):
         EfeSerEsp, models.DO_NOTHING, db_column='id_efe_ser_esp')
     id_paciente = models.IntegerField()
     prioridad = models.IntegerField()
+    id_profesional_deriva = models.IntegerField(blank=True, null=True)
     fecha_hora_creacion = models.DateTimeField()
     fecha_hora_cierre = models.DateTimeField(null=True, blank=True)
     cupo = models.BooleanField()

@@ -4,24 +4,15 @@ import {
   Card,
   CardContent,
   Typography,
-  Menu,
-  MenuItem,
-  Checkbox,
-  ListItemIcon,
-  ListItemText,
   CircularProgress,
   Divider,
-  TextField,
-  Stack,
 } from '@mui/material'
-import HospitalIcon from '../../assets/hospital.png'
-import AidKitIcon from '../../assets/first-aid-kit.png'
-import MedicalReportIcon from '../../assets/medical-report.png'
 import { useMensajesDashboard } from './useMensajeDashboard'
 import { EstadoRecordatorioCard } from './components/EstadoRecordatorioCard'
-import { FilterIcon } from './components/FilterIcon'
-import { StatCard } from './components/StatCard'
 import { ActualizacionComponent } from './components/ActualizacionesComponent'
+import { FilterFecha } from './components/FilterFecha'
+import { TarjetaResumen } from './components/TarjetaResumen'
+import { FilterEfeSerEsp } from './components/FilterEfeSerEsp'
 
 export function MensajesDashboard() {
   const {
@@ -35,17 +26,8 @@ export function MensajesDashboard() {
     selectedEspecialidades,
     selectedDesde, setSelectedDesde,
     selectedHasta, setSelectedHasta,
-    anchorEfector, setAnchorEfector,
-    anchorServicio, setAnchorServicio,
-    anchorEspecialidad, setAnchorEspecialidad,
     loading,
     resumen,
-    isServicioDisabled,
-    isEspecialidadDisabled,
-    handleToggleEfector,
-    handleToggleServicio,
-    handleToggleEspecialidad,
-    removeChip,
     setSelectedEfectores,
     setSelectedServicios,
     setSelectedEspecialidades,
@@ -73,174 +55,34 @@ export function MensajesDashboard() {
         }}
       >
         {/* Filtros de entidad */}
-        <FilterIcon
-          src={HospitalIcon}
-          label="efectores"
-          disabled={false}
-          onClick={e => setAnchorEfector(e.currentTarget)}
-          chips={
-            selectedEfectores.length === 0
-              ? [{ id: -1, label: 'Todos los efectores' }]
-              : selectedEfectores.map(id => ({
-                  id,
-                  label: efectores?.find(e => e.id === id)?.nombre ?? String(id),
-                  onDelete: () => removeChip(setSelectedEfectores, id),
-                }))
-          }
+        <FilterEfeSerEsp
+          efectores={efectores}
+          selectedEfectores={selectedEfectores}
+          setSelectedEfectores={setSelectedEfectores}
+          servicios={servicios}
+          selectedServicios={selectedServicios}
+          setSelectedServicios={setSelectedServicios}
+          especialidades={especialidades}
+          selectedEspecialidades={selectedEspecialidades}
+          setSelectedEspecialidades={setSelectedEspecialidades}
+          availableServicios={availableServicios}
+          availableEspecialidades={availableEspecialidades}
         />
-
-        <Menu
-          anchorEl={anchorEfector}
-          open={Boolean(anchorEfector)}
-          onClose={() => setAnchorEfector(null)}
-          PaperProps={{ style: { maxHeight: 320, minWidth: 260 } }}
-        >
-          <MenuItem onClick={() => { setSelectedEfectores([]); setAnchorEfector(null) }}>
-            <ListItemText>Todos los efectores</ListItemText>
-          </MenuItem>
-          {efectores?.map(e => (
-            <MenuItem key={e.id} onClick={() => handleToggleEfector(e.id)}>
-              <ListItemIcon>
-                <Checkbox edge="start" checked={selectedEfectores.includes(e.id)} />
-              </ListItemIcon>
-              <ListItemText>{e.nombre}</ListItemText>
-            </MenuItem>
-          ))}
-        </Menu>
-
-        <FilterIcon
-          src={MedicalReportIcon}
-          label="servicios"
-          disabled={isServicioDisabled}
-          onClick={e => { if (!isServicioDisabled) setAnchorServicio(e.currentTarget) }}
-          chips={
-            selectedServicios.length === 0
-              ? [{ id: -1, label: 'Todos los servicios' }]
-              : selectedServicios.map(id => ({
-                  id,
-                  label: servicios.find(s => s.id === id)?.nombre ?? String(id),
-                  onDelete: () => removeChip(setSelectedServicios, id),
-                }))
-          }
-        />
-
-        <Menu
-          anchorEl={anchorServicio}
-          open={Boolean(anchorServicio)}
-          onClose={() => setAnchorServicio(null)}
-          PaperProps={{ style: { maxHeight: 360, minWidth: 280 } }}
-        >
-          <MenuItem onClick={() => { setSelectedServicios([]); setAnchorServicio(null) }}>
-            <ListItemText>Todos los servicios</ListItemText>
-          </MenuItem>
-          {servicios.filter(s => availableServicios.includes(s.id)).map(s => (
-            <MenuItem key={s.id} onClick={() => handleToggleServicio(s.id)}>
-              <ListItemIcon>
-                <Checkbox edge="start" checked={selectedServicios.includes(s.id)} />
-              </ListItemIcon>
-              <ListItemText>{s.nombre}</ListItemText>
-            </MenuItem>
-          ))}
-        </Menu>
-
-        <FilterIcon
-          src={AidKitIcon}
-          label="especialidades"
-          disabled={isEspecialidadDisabled}
-          onClick={e => { if (!isEspecialidadDisabled) setAnchorEspecialidad(e.currentTarget) }}
-          chips={
-            selectedEspecialidades.length === 0
-              ? [{ id: -1, label: 'Todas las especialidades' }]
-              : selectedEspecialidades.map(id => ({
-                  id,
-                  label: especialidades.find(e => e.id === id)?.nombre ?? String(id),
-                  onDelete: () => removeChip(setSelectedEspecialidades, id),
-                }))
-          }
-        />
-
-        <Menu
-          anchorEl={anchorEspecialidad}
-          open={Boolean(anchorEspecialidad)}
-          onClose={() => setAnchorEspecialidad(null)}
-          PaperProps={{ style: { maxHeight: 360, minWidth: 320 } }}
-        >
-          <MenuItem onClick={() => { setSelectedEspecialidades([]); setAnchorEspecialidad(null) }}>
-            <ListItemText>Todas las especialidades</ListItemText>
-          </MenuItem>
-          {especialidades.filter(e => availableEspecialidades.includes(e.id)).map(es => (
-            <MenuItem key={es.id} onClick={() => handleToggleEspecialidad(es.id)}>
-              <ListItemIcon>
-                <Checkbox edge="start" checked={selectedEspecialidades.includes(es.id)} />
-              </ListItemIcon>
-              <ListItemText>{es.nombre}</ListItemText>
-            </MenuItem>
-          ))}
-        </Menu>
 
         {/* ── Filtros de fecha ─────────────────────── */}
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            label="Desde"
-            type="date"
-            size="small"
-            value={selectedDesde}
-            onChange={e => setSelectedDesde(e.target.value)}
-            inputProps={{ max: selectedHasta }}
-            InputLabelProps={{ shrink: true }}
-            sx={{ width: 155 }}
-          />
-          <TextField
-            label="Hasta"
-            type="date"
-            size="small"
-            value={selectedHasta}
-            onChange={e => setSelectedHasta(e.target.value)}
-            inputProps={{ min: selectedDesde }}
-            InputLabelProps={{ shrink: true }}
-            sx={{ width: 155 }}
-          />
-        </Stack>
+        <FilterFecha
+          selectedDesde={selectedDesde}
+          setSelectedDesde={setSelectedDesde}
+          selectedHasta={selectedHasta}
+          setSelectedHasta={setSelectedHasta}
+        />
         <ActualizacionComponent />
       </Box>
 
       {/* ── TARJETAS RESUMEN ─────────────────────── */}
-      <Box
-        sx={{
-          width: '70%',
-          minWidth: 400,
-          mx: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <Card sx={{ textAlign: 'center', borderRadius: 4, boxShadow: 4, p: 2 }}>
-          <CardContent>
-            <Typography variant="overline" color="text.secondary" letterSpacing={2}>
-              Total de mensajes
-            </Typography>
-            <Typography variant="h2" fontSize={35} fontWeight={700} sx={{ mt: 1 }}>
-              {resumen.total.toLocaleString()}
-            </Typography>
-          </CardContent>
-        </Card>
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: 2,
-          }}
-        >
-          <StatCard label="Mensajes de asignación" value={resumen.total_asignacion} />
-          <StatCard label="Mensajes de cancelación" value={resumen.total_cancelacion} />
-          <StatCard label="Mensajes de reprogramación" value={resumen.total_reprogramacion} />
-          <StatCard label="Mensajes de recordatorio" value={resumen.total_recordatorio} />
-        </Box>
-      </Box>
-
+      <TarjetaResumen
+        resumen={resumen}
+      />
       {/* ── RECORDATORIOS + ESTADOS ─────────────── */}
       <Box
         sx={{

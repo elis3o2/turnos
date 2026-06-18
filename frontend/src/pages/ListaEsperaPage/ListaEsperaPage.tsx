@@ -12,10 +12,10 @@ import {
   GridLegacy as Grid,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
-import { AlertMessage } from "../../common/components";
+import { AlertMessage } from "@/common/components";
 import DetalleTurno from "./components/DetalleTurno/DetalleTurno";
-import { EfectorForm } from "../../features/efector/components/EfectorForm";
-import ListaEsperaComponent from "../../features/turno_espera/components/ListaEsperaComponent";
+import { EfectorForm } from "@/features/efector/components/EfectorForm";
+import ListaEsperaComponent from "@/features/turno_espera/components/ListaEsperaComponent";
 import { useListaEspera } from "./useListaEspera";
 import type { SortBy } from "./utilsListaEspra";
 

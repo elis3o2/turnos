@@ -6,7 +6,7 @@ import {
   TextField,
   Chip,
 } from '@mui/material';
-import { AlertMessage } from '../../common/components';
+import { AlertMessage } from '@/common/components';
 import { usePlantillas } from './usePlantillas';
 import PlantillaComponent from './components/PlantillaComponent';
 import { TIPO_TO_LABEL, TIPO_TO_COLOR, TIPO_KEYS } from './utilsPlantillas';

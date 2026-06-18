@@ -10,11 +10,7 @@ interface LookPacienteProps {
   setFinishPaciente: Dispatch<SetStateAction<boolean>>;
 }
 
-export function useLookPaciente({
-  paciente,
-  setPaciente,
-  setFinishPaciente,
-}: LookPacienteProps) {
+export function useLookPaciente({ paciente, setPaciente, setFinishPaciente }: LookPacienteProps) {
   const [dni, setDni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

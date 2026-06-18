@@ -9,11 +9,7 @@ type Props = {
 
 
 
-export const ServicioForm = ({
-  servicios,
-  selectedServicio,
-  setSelectedServicio,
-}: Props) => {
+export const ServicioForm = ({ servicios, selectedServicio, setSelectedServicio }: Props) => {
   
   return (
     <FormControl fullWidth size="small" sx={{ mb: 2 }}>

@@ -8,11 +8,7 @@ type Props = {
 };
 
 
-export const EspecialidadForm = ({
-  especialidades,
-  selectedEspecialidad,
-  setSelectedEspecialidad,
-}: Props) => {
+export const EspecialidadForm = ({ especialidades, selectedEspecialidad, setSelectedEspecialidad }: Props) => {
   
     return (
         <FormControl size="small" fullWidth>
