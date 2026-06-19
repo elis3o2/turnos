@@ -53,7 +53,8 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
 
     id_paciente = serializers.IntegerField(write_only=True)
     id_profesional_solicitante = serializers.IntegerField(write_only=True)
-    id_profesional_deriva = serializers.IntegerField(write_only=True)
+    id_profesional_deriva = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    
     class Meta:
         model = TurnoEspera
         fields = [
@@ -93,7 +94,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
         return ProfesionalSerializer(prof).data if prof else None
     
     def get_profesional_deriva(self, obj):
-        prof = self.context.get("prof_map", {}).get(obj.id_profesional_solicitante)
+        prof = self.context.get("prof_map", {}).get(obj.id_profesional_deriva)
         return ProfesionalSerializer(prof).data if prof else None
 
 

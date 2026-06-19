@@ -279,7 +279,7 @@ def query_turno_fecha():
 
 def query_profesional_from_efe_ser_esp():
     return """
-    SELECT p.idpersonal AS id,
+    SELECT DISTINCT p.idpersonal AS id,
         TRIM(p.apellido) AS apellido,
         TRIM(p.nombre)   AS nombre
     FROM personal p

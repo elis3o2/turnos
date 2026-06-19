@@ -106,7 +106,7 @@ def fetch_profesional(
     id_efector: int | None = None,
     nombre: str | None = None,
     apellido: str | None = None,
-    efe_ser_esp: int | None = None
+    id_efe_ser_esp: int | None = None
 ) -> list[Row]:
     if ids is not None:
         if not ids:
@@ -123,9 +123,9 @@ def fetch_profesional(
             params_list.append(apellido.strip().upper() + "%")
         params = tuple(params_list)
 
-    elif efe_ser_esp is not None:
+    elif id_efe_ser_esp is not None:
         query = query_profesional_from_efe_ser_esp()
-        params = (efe_ser_esp,)
+        params = (id_efe_ser_esp,)
 
     else:
         return []

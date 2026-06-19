@@ -21,6 +21,9 @@ export function useAddEspera(efectorId: number | null) {
   const [profesional, setProfesional] = useState<Profesional | null>(null);
   const [finishProfesional, setFinishProfesional] = useState(false);
 
+  const [profesionalDeriva, setProfesionalDeriva] = useState<Profesional | null>(null)
+  const [finishProfesionalDeriva, setFinishProfesionalDeriva] = useState(false)
+
   const [efeSerEspSeleccionado, setEfeSerEspSeleccionado] = useState<EfeSerEspCompleto | null>(null);
   const [finishEfeSerEsp, setFinishEfeSerEsp] = useState(false);
   const [cupo, setCupo] = useState(false);
@@ -32,6 +35,8 @@ export function useAddEspera(efectorId: number | null) {
   const [alert, setAlert] = useState({ open: false, msg: "", severity: "info" as AlertSeverity });
   const [submitting, setSubmitting] = useState(false);
   const [showRepeatOptions, setShowRepeatOptions] = useState(false);
+
+
 
   // ── Efecto de carga ──────────────────────────────────────────
   useEffect(() => {
@@ -57,7 +62,8 @@ export function useAddEspera(efectorId: number | null) {
   // ── Resets ──────────────────────────────────────────────────
   const resetPaciente    = () => { setPaciente(null); setFinishPaciente(false); setPriority(null); };
   const resetProfesional = () => { setProfesional(null); setFinishProfesional(false); setPriority(null); };
-  const resetEfeSerEsp   = () => { setEfeSerEspSeleccionado(null); setFinishEfeSerEsp(false); setPriority(null); setEstudioRequerido([]); setFinishEstudioRequerido(false); };
+  const resetEfeSerEsp   = () => { setEfeSerEspSeleccionado(null); setFinishEfeSerEsp(false); setPriority(null); setEstudioRequerido([]); setFinishEstudioRequerido(false); setProfesionalDeriva(null); setFinishProfesionalDeriva(false) };
+  const resetProfesionalDeriva = () => { setProfesionalDeriva(null); setFinishProfesionalDeriva(false); setPriority(null); };
   const resetEstudioRequerido = () => { setEstudioRequerido([]); setFinishEstudioRequerido(false); setPriority(null); };
   const resetForRepeat   = () => { resetEfeSerEsp(); setCupo(false); setShowRepeatOptions(false); };
 
@@ -68,6 +74,7 @@ export function useAddEspera(efectorId: number | null) {
     try {
       await postTurnoEspera(
         efeSerEspSeleccionado.id, profesional.id,
+        profesionalDeriva ? profesionalDeriva.id : null,
         efector ? efector.id : efectorId,
         paciente.id, estudioRequerido.map(e => e.id),
         mapPriorityNameId[priority], cupo
@@ -87,6 +94,7 @@ export function useAddEspera(efectorId: number | null) {
     efector, loadingEfector, errorEfector,
     paciente, setPaciente, finishPaciente, setFinishPaciente, resetPaciente,
     profesional, setProfesional, finishProfesional, setFinishProfesional, resetProfesional,
+    profesionalDeriva, setProfesionalDeriva, finishProfesionalDeriva, setFinishProfesionalDeriva, resetProfesionalDeriva,
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
     setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,

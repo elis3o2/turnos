@@ -7,9 +7,10 @@ export const canSelectPriority = (
   paciente: Paciente | null,
   profesional: Profesional | null,
   efeSerEspSeleccionado: EfeSerEspCompleto | null,
+  finishProfesionalDeriva: boolean,
   finishEstudioRequerido: boolean
 ): boolean =>
-  Boolean((efector || efectorId) && paciente && profesional && efeSerEspSeleccionado && finishEstudioRequerido);
+  Boolean((efector || efectorId) && paciente && profesional && efeSerEspSeleccionado && finishProfesionalDeriva && finishEstudioRequerido);
 
 export const canConfirm = (
   efector: Efector | null,

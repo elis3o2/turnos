@@ -6,6 +6,7 @@ import { TarjetaPaciente } from "./components/TarjetaPaciente";
 import { TarjetaProfesional } from "./components/TarjetaProfesional";
 import { TarjetaEfeSerEsp } from "./components/TarjetaEfeSerEsp";
 import { TarjetaEstudio } from "./components/TarjetaEstudio";
+import { TarjetaProfesionalDeriva } from "./components/TarjetaProfesionalDeriva";
 import { useAddEspera } from "./useAddEspera";
 import { canSelectPriority, canConfirm } from "./utilsAddEspera";
 import { useEfectorIdFromUrl } from "@/features/efector/utils/getUrl";
@@ -17,6 +18,7 @@ export default function AddEspera(): React.ReactElement {
     efector, loadingEfector, errorEfector,
     paciente, setPaciente, finishPaciente, setFinishPaciente, resetPaciente,
     profesional, setProfesional, finishProfesional, setFinishProfesional, resetProfesional,
+    profesionalDeriva, setProfesionalDeriva, finishProfesionalDeriva, setFinishProfesionalDeriva, resetProfesionalDeriva,
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
     setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
@@ -27,8 +29,10 @@ export default function AddEspera(): React.ReactElement {
     navigate,
   } = useAddEspera(efectorId);
 
-  const selectPriority = canSelectPriority(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, finishEstudioRequerido);
+  const selectPriority = canSelectPriority(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, finishProfesionalDeriva, finishEstudioRequerido);
   const confirm = canConfirm(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, priority);
+
+
 
   return (
     <Box sx={{ p: 3, maxWidth: 900, mx: "auto", position: "relative" }}>
@@ -74,8 +78,19 @@ export default function AddEspera(): React.ReactElement {
           setCupo={setCupo}
         />
       )}
+      {finishEfeSerEsp && efeSerEspSeleccionado && (
+        <TarjetaProfesionalDeriva
+          efe_ser_esp={efeSerEspSeleccionado.id}
+          profesionalDeriva={profesionalDeriva}
+          setProfesionalDeriva={setProfesionalDeriva}
+          finishProfesionalDeriva={finishProfesionalDeriva}
+          setFinishProfesionalDeriva={setFinishProfesionalDeriva}
+          resetProfesionalDeriva={resetProfesionalDeriva}
+        />
+      )}
 
-      {finishEfeSerEsp && (
+
+      {(finishProfesionalDeriva || finishEstudioRequerido) && (
         <TarjetaEstudio
           estudioRequerido={estudioRequerido}
           setEstudioRequerido={setEstudioRequerido}

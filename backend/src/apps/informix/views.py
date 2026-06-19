@@ -57,17 +57,21 @@ class GetProfesionalAPIView(APIView):
         id_efe_ser_esp = request.query_params.get("id_efe_ser_esp")
 
         try:
-            if not id_efector or not id_efe_ser_esp:
+            if not (id_efector or id_efe_ser_esp):
                 return Response(
                     {"detail": "Parámetro 'id_efector' requerido."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            if id_efector:
+                id_efector = int(id_efector)
+            if id_efe_ser_esp:
+                id_efe_ser_esp = int(id_efe_ser_esp)
 
             profs = fetch_profesional(
-                id_efector=int(id_efector),
+                id_efector=id_efector,
                 nombre=nombre,
                 apellido=apellido,
-                id_efe_ser_esp=int(id_efe_ser_esp)
+                id_efe_ser_esp=id_efe_ser_esp
             )
             ser = ProfesionalSerializer(instance=profs, many=True)
             return Response(ser.data, status=status.HTTP_200_OK)
