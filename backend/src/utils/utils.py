@@ -12,7 +12,7 @@ from django.core import signing
 Row = [dict, any]
 from decimal import Decimal
 from .querys_informix import (query_paciente_from_id, query_paciente_from_id_extend,
-    query_paciente_from_dni, query_profesional_from_id, query_profesional_from_nombre)
+    query_paciente_from_dni, query_profesional_from_id, query_profesional_from_nombre, query_profesional_from_efe_ser_esp)
 from typing import Any, Optional, Iterable
 
 
@@ -106,6 +106,7 @@ def fetch_profesional(
     id_efector: int | None = None,
     nombre: str | None = None,
     apellido: str | None = None,
+    efe_ser_esp: int | None = None
 ) -> list[Row]:
     if ids is not None:
         if not ids:
@@ -121,6 +122,10 @@ def fetch_profesional(
         if apellido:
             params_list.append(apellido.strip().upper() + "%")
         params = tuple(params_list)
+
+    elif efe_ser_esp is not None:
+        query = query_profesional_from_efe_ser_esp()
+        params = (efe_ser_esp,)
 
     else:
         return []

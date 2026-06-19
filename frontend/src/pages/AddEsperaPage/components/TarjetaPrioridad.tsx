@@ -1,10 +1,10 @@
 import { Paper, Typography, FormControl, FormLabel, RadioGroup, FormControlLabel, Radio } from "@mui/material"
-
+import type { Setter } from "@/common/types";
 
 interface Props {
     canSelectPriority: boolean;
     priority: string | null;
-    setPriority: React.Dispatch<React.SetStateAction<string | null>>;
+    setPriority: Setter<string | null>;
 }
 
 export const TarjetaPrioridad = ({canSelectPriority, priority, setPriority}: Props) => {

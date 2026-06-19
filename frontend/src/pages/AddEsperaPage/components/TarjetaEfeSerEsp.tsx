@@ -1,18 +1,19 @@
 import { Paper, IconButton, Typography, Stack } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
 
-import LookEfeSerEsp from "../../../features/efector/components/LookEfeSerEsp/LookEfeSerEsp";
-import type { Efector, EfeSerEspCompleto } from "../../../features/efector/types";
-import { useLookEfeSerEsp } from "../../../features/efector/components/LookEfeSerEsp/useLookEfeSerEsp";
+import LookEfeSerEsp from "@/features/efector/components/LookEfeSerEsp/LookEfeSerEsp";
+import type { Efector, EfeSerEspCompleto } from "@/features/efector/types";
+import { useLookEfeSerEsp } from "@/features/efector/components/LookEfeSerEsp/useLookEfeSerEsp";
+import type { Setter } from "@/common/types";
 
 interface Props {
     efector: Efector;
     efeSerEspSeleccionado : EfeSerEspCompleto | null;
-    setEfeSerEspSeleccionado: React.Dispatch<React.SetStateAction<EfeSerEspCompleto | null>>;
+    setEfeSerEspSeleccionado: Setter<EfeSerEspCompleto | null>;
     finishEfeSerEsp: boolean;
-    setFinishEfeSerEsp: React.Dispatch<React.SetStateAction<boolean>>;
+    setFinishEfeSerEsp: Setter<boolean>;
     resetEfeSerEsp: () => void;
-    setCupo: (val: boolean) => void;
+    setCupo: Setter<boolean>;
 }
 
 

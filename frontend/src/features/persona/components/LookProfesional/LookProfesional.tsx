@@ -16,13 +16,14 @@ import {
 } from "@mui/material";
 import type { Profesional } from "../../types";
 import { useLookProfesional } from "./useLookProfesional";
-import { getProfesionalDisplayName } from "./utilsLookProfesional";
+import { profesionaLabel } from "../../utils";
+import type { Setter } from "@/common/types";
 
 interface Props {
   efectorId: number;
   selectedProfesional: Profesional | null;
-  setProfesional: (p: Profesional | null) => void;
-  setFinishProfesional: React.Dispatch<React.SetStateAction<boolean>>;
+  setProfesional: Setter<Profesional | null>;
+  setFinishProfesional: Setter<boolean>;
 }
 
 export default function LookProfesional({
@@ -109,7 +110,7 @@ export default function LookProfesional({
                   }
                   sx={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
                 >
-                  <ListItemText primary={getProfesionalDisplayName(p)} />
+                  <ListItemText primary={profesionaLabel(p)} />
                 </ListItem>
               ))}
             </List>
@@ -120,7 +121,7 @@ export default function LookProfesional({
       {profesionalSeleccionado && (
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Typography variant="h6">
-            Seleccionado: {getProfesionalDisplayName(profesionalSeleccionado)}
+            Seleccionado: {profesionaLabel(profesionalSeleccionado)}
           </Typography>
 
           <Stack direction="row" spacing={1} sx={{ mt: 2 }}>

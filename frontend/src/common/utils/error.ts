@@ -1,5 +1,3 @@
-import type { Estudio } from "../../types";
-
 export function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message || fallback;
 
@@ -22,19 +20,4 @@ export function getErrorMessage(error: unknown, fallback: string): string {
   }
 
   return fallback;
-}
-
-export function filterEstudios(
-  estudios: Estudio[],
-  query: string
-): Estudio[] {
-  const q = query.toLowerCase();
-
-
-  return estudios.filter((e) =>
-    [e.nombre, e.id?.toString()]
-      .join(" ")
-      .toLowerCase()
-      .includes(q)
-  );
 }

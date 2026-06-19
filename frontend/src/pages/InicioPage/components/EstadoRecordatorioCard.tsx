@@ -1,6 +1,6 @@
 import {Box, Typography, Stack, Card, Popover, Chip} from "@mui/material";
 import { useState } from "react";
-import { ESTADO_COLORS, DEFAULT_ESTADO_COLOR } from "../utilsMensajeDashboard";
+import { ESTADO_COLORS, DEFAULT_ESTADO_COLOR } from "@/features/mensaje/utils"
 
 interface Props {
   estado: string;

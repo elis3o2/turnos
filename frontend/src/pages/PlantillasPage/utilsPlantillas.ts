@@ -1,5 +1,5 @@
-import type { Plantilla } from "../../features/mensaje/types";
-
+import type { Plantilla } from "@/features/mensaje/types";
+import { TIPO_TO_CAMPO } from "@/features/mensaje/utils";
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 export type AlertSeverity = 'error' | 'warning' | 'info' | 'success';
 
@@ -10,42 +10,7 @@ export type StateShape = {
 };
 
 // ─── Mapas ────────────────────────────────────────────────────────────────────
-export const TIPO_TO_ID: Record<string, number> = {
-  asignacion:    1,
-  cancelacion:   2,
-  reprogramacion:3,
-  recordatorio:  4,
-};
 
-export const ID_TO_TIPO_KEY: Record<number, string> = {
-  1: 'asignacion',
-  2: 'cancelacion',
-  3: 'reprogramacion',
-  4: 'recordatorio',
-};
-
-export const TIPO_TO_CAMPO: Record<string, string> = {
-  asignacion:    'plantilla_asig',
-  cancelacion:   'plantilla_canc',
-  reprogramacion:'plantilla_repr',
-  recordatorio:  'plantilla_reco',
-};
-
-export const TIPO_TO_LABEL: Record<string, string> = {
-  asignacion:    'Confirmación',
-  reprogramacion:'Reprogramación',
-  cancelacion:   'Cancelación',
-  recordatorio:  'Recordatorio',
-};
-
-export const TIPO_TO_COLOR: Record<string, string> = {
-  asignacion:    '#4caf50',
-  reprogramacion:'#1976d2',
-  cancelacion:   '#e53935',
-  recordatorio:  '#fbc02d',
-};
-
-export const TIPO_KEYS = Object.keys(TIPO_TO_LABEL);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 export const groupPlantillasByType = (

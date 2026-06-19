@@ -2,10 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 
 import { getPlantillas, getPlantillaByTipo, updateEfectorPlantilla } from '../../features/mensaje/api';
-import type { Plantilla } from '../../features/mensaje/types';
-
+import type { Plantilla } from '@/features/mensaje/types';
+import { TIPO_TO_ID } from '@/features/mensaje/utils';
 import {
-  TIPO_TO_ID,
   groupPlantillasByType,
   validateDiasAntes,
   buildPlantillaPayload,

@@ -12,6 +12,7 @@ import { EfectorForm } from "../EfectorForm";
 import { ServicioForm } from "../ServicioForm";
 import { EspecialidadForm } from "../EspecialidadForm";
 import type { Efector, Servicio, Especialidad } from "../../types";
+import type { Setter } from "@/common/types";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -23,9 +24,9 @@ interface Props {
   selectedEfector: Efector | null
   loading: boolean
   error: string | null
-  setSelectedServicio: (val: Servicio | null) => void
-  setSelectedEspecialidad: (val: Especialidad | null) => void
-  setSelectedEfector: (val: Efector | null) => void
+  setSelectedServicio: Setter<Servicio | null>
+  setSelectedEspecialidad: Setter<Especialidad | null>
+  setSelectedEfector: Setter<Efector | null>
   handleConfirm: () => void
   handleClear: () => void
 }

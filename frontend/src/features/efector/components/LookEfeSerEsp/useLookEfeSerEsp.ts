@@ -8,17 +8,17 @@ import type {
   SerEsp,
   Deriva
 } from "../../types";
-import { sortByNombre, mergeById } from "../../../../common/utils/collections";
+import { sortByNombre, mergeById } from "@/common/utils/collections";
 
 import { buildServiciosUnificados, toEspecialidad } from "./utilsLookEfeSerEsp";
-
+import type { Setter } from "@/common/types";
 
 // ─── HOOK PRINCIPAL ──────────────────────────────────────────────────────
 
 interface UseLookEfeSerEspProps {
   efector: Efector;
-  setCupo: (val: boolean) => void;
-  setEfeSerEspSeleccionado: (val: EfeSerEspCompleto | null) => void;
+  setCupo:  Setter<boolean>;
+  setEfeSerEspSeleccionado: Setter<EfeSerEspCompleto | null>;
   setFinishEfeSerEsp: (val: boolean) => void;
 }
 

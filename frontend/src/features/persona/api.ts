@@ -6,7 +6,7 @@ export const getPacienteByDNI = (dni:string): Promise<Paciente[]> => {
   return http.get<Paciente[]>(`informix/get_paciente/?dni=${dni}`).then(res => res.data);
 }
 
-export const getProfesionalByEfector = (id:number, n:string|null, a:string | null): Promise<Profesional[]> => {
+export const getProfesionalByEfector = (id:number, n:string|null, a:string | null, ): Promise<Profesional[]> => {
     let added = "";
   if (n) { added += `&nombre=${n}`}
   if (a) { added += `&apellido=${a}`}
@@ -14,3 +14,7 @@ export const getProfesionalByEfector = (id:number, n:string|null, a:string | nul
 }
 
 
+
+export const getProfesionalByEfeSerEsp = (id: number): Promise<Profesional[]> => {
+  return http.get<Profesional[]>(`informix/get_profesional/?id_efe_ser_esp=${id}`).then(res => res.data)
+}

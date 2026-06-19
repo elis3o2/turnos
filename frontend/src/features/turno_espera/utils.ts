@@ -1,4 +1,4 @@
-import type { TurnoEspera } from "./types";
+import type { TurnoEspera, Estudio } from "./types";
 
 export const mapPriorityNameId: Record<string, number> = { baja: 2, media: 1, alta: 0 };
 
@@ -26,4 +26,28 @@ export function getDiasEnEsperaNumber(t: TurnoEspera): number {
   } catch {
     return 0;
   }
+}
+
+
+export const getPriorityColor = (p: number) => {
+  if (p === 0) return "#EF4444";
+  if (p === 1) return "#F59E0B";
+  if (p === 2) return "#0baf26ff";
+};
+
+
+
+export function filterEstudios(
+  estudios: Estudio[],
+  query: string
+): Estudio[] {
+  const q = query.toLowerCase();
+
+
+  return estudios.filter((e) =>
+    [e.nombre, e.id?.toString()]
+      .join(" ")
+      .toLowerCase()
+      .includes(q)
+  );
 }

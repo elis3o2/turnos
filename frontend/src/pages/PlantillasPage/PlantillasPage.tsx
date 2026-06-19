@@ -9,7 +9,7 @@ import {
 import { AlertMessage } from '@/common/components';
 import { usePlantillas } from './usePlantillas';
 import PlantillaComponent from './components/PlantillaComponent';
-import { TIPO_TO_LABEL, TIPO_TO_COLOR, TIPO_KEYS } from './utilsPlantillas';
+import { TIPO_TO_LABEL, TIPO_TO_COLOR, TIPO_KEYS } from "@/features/mensaje/utils"
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function PlantillasPage(): React.ReactElement {

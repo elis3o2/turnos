@@ -1,15 +1,16 @@
 import { Paper, Typography, IconButton} from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
 
-import LookProfesional from "../../../features/persona/components/LookProfesional/LookProfesional";
-import type { Profesional } from "../../../features/persona/types";
+import LookProfesional from "@/features/persona/components/LookProfesional/LookProfesional";
+import type { Profesional } from "@/features/persona/types";
+import type { Setter } from "@/common/types";
 
 interface Props {
     efectorId: number
     profesional: Profesional | null;
-    setProfesional: (p: Profesional | null) => void;
+    setProfesional: Setter<Profesional | null>;
     finishProfesional: boolean;
-    setFinishProfesional: React.Dispatch<React.SetStateAction<boolean>>;
+    setFinishProfesional: Setter<boolean>;
     resetProfesional: () => void;
 }
 

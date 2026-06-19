@@ -11,6 +11,7 @@ import type { TurnoMerged } from "@/features/informix/types";
 import type { Mensaje } from "@/features/mensaje/types";
 import { DateTimeStack } from "@/common/components/DateTimeStack";
 import { DateStack } from "@/common/components/DateStack";
+import { estadoChipColor, estadoRespChipColor } from "@/features/informix/utils";
 
 // ─── resolvers de endpoint ───────────────────────────────────────────────────
 
@@ -32,37 +33,6 @@ export function resolveDownloadEndpoint(mode: {
   if (mode.respuestaMode) return downloadTurnosMergedRespuesta;
   if (mode.errorMode) return downloadTurnosMergedError;
   return downloadTurnosMerged;
-}
-
-// ─── colores de chips ────────────────────────────────────────────────────────
-
-export function estadoRespChipColor(
-  t: TurnoMerged
-): "info" | "success" | "error" | "warning" | "default" {
-  const map: Record<string, "info" | "success" | "error" | "warning"> = {
-    "SIN DATOS":     "info",
-    CONFIRMADO:      "success",
-    RECHAZADO:       "error",
-    INCORRECTO:      "warning",
-    "SIN RESPUESTA": "warning",
-  };
-  return map[t.estado_paciente ?? ""] ?? "default";
-}
-
-export function estadoChipColor(
-  t: TurnoMerged
-): "success" | "error" | "warning" | "info" | "default" {
-  const map: Record<string, "success" | "error" | "warning" | "info"> = {
-    LIBRE:         "error",
-    SUSPENDIDO:    "error",
-    ASIGNADO:      "success",
-    ATENDIDO:      "success",
-    AUSENTE:       "error",
-    RECEPCIONADO:  "info",
-    ELIMINADO:     "error",
-    REPROGRAMADO:  "warning",
-  };
-  return map[t.estado ?? ""] ?? "default";
 }
 
 // ─── columnas de la tabla ────────────────────────────────────────────────────

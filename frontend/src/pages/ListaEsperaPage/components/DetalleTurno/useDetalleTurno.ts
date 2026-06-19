@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { TurnoEspera } from "../../../../features/turno_espera/types";
+import type { TurnoEspera } from "@/features/turno_espera/types";
 import { puedeSacarTurno, tieneEstudiosPendientes } from "./utilsDetalleTurno";
 
 interface UseDetalleTurnoParams {

@@ -16,20 +16,13 @@ import {
 } from "@mui/material";
 import type { Paciente } from "../../types";
 import { useLookPaciente } from "./useLookPaciente";
-import {
-  formatPacienteDni,
-  formatPacienteDireccion,
-  formatPacienteFechaNacimiento,
-  formatPacienteNombre,
-  formatPacienteSexo,
-  formatPacienteTelefono,
-  getPhoneAlert,
-} from "./utilsLookPaciente";
+import { formatPacienteNombre, telefonoCompleto, formatPacienteDireccion, getPhoneAlert } from "../../utils";
+import type { Setter } from "@/common/types";
 
 interface Props {
   paciente: Paciente | null;
-  setPaciente: (paciente: Paciente | null) => void;
-  setFinishPaciente: React.Dispatch<React.SetStateAction<boolean>>;
+  setPaciente: Setter<Paciente | null>;
+  setFinishPaciente: Setter<boolean>;
 }
 
 function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
@@ -48,7 +41,7 @@ function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
   } = useLookPaciente({ paciente, setPaciente, setFinishPaciente });
 
   const phoneAlert = getPhoneAlert(pacienteSeleccionado);
-
+  const pac = pacienteSeleccionado
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", p: 2 }}>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 2 }}>
@@ -118,23 +111,23 @@ function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
                             {formatPacienteNombre(p)}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            · DNI: {formatPacienteDni(p)}
+                            · DNI: {p?.nro_doc ?? "-"}
                           </Typography>
                         </Box>
                       }
                       secondary={
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="body2">
-                            Sexo: {formatPacienteSexo(p)}
+                            Sexo: {p?.sexo ?? "-"}
                           </Typography>
                           <Typography variant="body2">
-                            Fecha Nacimiento: {formatPacienteFechaNacimiento(p)}
+                            Fecha Nacimiento: {p?.fecha_nacimiento ? String(p.fecha_nacimiento) : "-"}
                           </Typography>
                           <Typography variant="body2">
                             Calle: {p.nombre_calle ?? "-"} · Altura: {p.numero_calle ?? "-"}
                           </Typography>
                           <Typography variant="body2">
-                            Teléfono: {formatPacienteTelefono(p)}
+                            Teléfono: {telefonoCompleto(p.carac_telef, p.nro_telef)}
                           </Typography>
                         </Box>
                       }
@@ -148,7 +141,7 @@ function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
       </Box>
 
       <Box sx={{ mt: 2 }}>
-        {pacienteSeleccionado ? (
+        {pac ? (
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Box sx={{ mb: 2 }}>
               {phoneAlert && (
@@ -157,16 +150,16 @@ function LookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
             </Box>
 
             <Typography variant="h6">
-              Seleccionado: {formatPacienteNombre(pacienteSeleccionado)}
+              Seleccionado: {formatPacienteNombre(pac)}
             </Typography>
             <Typography variant="body2">
-              DNI: {formatPacienteDni(pacienteSeleccionado)}
+              DNI: {pac?.nro_doc ?? "-"}
             </Typography>
             <Typography variant="body2">
-              Sexo: {formatPacienteSexo(pacienteSeleccionado)}
+              Sexo: {pac.sexo ?? "-"}
             </Typography>
             <Typography variant="body2">
-              Fecha Nacimiento: {formatPacienteFechaNacimiento(pacienteSeleccionado)}
+              Fecha Nacimiento: {pac.fecha_nacimiento ? String(pac.fecha_nacimiento) : "-"}
             </Typography>
             <Typography variant="body2">
               Dirección: {formatPacienteDireccion(pacienteSeleccionado)}

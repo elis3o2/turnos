@@ -2,12 +2,13 @@ import { useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { getProfesionalByEfector } from "../../api";
 import type { Profesional } from "../../types";
-import { getErrorMessage, parseProfesionalesResponse } from "./utilsLookProfesional";
+import { getErrorMessage } from "@/common/utils/error"
+import type { Setter } from "@/common/types";
 
 interface UseLookProfesionalProps {
   efectorId: number;
   selectedProfesional: Profesional | null;
-  setProfesional: (p: Profesional | null) => void;
+  setProfesional: Setter<Profesional | null>;
   setFinishProfesional: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -54,13 +55,11 @@ export function useLookProfesional({
         apellido || null
       );
 
-      const list = parseProfesionalesResponse(data);
-
-      if (list.length === 0) {
+      if (data.length === 0) {
         setError("No se encontraron profesionales.");
       }
 
-      setProfesionales(list);
+      setProfesionales(data);
     } catch (e: unknown) {
       setError(getErrorMessage(e, "Error al consultar profesionales."));
     } finally {

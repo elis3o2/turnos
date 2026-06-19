@@ -275,3 +275,19 @@ def query_turno_fecha():
     WHERE idturno = ?
     AND idestadoturno = 3
     """
+
+
+def query_profesional_from_efe_ser_esp():
+    return """
+    SELECT p.idpersonal AS id,
+        TRIM(p.apellido) AS apellido,
+        TRIM(p.nombre)   AS nombre
+    FROM personal p
+    JOIN personalefector pe
+    ON pe.idpersonal = p.idpersonal
+    JOIN horariospersonal h 
+    ON h.idpersonalefector = pe.idpersonalefector 
+    WHERE h.estado = 1
+    AND h.idefecservesp = ?
+    AND h.fechabaja is null
+    """

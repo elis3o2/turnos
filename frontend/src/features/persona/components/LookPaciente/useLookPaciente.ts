@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import type { Paciente } from "../../types";
 import { getPacienteByDNI } from "../../api";
-import { parsePacientesResponse } from "./utilsLookPaciente";
+import type { Setter } from "@/common/types";
 
-interface LookPacienteProps {
+interface Props {
   paciente: Paciente | null;
-  setPaciente: (paciente: Paciente | null) => void;
-  setFinishPaciente: Dispatch<SetStateAction<boolean>>;
+  setPaciente: Setter<Paciente | null>;
+  setFinishPaciente: Setter<boolean>;
 }
 
-export function useLookPaciente({ paciente, setPaciente, setFinishPaciente }: LookPacienteProps) {
+export function useLookPaciente({ paciente, setPaciente, setFinishPaciente }: Props) {
   const [dni, setDni] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +36,12 @@ export function useLookPaciente({ paciente, setPaciente, setFinishPaciente }: Lo
     setLoading(true);
     try {
       const data = await getPacienteByDNI(doc);
-      const list = parsePacientesResponse(data);
 
-      if (list.length === 0) {
+      if (data.length === 0) {
         setError("No se encontraron pacientes para ese DNI.");
       }
 
-      setPacientes(list);
+      setPacientes(data);
     } catch (e: unknown) {
       const err = e as {
         response?: { data?: { detail?: string } | string };

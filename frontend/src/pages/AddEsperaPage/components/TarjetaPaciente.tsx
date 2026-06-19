@@ -2,12 +2,13 @@ import { Paper, Typography, IconButton } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close";
 import LookPaciente from "@/features/persona/components/LookPaciente/LookPaciente";
 import type { Paciente } from "@/features/persona/types";
+import type { Setter } from "@/common/types";
 
 interface Props {
     paciente: Paciente | null;
-    setPaciente: (p: Paciente | null) => void;
+    setPaciente: Setter<Paciente | null>;
     finishPaciente: boolean;
-    setFinishPaciente: React.Dispatch<React.SetStateAction<boolean>>;
+    setFinishPaciente: Setter<boolean>;
     resetPaciente: () => void;
 }
 

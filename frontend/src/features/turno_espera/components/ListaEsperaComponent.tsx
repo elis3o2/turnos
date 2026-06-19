@@ -1,5 +1,7 @@
 import { Box, Tooltip, Paper, Typography, Chip } from "@mui/material";        
 import type { TurnoEspera } from "../types";
+import { getPriorityColor, getDiasEnEsperaNumber } from "../utils";
+import { profesionaLabel, pacienteLabel } from "@/features/persona/utils";
 
 interface Props{
   visibleTurnos: TurnoEspera[],
@@ -8,47 +10,8 @@ interface Props{
 
 export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}: Props){
   
-  const priorityColor = (p: number) => {
-    if (p === 0) return "#EF4444";
-    if (p === 1) return "#F59E0B";
-    if (p === 2) return "#0baf26ff";
-  };
 
-  const medicoSolicitanteLabel = (t: TurnoEspera) => {
-    const apellido = t.profesional_solicitante?.apellido ?? "";
-    const nombre = t.profesional_solicitante?.nombre ?? "";
-    if (apellido || nombre)
-      return `${apellido}${apellido && nombre ? ", " : ""}${nombre}`;
-    return "No registrado";
-  };
-
-  const diasEnEsperaNumber = (t: TurnoEspera): number => {
-    try {
-      const fecha = new Date(t.fecha_hora_creacion);
-      const fechaMid = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()).getTime();
-      const today = new Date();
-      const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-      const days = Math.floor((todayMid - fechaMid) / (1000 * 60 * 60 * 24));
-      return days >= 0 ? days : 0;
-    } catch {
-      return 0;
-    }
-};
-  
-
-  const diasEnEsperaLabel = (t: TurnoEspera) => `${diasEnEsperaNumber(t)} días`;
-
-  const pacienteLabel = (t: TurnoEspera) => {
-    const p = t.paciente;
-    const apellido = p?.apellido ?? "";
-    const nombre = p?.nombre ?? "";
-    const dni = p?.nro_doc ?? null;
-    if (apellido || nombre) {
-      const base = `${apellido}${apellido && nombre ? ", " : ""}${nombre}`;
-      return dni ? `${base} · DNI: ${dni}` : base;
-    }
-    return dni ? `Paciente · DNI: ${dni}` : "Paciente sin datos";
-  };
+  const diasEnEsperaLabel = (t: TurnoEspera) => `${getDiasEnEsperaNumber(t)} días`;
 
   const tooltipContent = (t: TurnoEspera) => {
     const p = t.paciente ?? {};
@@ -60,7 +23,8 @@ export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}:
         <Typography variant="caption" display="block">DNI: {p.nro_doc ?? "-"}</Typography>
         <Typography variant="caption" display="block">Servicio: {t.servicio.nombre}</Typography>
         <Typography variant="caption" display="block">Especialidad: {t.especialidad.nombre}</Typography>
-        <Typography variant="caption" display="block">Solicitado por: {medicoSolicitanteLabel(t)}</Typography>
+        <Typography variant="caption" display="block">Solicitado por: {profesionaLabel(t.profesional_solicitante)}</Typography>
+        <Typography variant="caption" display="block">Medico solicitado: {profesionaLabel(t.profesional_deriva)}</Typography>
         <Typography variant="caption" display="block">Desde: {t.efector_solicitante.nombre}</Typography>
         {t.cupo && (
           <Typography variant="caption" display="block">A: {t.efector.nombre}</Typography>
@@ -72,7 +36,7 @@ export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}:
   return (
   <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
     {visibleTurnos.map((t) => {
-      const bg = priorityColor(t.prioridad ?? 0);
+      const bg = getPriorityColor(t.prioridad ?? 0);
       return (
         <Tooltip key={t.id} title={tooltipContent(t)} placement="top" arrow>
           <Paper
@@ -89,7 +53,7 @@ export default function ListaEsperaComponent ({visibleTurnos, handleOpenDialog}:
               <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <Typography variant="body2"
                   sx={{ fontSize: 13,fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {pacienteLabel(t)}
+                  {pacienteLabel(t.paciente)}
                 </Typography>
                 <Typography variant="caption"
                   sx={{ color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

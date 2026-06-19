@@ -1,5 +1,5 @@
 import type { SerEsp, Servicio, Deriva, Especialidad } from "../../types";
-import { sortByNombre } from "../../../../common/utils/collections";
+import { sortByNombre } from "@/common/utils/collections";
 
 export const toServicio = (s: SerEsp): Servicio => ({ id: s.id_ser, nombre: s.ser_nombre } as Servicio);
 

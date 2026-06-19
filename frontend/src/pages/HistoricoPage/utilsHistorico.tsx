@@ -2,23 +2,8 @@ import { Chip } from '@mui/material';
 import type { TurnoHistorico } from '../../features/informix/types';
 import { DateStack } from '../../common/components/DateStack';
 import { DateTimeStack } from '../../common/components/DateTimeStack';
+import { estadoChipColor } from '@/features/informix/utils';
 
-type ChipColor = 'success' | 'error' | 'warning' | 'info' | 'default';
-
-const ESTADO_COLOR_MAP: Record<string, ChipColor> = {
-  LIBRE:        'error',
-  SUSPENDIDO:   'error',
-  ASIGNADO:     'success',
-  ATENDIDO:     'success',
-  AUSENTE:      'error',
-  RECEPCIONADO: 'info',
-  ELIMINADO:    'error',
-  REPROGRAMADO: 'warning',
-};
-
-export function estadoChipColor(t: TurnoHistorico): ChipColor {
-  return ESTADO_COLOR_MAP[t.estado ?? ''] ?? 'default';
-}
 
 export function renderCell(columnKey: string, t: TurnoHistorico) {
   switch (columnKey) {

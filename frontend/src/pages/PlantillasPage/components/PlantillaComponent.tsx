@@ -7,7 +7,7 @@ import {
   Typography,
   Button,
 } from '@mui/material';
-import type { Plantilla } from '../../../features/mensaje/types';
+import type { Plantilla } from '@/features/mensaje/types';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 

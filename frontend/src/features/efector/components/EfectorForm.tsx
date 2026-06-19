@@ -1,10 +1,11 @@
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import type { Efector } from "../types";
+import type { Setter } from "@/common/types";
 
 type Props = {
   efectores: Efector[];
   selectedEfector: Efector | null;
-  setSelectedEfector: (val: Efector | null) => void
+  setSelectedEfector: Setter<Efector | null>
 };
 
 
