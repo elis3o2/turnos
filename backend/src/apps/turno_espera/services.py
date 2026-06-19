@@ -4,16 +4,19 @@ from datetime import datetime, timedelta
 from src.utils.querys_informix import query_turno_fecha
 from django.db import connections
 from django.utils import timezone
+from src.apps.efector.models import EfeSerEsp
 
 def sacar_Turno_Espera(id_pac: int, id_efe_ser_esp: int, id_turno: int) -> bool:
     turno = (
         TurnoEspera.objects
         .filter(
             id_paciente=id_pac,
-            efe_ser_esp=id_efe_ser_esp,
-            estado_id=0
+            efe_ser_esp__ser_esp_id=EfeSerEsp.objects
+                .filter(pk=id_efe_ser_esp)
+                .values("ser_esp_id")[:1],
+            estado_id=0,
         )
-        .order_by('fecha_hora_creacion')
+        .order_by("fecha_hora_creacion")
         .first()
     )
 

@@ -8,7 +8,7 @@ from .serializers import EstudioRequeridoSerializer, TurnoEsperaSerializer, Turn
 from src.permissions import ReadOnly
 from .permissions import TurnoEsperaCreatePermission, TurnoEsperaUpdatePermission, TurnoEsperaReadPermission
 from src.utils.utils import fetch_paciente, fetch_profesional
-
+from src.apps.efector.models import EfeSerEsp
 
 class EstudioRequeridoViewSet(viewsets.ModelViewSet):
     serializer_class = EstudioRequeridoSerializer
@@ -203,9 +203,16 @@ class TurnoEsperaViewSet(viewsets.ModelViewSet):
         efe_ser_esp = request.data.get("id_efe_ser_esp")
 
         if paciente and efe_ser_esp:
-            if TurnoEspera.objects.filter(
+            ser_esp_id = (
+                EfeSerEsp.objects
+                .filter(pk=efe_ser_esp)
+                .values_list("ser_esp_id", flat=True)
+                .first()
+            )
+
+            if ser_esp_id and TurnoEspera.objects.filter(
                 id_paciente=paciente,
-                efe_ser_esp_id=efe_ser_esp,
+                efe_ser_esp__ser_esp_id=ser_esp_id,
                 estado_id=0,
             ).exists():
                 return Response(
