@@ -1,5 +1,5 @@
-import type { TurnoEspera } from '../../features/turno_espera/types';
-import { mapPriorityIdName } from '../../features/turno_espera/utils';
+import type { TurnoEspera } from '@/features/turno_espera/types';
+import { mapPriorityIdName } from '@/features/turno_espera/utils';
 
 // ---------------------- Columnas ----------------------
 export const ALL_COLUMNS = [

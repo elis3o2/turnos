@@ -5,9 +5,9 @@ import {
 } from '@mui/material';
 import ClearIcon from '@mui/icons-material/Clear';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import LookPaciente from '../../features/persona/components/LookPaciente/LookPaciente';
-import { ColumnSelector } from '../../common/components/ColumnSelector';
-import { TableComponent } from '../../common/components/TableComponent';
+import LookPaciente from '@/features/persona/components/LookPaciente/LookPaciente';
+import { ColumnSelector } from '@/common/components/ColumnSelector';
+import { TableComponent } from '@/common/components/TableComponent';
 import { useHistorico } from './useHistorico';
 import { renderCell, ALL_COLUMNS, DEFAULT_VISIBLE_COLUMNS } from './utilsHistorico';
 

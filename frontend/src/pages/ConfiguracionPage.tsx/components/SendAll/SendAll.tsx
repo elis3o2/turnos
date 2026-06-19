@@ -1,10 +1,10 @@
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
 import { Stack, Tooltip, IconButton } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReplayIcon from "@mui/icons-material/Replay";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { Setter, AlertSeverity } from "@/common/types";
 import { Confirmacion } from "../Confirmacion/Confirmacion";
 import { useSendAll } from "./useSendAll";
 import type { FieldName } from "../../utilsConfiguracion";

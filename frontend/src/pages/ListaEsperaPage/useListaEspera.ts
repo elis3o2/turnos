@@ -1,16 +1,16 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../common/contex";
-import type { Efector } from "../../features/efector/types";
-import type { EstudioRequerido, TurnoEspera } from "../../features/turno_espera/types";
+import { AuthContext } from "@/common/contex";
+import type { Efector } from "@/features/efector/types";
+import type { EstudioRequerido, TurnoEspera } from "@/features/turno_espera/types";
 import {
   getTurnoEsperaAbierto,
   getTurnoEsperaAbiertoDeriva,
   postMarcarEstudiosTurno,
   CloseTurnoEspera,
-} from "../../features/turno_espera/api";
-import { getDerivaByEfector } from "../../features/efector/api";
-import { hasEspera } from "../../common/utils/permissions";
+} from "@/features/turno_espera/api";
+import { getDerivaByEfector } from "@/features/efector/api";
+import { hasEspera } from "@/common/utils/permissions";
 import {
     applyEstudiosToTurnos,
     buildEspecialidadesOptions,

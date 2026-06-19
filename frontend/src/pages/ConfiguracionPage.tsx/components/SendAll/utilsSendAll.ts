@@ -1,4 +1,4 @@
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
 import type { FieldName } from "../../utilsConfiguracion";
 
 export const getToChange = (

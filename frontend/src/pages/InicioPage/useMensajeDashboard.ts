@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback, useContext } from 'react'
-import type { Especialidad, Servicio, EfeSerEsp, Efector } from '../../features/efector/types'
+import type { Especialidad, Servicio, EfeSerEsp, Efector } from '@/features/efector/types'
 import {
   getServiciosAll,
   getEspecialidadesAll,
   getEfeSerEspAll,
 } from '../../features/efector/api'
-import { getMensajesCount } from '../../features/mensaje/api'
-import type { MensajeCount } from '../../features/mensaje/types'
-import { AuthContext } from '../../common/contex'
+import { getMensajesCount } from '@/features/mensaje/api'
+import type { MensajeCount } from '@/features/mensaje/types'
+import { AuthContext } from '@/common/contex'
 import { getDefaultDesde } from './utilsMensajeDashboard'
 
 // ─────────────────────────────────────────────────────────────────────────────

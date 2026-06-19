@@ -1,4 +1,4 @@
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
 import {
   Typography,
   Button,
@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { Setter, AlertSeverity } from "@/common/types";
 import { useConfirmacion } from "./useConfirmacion";
 import type { FieldName } from "../../utilsConfiguracion";
 

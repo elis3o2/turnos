@@ -3,10 +3,10 @@ import {
   GridLegacy as Grid,
   Button,
 } from '@mui/material';
-import type { Efector } from '../../features/efector/types';
+import type { Efector } from '@/features/efector/types';
 import { ServicioBlock } from './components/ServicioBlock/ServicioBlock';
 import { EspecialidadBlock } from './components/EspecialidadBlock/EspecialidadBlock';
-import { AlertMessage } from '../../common/components';
+import { AlertMessage } from '@/common/components/AlertMessage';
 
 import { useConfiguracion } from './useConfiguracion';
 import { BurbujaCard } from './components/BurbujaCard';

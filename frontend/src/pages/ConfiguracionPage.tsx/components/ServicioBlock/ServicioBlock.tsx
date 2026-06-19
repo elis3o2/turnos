@@ -1,8 +1,8 @@
 import { Collapse, Box, GridLegacy as Grid } from "@mui/material";
 import { useServicioBlock } from "./useServicioBlock";
-import type { Efector, Servicio } from "../../../../features/efector/types";
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { Efector, Servicio } from "@/features/efector/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
+import type { Setter, AlertSeverity } from "@/common/types";
 import SendAll from "../SendAll/SendAll";
 import { BurbujaCard } from "../BurbujaCard";
 

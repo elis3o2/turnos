@@ -1,6 +1,6 @@
 import {Box, Button, Paper, Typography,} from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import type { RespuestaCategory } from '../../../features/informix/types';
+import type { RespuestaCategory } from '@/features/informix/types';
 
 type Props = {
   activeRespuestaCategory: RespuestaCategory | null;

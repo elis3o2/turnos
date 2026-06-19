@@ -1,5 +1,5 @@
-import type { Efector } from "../../features/efector/types";
-import type { TurnoEspera, EstudioRequerido } from "../../features/turno_espera/types";
+import type { Efector } from "@/features/efector/types";
+import type { TurnoEspera, EstudioRequerido } from "@/features/turno_espera/types";
 
 export type SortBy = "priority" | "dias";
 export type AlertSeverity = "success" | "info" | "warning" | "error";

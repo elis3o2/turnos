@@ -1,5 +1,5 @@
 import { Stack, TextField } from "@mui/material"
-import type { Setter } from "../../../common/types"
+import type { Setter } from "@/common/types"
 
 type Props = {
     selectedDesde: string | null

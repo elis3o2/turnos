@@ -1,5 +1,5 @@
 import { Box,  Typography, Paper} from "@mui/material"
-import type { Efector } from "../../../features/efector/types";
+import type { Efector } from "@/features/efector/types";
 import  { CircularProgress } from "@mui/material";
 
 interface Props {

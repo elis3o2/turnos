@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import { updateEfectorPlantilla } from "../../../../features/mensaje/api";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
+import { updateEfectorPlantilla } from "@/features/mensaje/api";
+import type { Setter, AlertSeverity } from "@/common/types";
 import type { FieldName } from "../../utilsConfiguracion";
 import { getFieldLabel, getPlantField } from "./utilsConfirmacion";
 

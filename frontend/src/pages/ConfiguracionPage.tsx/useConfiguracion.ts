@@ -1,12 +1,12 @@
 import { useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { AuthContext } from '../../common/contex';
-import { getServiciosByEfector } from '../../features/efector/api';
-import type { Efector, Servicio } from '../../features/efector/types';
-import type { AlertSeverity } from '../../common/types';
-import type { EfeSerEspPlantillaExtend } from '../../features/mensaje/types';
-import { hasConfiguracion } from '../../common/utils/permissions';
+import { AuthContext } from '@/common/contex';
+import { getServiciosByEfector } from '@/features/efector/api';
+import type { Efector, Servicio } from '@/features/efector/types';
+import type { AlertSeverity } from '@/common/types';
+import type { EfeSerEspPlantillaExtend } from '@/features/mensaje/types';
+import { hasConfiguracion } from '@/common/utils/permissions';
 import {
   mergeServiciosUnique,
   addEfectorToServicios,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { getTurnoPaciente, putTurnoPaciente } from "../../features/turno/api";
-import type { TurnoPacienteResp } from "../../features/turno/types";
+import { getTurnoPaciente, putTurnoPaciente } from "@/features/turno/api";
+import type { TurnoPacienteResp } from "@/features/turno/types";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);

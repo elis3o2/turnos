@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from '../pages/LoginPage';
-import { PrivateRoute } from '../common/components';
+import { PrivateRoute } from '@/common/components/PrivateRoute';
 import Layout from '../common/layouts/Layout';
 import {MensajesDashboard }  from '../pages/InicioPage/MensajeDashboardPage';
 import {ConfiguracionPage }  from '../pages/ConfiguracionPage.tsx/ConfiguracionPage';

@@ -8,7 +8,7 @@ type Props = {
     severity: AlertSeverity;
 };
 
-const AlertMessage = ({ open, handleClose, message, severity }: Props) => {
+export const AlertMessage = ({ open, handleClose, message, severity }: Props) => {
 
     return (
         <Snackbar 
@@ -35,5 +35,3 @@ const AlertMessage = ({ open, handleClose, message, severity }: Props) => {
         </Snackbar>
     );
 };
-
-export default AlertMessage;

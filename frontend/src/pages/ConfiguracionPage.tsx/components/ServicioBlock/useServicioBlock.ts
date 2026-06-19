@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import type { Servicio, Efector } from"../../../../features/efector/types";
-import type { EfeSerEspPlantillaExtend } from "../../../../features/mensaje/types";
-import { getPlantillaByEfectorServicio } from "../../../../features/mensaje/api";
-import type { Setter, AlertSeverity } from "../../../../common/types";
+import type { Servicio, Efector } from "@/features/efector/types";
+import type { EfeSerEspPlantillaExtend } from "@/features/mensaje/types";
+import { getPlantillaByEfectorServicio } from "@/features/mensaje/api";
+import type { Setter, AlertSeverity } from "@/common/types";
 
 type Props = {
   efectorSeleccionado: Efector[];

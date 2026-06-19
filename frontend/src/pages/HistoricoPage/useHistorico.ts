@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { getHistoricoTurno } from '../../features/informix/api';
-import type { Paciente } from '../../features/persona/types';
-import type { TurnoHistorico } from '../../features/informix/types';
+import { getHistoricoTurno } from '@/features/informix/api';
+import type { Paciente } from '@/features/persona/types';
+import type { TurnoHistorico } from '@/features/informix/types';
 
 export function useHistorico() {
   const [turnos, setTurnos] = useState<TurnoHistorico[]>([]);

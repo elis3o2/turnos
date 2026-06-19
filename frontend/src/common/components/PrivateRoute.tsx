@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import type { ReactElement } from 'react';
 import { AuthContext } from '../contex';
 
-const PrivateRoute = ({ children }: { children: ReactElement }): ReactElement | null => {
+export const PrivateRoute = ({ children }: { children: ReactElement }): ReactElement | null => {
   const { authTokens } = useContext(AuthContext);
 
   if (!authTokens) {
@@ -13,4 +13,3 @@ const PrivateRoute = ({ children }: { children: ReactElement }): ReactElement | 
   return children;
 };
 
-export default PrivateRoute

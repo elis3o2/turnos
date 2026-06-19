@@ -1,7 +1,7 @@
 import { Chip } from '@mui/material';
-import type { TurnoHistorico } from '../../features/informix/types';
-import { DateStack } from '../../common/components/DateStack';
-import { DateTimeStack } from '../../common/components/DateTimeStack';
+import type { TurnoHistorico } from '@/features/informix/types';
+import { DateStack } from '@/common/components/DateStack';
+import { DateTimeStack } from '@/common/components/DateTimeStack';
 import { estadoChipColor } from '@/features/informix/utils';
 
 

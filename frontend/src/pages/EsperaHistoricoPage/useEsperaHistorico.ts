@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { getTurnoEsperaById } from '../../features/turno_espera/api';
-import type { TurnoEspera } from '../../features/turno_espera/types';
-import type { Paciente } from '../../features/persona/types';
+import { getTurnoEsperaById } from '@/features/turno_espera/api';
+import type { TurnoEspera } from '@/features/turno_espera/types';
+import type { Paciente } from '@/features/persona/types';
 import { ALL_COLUMNS, COLUMNS_MAP, downloadCSV } from './utilsEsperaHistorico';
 
 // ---------------------- Hook ----------------------

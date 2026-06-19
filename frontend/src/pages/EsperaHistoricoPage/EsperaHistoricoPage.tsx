@@ -5,14 +5,14 @@ import DownloadIcon    from '@mui/icons-material/Download';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
-import LookPaciente   from '../../features/persona/components/LookPaciente/LookPaciente';
-import { TableComponent } from '../../common/components/TableComponent';
-import type { TurnoEspera } from '../../features/turno_espera/types';
+import LookPaciente   from '@/features/persona/components/LookPaciente/LookPaciente';
+import { TableComponent } from '@/common/components/TableComponent';
+import type { TurnoEspera } from '@/features/turno_espera/types';
 
 import { useEsperaHistorico }                from './useEsperaHistorico';
 import { ALL_COLUMNS, estadoColor } from './utilsEsperaHistorico';
-import { mapPriorityIdName } from '../../features/turno_espera/utils';
-import { DateTimeStack } from '../../common/components/DateTimeStack';
+import { mapPriorityIdName } from '@/features/turno_espera/utils';
+import { DateTimeStack } from '@/common/components/DateTimeStack';
 
 // ---------------------- Render de celda ----------------------
 function renderCell(columnKey: string, t: TurnoEspera): React.ReactNode {

@@ -1,5 +1,5 @@
 import { Box, Typography, Button, CircularProgress, Divider } from "@mui/material";
-import { AlertMessage } from "../../common/components";
+import { AlertMessage } from "@/common/components/AlertMessage";
 import { TarjetaPrioridad } from "./components/TarjetaPrioridad";
 import { TarjetaEfector } from "./components/TarjetaEfector";
 import { TarjetaPaciente } from "./components/TarjetaPaciente";
