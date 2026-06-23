@@ -35,6 +35,7 @@ class TurnoEspera(models.Model):
     estudios_requerido = models.ManyToManyField(
         'EstudioRequerido', through='TurnoEsperaEstudio')
     id_sisr = models.IntegerField(blank=True, null=True)
+    observaciones = models.CharField(max_length=256, blank=True, null=True)
 
     class Meta:
         db_table = 'turno_espera'

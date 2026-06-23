@@ -1,23 +1,16 @@
 import {
   Box,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   CircularProgress,
   Typography,
   Paper,
   Stack,
   Button,
-  GridLegacy as Grid,
 } from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material";
 import { AlertMessage } from "@/common/components/AlertMessage";
 import DetalleTurno from "./components/DetalleTurno/DetalleTurno";
-import { EfectorForm } from "@/features/efector/components/EfectorForm";
 import ListaEsperaComponent from "@/features/turno_espera/components/ListaEsperaComponent";
 import { useListaEspera } from "./useListaEspera";
-import type { SortBy } from "./utilsListaEspra";
+import { FilterListaEspera } from "./components/FilterListaEspera";
 
 
 export default function ListaEsperaPage(): React.ReactElement {
@@ -32,6 +25,8 @@ export default function ListaEsperaPage(): React.ReactElement {
     derivaciones,
     selectedDerivacion,
     setSelectedDerivacion,
+    selectedOrigen,
+    setSelectedOrigen,
     sortBy,
     setSortBy,
     openDialog,
@@ -42,6 +37,7 @@ export default function ListaEsperaPage(): React.ReactElement {
     alertMsg,
     alertSeverity,
     especialidadesOptions,
+    origenesOptions,
     visibleTurnos,
     isRemoving,
     handleToggleEstudio,
@@ -54,7 +50,7 @@ export default function ListaEsperaPage(): React.ReactElement {
   } = useListaEspera();
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1000, mx: "auto" }}>
+    <Box sx={{ p: 3, maxWidth: 1100, mx: "auto" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Typography variant="h6">Lista de espera</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -78,95 +74,22 @@ export default function ListaEsperaPage(): React.ReactElement {
         </Box>
       </Box>
 
-      <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={4} md={3}>
-          <EfectorForm
-            efectores={efectores}
-            selectedEfector={selectedEfector}
-            setSelectedEfector={setSelectedEfector}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={4} md={3}>
-          <FormControl size="small" fullWidth>
-            <InputLabel sx={{ fontSize: 13 }}>Especialidad</InputLabel>
-            <Select
-              value={String(selectedEspecialidad) ?? ""}
-              label="Especialidad"
-              onChange={(e: SelectChangeEvent) =>
-                setSelectedEspecialidad(e.target.value === "" ? null : Number(e.target.value))
-              }
-              sx={{
-                fontSize: 13,
-                height: 36,
-                '& .MuiSelect-select': {
-                  py: 0.5,
-                },
-              }}
-            >
-              <MenuItem value="" sx={{ fontSize: 13 }}>Todos</MenuItem>
-              {especialidadesOptions.map((s) => (
-                <MenuItem key={s.id} value={s.id} sx={{ fontSize: 13 }}>
-                  {s.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <FormControl size="small" fullWidth>
-            <InputLabel sx={{ fontSize: 13 }}>Ordenar por</InputLabel>
-            <Select
-              value={sortBy}
-              label="Ordenar por"
-              onChange={(e) => setSortBy(e.target.value as SortBy)}
-              sx={{
-                fontSize: 13,
-                height: 36,
-                '& .MuiSelect-select': {
-                  py: 0.5,
-                },
-              }}
-            >
-              <MenuItem value="priority" sx={{ fontSize: 13 }}>Prioridad</MenuItem>
-              <MenuItem value="dias" sx={{ fontSize: 13 }}>Días en espera</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <FormControl size="small" fullWidth>
-            <InputLabel sx={{ fontSize: 13 }}>Derivación</InputLabel>
-            <Select
-              value={selectedDerivacion ? String(selectedDerivacion.id) : ""}
-              label="Derivación"
-              onChange={(e: SelectChangeEvent) => {
-                const val = e.target.value;
-                setSelectedDerivacion(
-                  val === "" ? null : derivaciones.find((x) => x.id === Number(val)) ?? null
-                );
-              }}
-              sx={{
-                fontSize: 13,
-                height: 36,
-                '& .MuiSelect-select': {
-                  py: 0.5,
-                },
-              }}
-            >
-              <MenuItem value="" sx={{ fontSize: 13 }}>
-                <em>Ninguna</em>
-              </MenuItem>
-              {derivaciones.map((ef) => (
-                <MenuItem key={ef.id} value={ef.id} sx={{ fontSize: 13 }}>
-                  {ef.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+      <FilterListaEspera
+        efectores={efectores}
+        selectedEfector={selectedEfector}
+        setSelectedEfector={setSelectedEfector}
+        selectedEspecialidad={selectedEspecialidad}
+        setSelectedEspecialidad={setSelectedEspecialidad}
+        especialidadesOptions={especialidadesOptions}
+        selectedDerivacion={selectedDerivacion}
+        setSelectedDerivacion={setSelectedDerivacion}
+        derivaciones={derivaciones}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        selectedOrigen={selectedOrigen}
+        setSelectedOrigen={setSelectedOrigen}
+        origenesOptions={origenesOptions}
+      />
 
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", mb: 1 }}>
         {loading ? (

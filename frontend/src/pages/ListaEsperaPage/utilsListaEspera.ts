@@ -29,9 +29,26 @@ export function buildEspecialidadesOptions(turnos: TurnoEspera[]) {
 }
 
 
+export function buildOrigenesOptions(turnos: TurnoEspera[]) {
+  const map = new Map<number, string>();
+
+  for (const t of turnos) {
+    if (!map.has(t.efector_solicitante.id)) {
+      map.set(t.efector_solicitante.id, t.efector_solicitante.nombre);
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort((a, b) => a[1].localeCompare(b[1], 'es', { sensitivity: 'base' }))
+    .map(([id, nombre]) => ({ id, nombre }));
+}
+
+
+
 export function filterAndSortTurnos(
   turnos: TurnoEspera[],
   selectedEspecialidad: number | null,
+  selectedOrigen: number | null,
   sortBy: SortBy
 ): TurnoEspera[] {
   let arr = [...turnos];
@@ -40,6 +57,10 @@ export function filterAndSortTurnos(
     arr = arr.filter((t) => t.especialidad.id === selectedEspecialidad);
   }
 
+  if (selectedOrigen !== null) {
+    arr = arr.filter((t) => t.efector_solicitante.id === selectedOrigen);
+  }
+  
   if (sortBy === "priority") {
     arr.sort((a, b) => {
       const pa = a.prioridad ?? 99;
@@ -83,17 +104,6 @@ export function applyEstudiosToTurnos(
       }),
     };
   });
-}
-
-export function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) return error.message || fallback;
-
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const msg = (error as { message?: unknown }).message;
-    if (typeof msg === "string" && msg.trim()) return msg;
-  }
-
-  return fallback;
 }
 
 export function toggleEstudioSelection(

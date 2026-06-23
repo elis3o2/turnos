@@ -105,7 +105,39 @@ export const DetalleTurnoInfo = ( { activeTurno, permiso, selectedEstudios, hand
                 </Box>
               </>
             )}
+            {activeTurno.observaciones && (
+              <>
+                <Divider />
+                <Box sx={{ px: 3, py: 2 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "text.secondary",
+                      fontWeight: 600,
+                      display: "block",
+                      mb: 0.75,
+                    }}
+                  >
+                    Observaciones
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "text.secondary",
+                      whiteSpace: "pre-wrap",
+                      overflowWrap: "break-word",
+                      wordBreak: "break-word",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {activeTurno.observaciones}
+                  </Typography>
+                </Box>
+              </>
+            )}
           </Box>
+          
         ) : (
           <Box sx={{ px: 3, py: 4, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">

@@ -10,10 +10,10 @@ export const getTurnoEsperaAbiertoDeriva = (id: number, id_deriva: number) : Pro
 }
 
 export const postTurnoEspera = (id_efe_ser_esp: number, id_profesional_solicitante: number, id_profesional_deriva: number | null,
-  id_efector_solicitante: number,id_paciente:number, ids_estudios_requerido: number[], prioridad: number, cupo:boolean ) => {
+  id_efector_solicitante: number,id_paciente:number, ids_estudios_requerido: number[], prioridad: number, cupo:boolean, observaciones: string | null ) => {
   
     return http.post("turno_espera/turno_espera/", {id_efe_ser_esp,id_profesional_solicitante,
-    id_profesional_deriva, id_efector_solicitante,id_paciente, ids_estudios_requerido, prioridad, cupo,});
+    id_profesional_deriva, id_efector_solicitante,id_paciente, ids_estudios_requerido, prioridad, cupo, observaciones});
 };
 
 

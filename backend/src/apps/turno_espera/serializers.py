@@ -83,6 +83,7 @@ class TurnoEsperaSerializer(serializers.ModelSerializer):
             "id",
             "fecha_hora_creacion",
             "fecha_hora_cierre",
+            "observaciones"
         ]
 
     def get_paciente(self, obj):

@@ -19,6 +19,7 @@ export interface TurnoEspera {
     usuario_creacion: User;
     usuario_cierre: User | null;
     cupo: boolean;
+    observaciones: string | null
 }
 
 export interface Estudio {

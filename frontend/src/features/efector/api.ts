@@ -39,4 +39,8 @@ export const getSerEspByEfector = (id: number) : Promise<SerEsp[]> =>
 
 
 export const getDerivaByEfector = (id: number) : Promise<Deriva[]> =>
-  http.get<Deriva[]>(`efector/derivaciones/?id_efector=${id}`).then(res=> res.data)
+  http.get<Deriva[]>(`efector/derivaciones/?id_efector=${id}`).then(res => res.data)
+
+
+export const postDeriva = (id_efe: number, id_efe_der: number, id_ser_der: number, id_esp_der: number) =>
+  http.post(`efector/derivaciones/`, {id_efe, id_efe_der, id_ser_der, id_esp_der}).then(res => res.data)

@@ -11,16 +11,17 @@ import {
 } from "@/features/turno_espera/api";
 import { getDerivaByEfector } from "@/features/efector/api";
 import { hasEspera } from "@/common/utils/permissions";
+import { getErrorMessage } from "@/common/utils/error";
 import {
     applyEstudiosToTurnos,
     buildEspecialidadesOptions,
+    buildOrigenesOptions,
     filterAndSortTurnos,
-    getErrorMessage,
     getSelectedEstudiosFromTurno,
     getUniqueDerivaciones,
     type AlertSeverity,
     type SortBy
- } from "./utilsListaEspra";
+ } from "./utilsListaEspera";
 
 export function useListaEspera() {
   const { efectores, groups } = useContext(AuthContext) as { efectores: Efector[], groups: string[] };
@@ -44,6 +45,8 @@ export function useListaEspera() {
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMsg, setAlertMsg] = useState("");
   const [alertSeverity, setAlertSeverity] = useState<AlertSeverity>("info");
+
+  const [selectedOrigen, setSelectedOrigen] = useState<number | null>(null);
 
   const permiso = hasEspera(groups)
   
@@ -131,9 +134,24 @@ export function useListaEspera() {
     }
   }, [especialidadesOptions, selectedEspecialidad]);
 
+  const origenesOptions = useMemo(
+    () => buildOrigenesOptions(turnos),
+    [turnos]
+  );
+
+  useEffect(() => {
+    if (
+      selectedOrigen !== null &&
+      !origenesOptions.some((s) => s.id === selectedOrigen)
+    ) {
+      setSelectedOrigen(null);
+    }
+  }, [origenesOptions, selectedOrigen]);
+
+
   const visibleTurnos = useMemo(
-    () => filterAndSortTurnos(turnos, selectedEspecialidad, sortBy),
-    [turnos, selectedEspecialidad, sortBy]
+    () => filterAndSortTurnos(turnos, selectedEspecialidad,selectedOrigen, sortBy),
+    [turnos, selectedEspecialidad, selectedOrigen, sortBy]
   );
 
   const isRemoving = (id?: number | null) => id != null && removingIds.includes(id);
@@ -229,6 +247,8 @@ export function useListaEspera() {
     derivaciones,
     selectedDerivacion,
     setSelectedDerivacion,
+    selectedOrigen,
+    setSelectedOrigen,
     sortBy,
     setSortBy,
     openDialog,
@@ -240,6 +260,7 @@ export function useListaEspera() {
     alertMsg,
     alertSeverity,
     especialidadesOptions,
+    origenesOptions,
     visibleTurnos,
     isRemoving,
     handleToggleEstudio,

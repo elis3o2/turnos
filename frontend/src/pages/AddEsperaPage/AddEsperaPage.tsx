@@ -10,6 +10,7 @@ import { TarjetaProfesionalDeriva } from "./components/TarjetaProfesionalDeriva"
 import { useAddEspera } from "./useAddEspera";
 import { canSelectPriority, canConfirm } from "./utilsAddEspera";
 import { useEfectorIdFromUrl } from "@/features/efector/utils/getUrl";
+import { TarjetaObservaciones } from "./components/TarjetaObservaciones";
 
 export default function AddEspera(): React.ReactElement {
 
@@ -22,6 +23,7 @@ export default function AddEspera(): React.ReactElement {
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
     setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
+    observaciones, setObservaciones, finishObservaciones, setFinishObservaciones, resetObsevaciones,
     priority, setPriority,
     alert, setAlert,
     submitting, showRepeatOptions,
@@ -29,7 +31,8 @@ export default function AddEspera(): React.ReactElement {
     navigate,
   } = useAddEspera(efectorId);
 
-  const selectPriority = canSelectPriority(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, finishProfesionalDeriva, finishEstudioRequerido);
+  const selectPriority = canSelectPriority(efector, efectorId, paciente, profesional, efeSerEspSeleccionado,
+                                          finishProfesionalDeriva, finishEstudioRequerido, finishObservaciones);
   const confirm = canConfirm(efector, efectorId, paciente, profesional, efeSerEspSeleccionado, priority);
 
 
@@ -97,6 +100,15 @@ export default function AddEspera(): React.ReactElement {
           finishEstudioRequerido={finishEstudioRequerido}
           setFinishEstudioRequerido={setFinishEstudioRequerido}
           resetEstudioRequerido={resetEstudioRequerido}
+        />
+      )}
+
+      {(finishEstudioRequerido || finishObservaciones) && (
+        <TarjetaObservaciones
+          observaciones={observaciones}
+          setObservaciones={setObservaciones}
+          finishObservaciones={finishObservaciones}
+          setFinishObservaciones={setFinishObservaciones}
         />
       )}
 

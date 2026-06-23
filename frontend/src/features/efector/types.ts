@@ -44,7 +44,7 @@ export interface EfeSerEspCompleto  {
 
 export interface Deriva {
     id: number;
-    cupo: number;
+    cupo: boolean;
     efector: Efector;
     efector_deriva: Efector;
     servicio_deriva: Servicio;

@@ -13,6 +13,7 @@ import ConfirmPage from '../pages/ConfirmPage/ConfirmPage';
 import EsperaHistorico from '../pages/EsperaHistoricoPage/EsperaHistoricoPage';
 import Eliseo from '../pages/EiseoPage';
 import { PoliticaPrivacidad } from '../pages/PoliticaComponent';
+import { DerivaPage } from '@/pages/DerivaPage/DerivaPage';
 
 const AppRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="/espera" element={<ListaEsperaPage />}/>
         <Route path="/add-espera" element={<AddEspera />}/>
         <Route path='/espera-paciente' element={<EsperaHistorico />}/>
+        <Route path='deriva' element={<DerivaPage/>}/>
         <Route path='*' element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>

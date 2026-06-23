@@ -56,3 +56,35 @@ class DerivaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deriva
         fields = '__all__'
+
+
+class DerivaCreateSerializer(serializers.Serializer):
+    id_efe = serializers.IntegerField()
+    id_efe_der = serializers.IntegerField()
+    id_ser_der = serializers.IntegerField()
+    id_esp_der = serializers.IntegerField()
+
+    def validate(self, data):
+        try:
+            efe_ser_esp = EfeSerEsp.objects.get(
+                efector_id=data["id_efe_der"],
+                ser_esp__servicio_id=data["id_ser_der"],
+                ser_esp__especialidad_id=data["id_esp_der"],
+            )
+        except EfeSerEsp.DoesNotExist:
+            raise serializers.ValidationError(
+                "La combinación efector/servicio/especialidad destino no existe."
+            )
+
+        existe = Deriva.objects.filter(
+            efector_id=data["id_efe"],
+            efe_ser_esp_deriva=efe_ser_esp,
+        ).exists()
+
+        if existe:
+            raise serializers.ValidationError(
+                "Ya existe una derivación con esos datos."
+            )
+
+        data["efe_ser_esp"] = efe_ser_esp
+        return data

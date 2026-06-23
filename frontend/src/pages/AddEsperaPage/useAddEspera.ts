@@ -1,4 +1,4 @@
-import  { useEffect, useState } from "react";
+import  { use, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Efector, EfeSerEspCompleto } from "@/features/efector/types";
 import type { Paciente, Profesional } from "@/features/persona/types";
@@ -30,6 +30,9 @@ export function useAddEspera(efectorId: number | null) {
 
   const [estudioRequerido, setEstudioRequerido] = useState<Estudio[]>([]);
   const [finishEstudioRequerido, setFinishEstudioRequerido] = useState(false);
+
+  const [observaciones, setObservaciones] = useState("")
+  const [finishObservaciones, setFinishObservaciones] = useState(false)
 
   const [priority, setPriority] = useState<string | null>(null);
   const [alert, setAlert] = useState({ open: false, msg: "", severity: "info" as AlertSeverity });
@@ -64,8 +67,9 @@ export function useAddEspera(efectorId: number | null) {
   const resetProfesional = () => { setProfesional(null); setFinishProfesional(false); setPriority(null); };
   const resetEfeSerEsp   = () => { setEfeSerEspSeleccionado(null); setFinishEfeSerEsp(false); setPriority(null); setEstudioRequerido([]); setFinishEstudioRequerido(false); setProfesionalDeriva(null); setFinishProfesionalDeriva(false) };
   const resetProfesionalDeriva = () => { setProfesionalDeriva(null); setFinishProfesionalDeriva(false); setPriority(null); };
-  const resetEstudioRequerido = () => { setEstudioRequerido([]); setFinishEstudioRequerido(false); setPriority(null); };
-  const resetForRepeat   = () => { resetEfeSerEsp(); setCupo(false); setShowRepeatOptions(false); };
+  const resetEstudioRequerido  = () => { setEstudioRequerido([]); setFinishEstudioRequerido(false); setPriority(null); };
+  const resetObsevaciones = () => { setFinishObservaciones(false);setObservaciones("") ;setPriority(null); }
+  const resetForRepeat    = () => { resetEfeSerEsp(); setCupo(false); setShowRepeatOptions(false); resetObsevaciones(); };
 
   // ── Submit ──────────────────────────────────────────────────
   const handleConfirm = async () => {
@@ -77,7 +81,8 @@ export function useAddEspera(efectorId: number | null) {
         profesionalDeriva ? profesionalDeriva.id : null,
         efector ? efector.id : efectorId,
         paciente.id, estudioRequerido.map(e => e.id),
-        mapPriorityNameId[priority], cupo
+        mapPriorityNameId[priority], cupo,
+        observaciones == "" ? null : observaciones 
       );
       setAlert({ open: true, msg: "Turno en espera creado correctamente.", severity: "success" });
       setShowRepeatOptions(true);
@@ -98,6 +103,7 @@ export function useAddEspera(efectorId: number | null) {
     efeSerEspSeleccionado, setEfeSerEspSeleccionado, finishEfeSerEsp, setFinishEfeSerEsp, resetEfeSerEsp,
     setCupo,
     estudioRequerido, setEstudioRequerido, finishEstudioRequerido, setFinishEstudioRequerido, resetEstudioRequerido,
+    observaciones, setObservaciones, finishObservaciones, setFinishObservaciones, resetObsevaciones,
     priority, setPriority,
     alert, setAlert,
     submitting, showRepeatOptions,

@@ -11,15 +11,15 @@ export const TarjetaResumen = ( { resumen }: Props) => {
 
     return (
     <Box
-    sx={{
-        width: '70%',
-        minWidth: 400,
-        mx: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-    }}
-    >
+        sx={{
+            width: '70%',
+            minWidth: 400,
+            mx: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+        }}
+        >
         <Card sx={{ textAlign: 'center', borderRadius: 4, boxShadow: 4, p: 2 }}>
             <CardContent>
             <Typography variant="overline" color="text.secondary" letterSpacing={2}>
