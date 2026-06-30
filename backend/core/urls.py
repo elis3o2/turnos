@@ -6,7 +6,4 @@ urlpatterns = [
     path("turnos/api/token/", CustomTokenObtainPairView.as_view()),
     path("turnos/api/", include("src.urls")),
 
-    # Catch-all: Cualquier cosa que empiece con /turnos/ y no haya 
-    # entrado en las rutas anteriores, se lo enviamos a React.
-    re_path(r"^turnos/", frontend), 
 ]

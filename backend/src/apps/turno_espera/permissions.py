@@ -1,25 +1,43 @@
 from rest_framework.permissions import BasePermission,  SAFE_METHODS
 from src.permissions import is_espera
+from src.apps.efector.models import Deriva, EfeSerEsp
 
 class TurnoEsperaCreatePermission(BasePermission):
-
-    message = "No tiene permisos para crear el turno."
+    message = "No tiene permisos para crear el turno o no existe una derivación válida."
 
     def _efectores_usuario(self, request):
         return set(request.user.efectores.values_list("id", flat=True))
 
     def has_permission(self, request, view):
-
         if not is_espera(request.user):
             return False
 
         id_efector_solicitante = request.data.get("id_efector_solicitante")
-        if not id_efector_solicitante:
+        id_efe_ser_esp = request.data.get("id_efe_ser_esp")
+        cupo = request.data.get("cupo")
+
+        if id_efector_solicitante is None or id_efe_ser_esp is None or cupo is None:
             return False
 
-        return int(id_efector_solicitante) in self._efectores_usuario(request)
+        try:
+            id_efector_solicitante = int(id_efector_solicitante)
+            id_efe_ser_esp = int(id_efe_ser_esp)
+            cupo = int(cupo)
+        except (TypeError, ValueError):
+            return False
 
+        if id_efector_solicitante not in self._efectores_usuario(request):
+            return False
 
+        return ( EfeSerEsp.objects.filter(
+                    id=id_efe_ser_esp,
+                    efector_id=id_efector_solicitante,
+                ).exists()
+            or Deriva.objects.filter(
+                efector_id=id_efector_solicitante,
+                efe_ser_esp_deriva_id=id_efe_ser_esp,
+                cupo=bool(cupo),
+            ).exists())
 
 class TurnoEsperaUpdatePermission(BasePermission):
 
