@@ -46,7 +46,7 @@ def _enviar_whatsapp(numero: str, mensaje: str, sesion: str | None) -> Response:
             api_url,
             json=payload,
             headers=headers,
-            timeout=15
+            timeout=300
         )
 
         if "application/json" in response.headers.get("Content-Type", ""):
