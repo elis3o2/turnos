@@ -4256,3 +4256,6 @@ False, False, False, False, False, False, False, False, False);
 
 INSERT INTO sesion (id, numero) VALUES
 ('met', '3417860940');
+
+INSERT INTO sesion (id,numero) VALUES
+('twi', '3415505736');

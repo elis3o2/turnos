@@ -8,6 +8,10 @@ from decouple import config
 import emoji
 import re
 import json
+from django.conf import settings
+from decouple import config
+from twilio.rest import Client
+from django.utils.timezone import make_aware
 
 def create_Mensaje(
     id: str | None = None,
@@ -137,6 +141,58 @@ def update_msg_state(mensaje: Mensaje) -> Mensaje:
                 mensaje.estado_id = int(data["ack"])
 
         mensaje.save(update_fields=["fecha_last_ack", "estado_id"])
+
+        return mensaje
+
+    except Exception as e:
+        print("SAVE ERROR:", e)
+        return mensaje
+
+
+
+def update_msg_state_twilio(mensaje: Mensaje) -> Mensaje:
+    """
+    Consulta Twilio por el estado del mensaje y actualiza Mensaje.
+    Usa date_updated de Twilio como fecha_last_ack.
+    Devuelve el Mensaje actualizado o el original si hay error.
+    """
+
+    try:
+        client = Client(
+            config("TWILIO_ACCOUNT_SID"),
+            config("TWILIO_AUTH_TOKEN")
+        )
+
+        twilio_msg = client.messages(mensaje.id_mensaje).fetch()
+
+    except Exception as e:
+        print("TWILIO ERROR:", e)
+        return mensaje
+
+    try:
+        estados_twilio = {
+            "queued": 0,
+            "sending": 1,
+            "sent": 1,
+            "delivered": 2,
+            "read": 3,
+            "failed": -1,
+            "undelivered": -2,
+        }
+
+        if twilio_msg.status in estados_twilio:
+            mensaje.estado_id = estados_twilio[twilio_msg.status]
+
+        # date_updated viene como datetime con timezone UTC
+        if twilio_msg.date_updated:
+            mensaje.fecha_last_ack = twilio_msg.date_updated.replace(tzinfo=None)
+
+        mensaje.save(
+            update_fields=[
+                "fecha_last_ack",
+                "estado_id",
+            ]
+        )
 
         return mensaje
 
