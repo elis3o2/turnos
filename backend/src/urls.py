@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from src.views import CustomTokenObtainPairView, SendWSP, TokenObtainPairView, WhatsAppWebhookView
+from src.views import CustomTokenObtainPairView, SendWSP, WhatsAppWebhookView
 
 
 
