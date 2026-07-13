@@ -1,4 +1,6 @@
 import requests
+import json
+from twilio.rest import Client
 from rest_framework import status
 from src.apps.mensaje.models import Mensaje
 from core.settings import HORA_INICIO, HORA_FIN, TZ
@@ -225,3 +227,83 @@ def send_message_meta(numero: str, template: str, components: list):
             },
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
+
+
+def decode_res_twilio(message) -> tuple[Optional[str], int, datetime, str]:
+    """
+    Decodifica la respuesta de Twilio.
+    """
+
+    fecha = datetime.now()
+    ins = "twi"
+
+    try:
+        return (
+            message.sid,
+            1 if message.status not in ("failed", "undelivered") else -1,
+            fecha,
+            ins,
+        )
+    except Exception:
+        return (None, -1, fecha, ins)
+
+
+
+def format_message_twilio(plantilla: Plantilla, datos: Any) -> dict[str, str]:
+    campos = [
+        "nombre_pac",
+        "apellido_pac",
+        "fecha",
+        "hora",
+        "horaturno",
+        "nombre_prof",
+        "apellido_prof",
+        "especialidad",
+        "efector",
+        "servicio",
+        "calle",
+        "altura",
+        "letra",
+        "coordx",
+        "coordy",
+        "tel_efe",
+        "calle_nom",
+        "url",
+    ]
+
+    variables = {}
+
+    for campo in campos:
+        if getattr(plantilla, campo, False):
+            valor = datos.get(campo)
+            variables[campo] = "" if valor is None else str(valor)
+
+    return variables
+
+
+def send_message_twilio(numero: str, content_sid: str, variables: dict | None = None):
+
+    client = Client(
+        config("TWILIO_ACCOUNT_SID"),
+        config("TWILIO_AUTH_TOKEN")
+    )
+
+    params = {
+        "from_": f"whatsapp:+{config('TWILIO_WHATSAPP_NUMBER')}",
+        "to": f"whatsapp:+{numero}",
+        "content_sid": content_sid,
+    }
+
+    if variables:
+        params["content_variables"] = json.dumps(variables)
+
+    print("PARAMS", params)
+    try:
+        message = client.messages.create(**params)
+
+        return message
+
+    except Exception as e:
+        return {
+            "error": str(e)
+        }
