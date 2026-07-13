@@ -12,7 +12,7 @@ from src.apps.mensaje.services import create_Mensaje, check_turno, format_planti
 from src.utils.querys_informix import query_detalles_turno, query_efector, query_persona, query_turnos_historico
 from src.utils.parse import parse_date, parse_time
 from src.apps.turno_espera.services import sacar_Turno_Espera
-
+from src.utils.parse import normalizar_telefono
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -93,11 +93,10 @@ def _enviar_mensaje(t, idturno, estado, datos):
 
     carac_tel = datos.get("carac_tel")
     tel       = datos.get("tel")
-    telefono  = None
+    telefono  = normalizar_telefono(carac_tel, tel)
     ack       = -3
 
-    if carac_tel and tel:
-        telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
+    if telefono:
 
         datos_plantilla = {
             "nombre_pac":    datos.get("nom_pac", ""),
