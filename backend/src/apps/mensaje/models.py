@@ -17,6 +17,25 @@ class Plantilla(models.Model):
     contenido = models.TextField()
     tipo = models.ForeignKey(
         TipoPlantilla, models.DO_NOTHING, db_column='id_tipo')
+    nombre = models.CharField(max_length=32)
+    nombre_pac = models.BooleanField()
+    apellido_pac = models.BooleanField()
+    fecha = models.BooleanField()
+    horaturno = models.BooleanField()
+    nombre_prof = models.BooleanField()
+    apellido_prof = models.BooleanField()
+    especialidad = models.BooleanField()
+    efector = models.BooleanField()
+    servicio = models.BooleanField()
+    calle = models.BooleanField()
+    altura = models.BooleanField()
+    letra = models.BooleanField()
+    coordx = models.BooleanField()
+    coordy = models.BooleanField()
+    tel_efe = models.BooleanField()
+    calle_nom = models.BooleanField()
+    content_sid = models.CharField(max_length=64, blank=True, null=True)
+    url = models.CharField(max_length=128, blank=True, null=True)
 
     class Meta:
         managed = False
