@@ -9,7 +9,8 @@ from django.utils import timezone
 from django.core import signing
 from rest_framework.response import Response
 from datetime import datetime, timedelta
-
+from typing import Optional, Any
+from src.apps.mensaje.models import Plantilla
 
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
 
