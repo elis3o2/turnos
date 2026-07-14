@@ -69,40 +69,19 @@ class WhatsAppWebhookView(APIView):
 
     def post(self, request):
 
-        signature = request.headers.get("X-Hub-Signature-256")
-
-        if not signature:
-            return Response(
-                {"error": "Falta firma"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         raw_body = request.body
 
-        #expected_signature = (
-        #    "sha256=" +
-        #    hmac.new(
-        #        self.APP_SECRET.encode("utf-8"),
-        #        raw_body,
-        #        hashlib.sha256
-        #    ).hexdigest()
-        #)
-#
-        #if not hmac.compare_digest(signature, expected_signature):
-        #    return Response(
-        #        {"error": "Firma inválida"},
-        #        status=status.HTTP_403_FORBIDDEN
-        #    )
-
         try:
 
-            response = requests.post(
+            session = requests.Session()
+            session.trust_env = False
+
+            response = session.post(
                 self.FORWARD_URL,
                 data=raw_body,
-                headers={
-                    "Content-Type": "application/json"
-                },
-                timeout=5
+                headers={"Content-Type": "application/json"},
+                timeout=5,
             )
 
             return Response(
