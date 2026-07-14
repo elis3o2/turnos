@@ -77,11 +77,13 @@ class WhatsAppWebhookView(APIView):
             session = requests.Session()
             session.trust_env = False
 
-            response = session.post(
+            response = requests.post(
                 self.FORWARD_URL,
-                data=raw_body,
-                headers={"Content-Type": "application/json"},
-                timeout=5,
+                data=request.body,
+                headers={
+                    "Content-Type": request.headers.get("Content-Type")
+                },
+                timeout=5
             )
 
             return Response(
