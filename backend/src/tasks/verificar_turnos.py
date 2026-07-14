@@ -120,8 +120,6 @@ def _enviar_mensaje(t, idturno, estado, datos):
         parameters = format_message_twilio(plantilla, datos_plantilla)
         res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
         try:
-            print(type(res))
-            print(res)
             (envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
             create_Mensaje(
                 id=envio_id, turno=t, numero=telefono,
@@ -132,6 +130,7 @@ def _enviar_mensaje(t, idturno, estado, datos):
             return False
     else:
         try:
+            telefono = ("549" + str(carac_tel) + str(tel)).replace(" ", "")
             create_Mensaje(turno=t, plantilla=plantilla, numero=telefono, estado=ack)
         except Exception as ex:
             print(f"[ERROR] create_Mensaje (sin tel) turno={idturno}: {ex}")
