@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Any, Optional
 from src.apps.mensaje.models import Plantilla, ContadorTwilio
 from django.db import transaction
+from datetime import date
 
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
 
@@ -283,25 +284,15 @@ def format_message_twilio(plantilla: Plantilla, datos: Any) -> dict[str, str]:
 
 
 def send_message_twilio(numero: str, content_sid: str, variables: dict | None = None):
-
     with transaction.atomic():
         max_mensajes = int(config("TWILIO_MAX_MENSAJES_DIARIOS"))
-        contador, _ = ContadorTwilio.objects.select_for_update().get_or_create(
-            id=1,
-            defaults={
-                "fecha": timezone.localdate(),
-                "contador": 0
-            }
-        )
-
-        hoy = timezone.localdate()
-        
+        contador = ContadorTwilio.objects.select_for_update().get(id=1)
+        hoy = date.today()
         # Si es otro día, reiniciar contador
         if contador.fecha != hoy:
             contador.fecha = hoy
             contador.contador = 0
             contador.save(update_fields=["fecha", "contador"])
-
         # Verificar límite
         if contador.contador >= max_mensajes:
             return {
@@ -340,3 +331,4 @@ def send_message_twilio(numero: str, content_sid: str, variables: dict | None = 
         return {
             "error": str(e)
         }
+
