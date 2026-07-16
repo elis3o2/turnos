@@ -119,7 +119,14 @@ class Mensaje(models.Model):
 
 
 
+class ContadorTwilio(models.Model):
+    id = models.AutoField(primary_key=True)
+    fecha = models.DateField()
+    contador = models.IntegerField()
 
+    class Meta:
+        managed = False
+        db_table = 'contador_twilio'
 
 
 

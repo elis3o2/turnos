@@ -13,7 +13,7 @@ from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje, EfeSerEspPlantilla
 from src.utils.querys_informix import query_detalles_turno
 from src.utils.parse import parse_date, parse_time, normalizar_telefono
-from .utils import enviar_whatsapp, decode_res, token_url, ajustar_horario_envio, calcular_proximo_retry
+from .utils import enviar_whatsapp, decode_res, token_url, ajustar_horario_envio, calcular_proximo_retry, decode_res_twilio, send_message_twilio, format_message_twilio
 from src.apps.mensaje.services import check_turno, create_Mensaje, format_plantilla
 from core.settings import SEND_TIME, BATCH_SIZE, BATCH_WINDOW_SECONDS, TZ
 
@@ -189,23 +189,23 @@ def _armar_datos_plantilla(
     d_fecha = parse_date(fecha_turno)
     d_hora  = parse_time(hora_turno)
     return {
-        "nompac":       nom_pac or "",
-        "apepac":       ape_pac or "",
-        "fecha":        d_fecha.strftime("%d-%m-%Y"),
-        "horaturno":    d_hora.strftime("%H:%M"),
-        "nomprof":      nom_prof or "",
-        "apeprof":      ape_prof or "",
-        "especialidad": nombre_especialidad or "",
-        "efector":      nombre_efector or "",
-        "servicio":     nombre_servicio or "",
-        "calle":        calle or "",
-        "altura":       altura or "",
-        "letra":        letra or "",
-        "coordx":       coordx or "",
-        "coordy":       coordy or "",
-        "tel_efe":      tel_efe or "",
-        "calle_nom":    calle_nom or "",
-        "url":          url,
+        "nombre_pac":    nom_pac or "",
+        "apellido_pac":  ape_pac or "",
+        "fecha":         d_fecha.strftime("%d-%m-%Y"),
+        "horaturno":     d_hora.strftime("%H:%M"),
+        "nombre_prof":   nom_prof or "",
+        "apellido_prof": ape_prof or "",
+        "especialidad":  nombre_especialidad or "",
+        "efector":       nombre_efector or "",
+        "servicio":      nombre_servicio or "",
+        "calle":         calle or "",
+        "altura":        altura or "",
+        "letra":         letra or "",
+        "coordx":        coordx or "",
+        "coordy":        coordy or "",
+        "tel_efe":       tel_efe or "",
+        "calle_nom":     calle_nom or "",
+        "url":           url,
     }, d_fecha, d_hora
 
 
@@ -328,8 +328,9 @@ def send_reminder_task(
 
             # --- Intento de envío ---
             try:
-                res = enviar_whatsapp(telefono, mensaje)
-                envio_id, ack, fecha_msj, ins = decode_res(res)
+                parameters = format_message_twilio(plantilla, datos_plantilla)
+                res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
+                (envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
             except Exception as send_ex:
                 # Error de red/API: reintentar si hay tiempo, sino abandonar
                 print(f"[WARN] Error al enviar turno={id_turno}: {send_ex}")

@@ -10,7 +10,8 @@ from django.core import signing
 from rest_framework.response import Response
 from datetime import datetime, timedelta
 from typing import Any, Optional
-from src.apps.mensaje.models import Plantilla
+from src.apps.mensaje.models import Plantilla, ContadorTwilio
+from django.db import transaction
 
 def enviar_whatsapp(numero: str, mensaje: str) -> Response:
 
@@ -283,6 +284,33 @@ def format_message_twilio(plantilla: Plantilla, datos: Any) -> dict[str, str]:
 
 def send_message_twilio(numero: str, content_sid: str, variables: dict | None = None):
 
+    with transaction.atomic():
+        max_mensajes = int(config("TWILIO_MAX_MENSAJES_DIARIOS"))
+        contador, _ = ContadorTwilio.objects.select_for_update().get_or_create(
+            id=1,
+            defaults={
+                "fecha": timezone.localdate(),
+                "contador": 0
+            }
+        )
+
+        hoy = timezone.localdate()
+        
+        # Si es otro día, reiniciar contador
+        if contador.fecha != hoy:
+            contador.fecha = hoy
+            contador.contador = 0
+            contador.save(update_fields=["fecha", "contador"])
+
+        # Verificar límite
+        if contador.contador >= max_mensajes:
+            return {
+                "error": (
+                    f"Se alcanzó el límite diario de {max_mensajes} "
+                    "mensajes de Twilio."
+                )
+                }
+
     client = Client(
         config("TWILIO_ACCOUNT_SID"),
         config("TWILIO_AUTH_TOKEN")
@@ -301,6 +329,11 @@ def send_message_twilio(numero: str, content_sid: str, variables: dict | None = 
     try:
         message = client.messages.create(**params)
 
+        with transaction.atomic():
+            contador = ContadorTwilio.objects.select_for_update().get(id=1)
+            contador.contador += 1
+            contador.save(update_fields=["contador"])
+            
         return message
 
     except Exception as e:

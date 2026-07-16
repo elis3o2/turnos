@@ -273,6 +273,12 @@ CREATE TABLE plantilla_meta(
 );
 
 
+CREATE TABLE contador_twilio(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATE NOT NULL,
+    contador INT NOT NULL
+);
+
 ALTER TABLE plantilla
 ADD COLUMN nombre VARCHAR(32) NOT NULL DEFAULT(""),
 ADD COLUMN pac_nombre BOOLEAN DEFAULT(FALSE),
