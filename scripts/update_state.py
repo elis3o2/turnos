@@ -2,14 +2,12 @@ import time
 from datetime import datetime
 
 from src.apps.mensaje.models import Mensaje
-from src.apps.mensaje.services import update_msg_state  # ajustá import
+from src.apps.mensaje.services import update_msg_state_twilio  # ajustá import
 
 fecha_desde = datetime(2026, 5, 24, 0, 0, 0)
-
+    
 mensajes = Mensaje.objects.filter(
-    fecha_envio__gt=fecha_desde,
-    estado__gte=0,
-    estado__lt=3
+    sesion="twi"
 ).order_by("fecha_envio")
 total = mensajes.count()
 print(f"Se encontraron {total} mensajes")
@@ -17,7 +15,7 @@ print(f"Se encontraron {total} mensajes")
 for i, mensaje in enumerate(mensajes, start=1):
     try:
         print(f"[{i}/{total}] Procesando ID={mensaje.id}")
-        update_msg_state(mensaje)
+        update_msg_state_twilio(mensaje)
         time.sleep(1)
     except Exception as e:
         print(f"Error ID={mensaje.id}: {e}")
