@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje
+from django.utils import timezone
 from src.apps.mensaje.services import sendMessage 
 
 
@@ -88,10 +89,10 @@ class WhatsAppWebhookView(APIView):
 
                 print("TURNO:", turno)
 
-                if turno.estado_paciente == 4:
+                if turno.estado_paciente_id == 4:
 
                     turno.estado_paciente_id = int(button_payload)
-                    turno.fecha_hora_paciente = timezone.localtime()
+                    turno.fecha_hora_paciente = timezone.now()
                     turno.save(update_fields=[
                         "estado_paciente_id",
                         "fecha_hora_paciente",
