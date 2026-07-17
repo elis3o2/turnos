@@ -15,7 +15,7 @@ from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje
 from django.utils import timezone
 from src.apps.mensaje.services import sendMessage 
-from src.apps.mensaje.services import lista_espera_look
+from src.apps.turno_espera.services import lista_espera_look
 from src.apps.informix.services import liberar_turno
 
 def frontend(request):
