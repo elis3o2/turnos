@@ -218,7 +218,7 @@ def sendMessage(body: str, to: str):
 
     account_sid = config("TWILIO_ACCOUNT_SID")
     auth_token = config("TWILIO_AUTH_TOKEN")
-    from_number = config("TWILIO_WHATSAPP_FROM")  # ej. whatsapp:+14155238886
+    from_number = f'whatsapp:+{config("TWILIO_WHATSAPP_NUMBER")}'  
 
     if not to.startswith("whatsapp:"):
         if not to.startswith("+"):
