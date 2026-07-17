@@ -95,7 +95,7 @@ def _enviar_mensaje(t, idturno, estado, datos):
     tel       = datos.get("tel")
     telefono  = normalizar_telefono(carac_tel, tel)
     ack       = -3
-
+    telefono = None
     if telefono:
 
         datos_plantilla = {
