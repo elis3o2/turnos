@@ -235,7 +235,7 @@ def _marcar_recordatorio_enviado(turno: Turno, id_efector, id_servicio, id_espec
     turno.save(update_fields=["msj_recordatorio"])
 
     # Lógica especial: Cirugía General
-    if int(id_efector) == 1:
+    if int(id_efector) == 1 or int(id_efector) == 100:
         now = datetime.now()
         turno.estado_paciente_id = 4
         turno.fecha_estado_paciente = now
