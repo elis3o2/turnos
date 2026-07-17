@@ -93,10 +93,10 @@ class WhatsAppWebhookView(APIView):
                 if turno.estado_paciente_id == 4:
 
                     turno.estado_paciente_id = int(button_payload)
-                    turno.fecha_hora_paciente = timezone.now()
+                    turno.fecha_estado_paciente = timezone.now()
                     turno.save(update_fields=[
                         "estado_paciente_id",
-                        "fecha_hora_paciente",
+                        "fecha_estado_paciente",
                     ])
 
                     men = sendMessage(
