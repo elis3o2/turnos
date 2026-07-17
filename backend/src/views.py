@@ -82,7 +82,11 @@ class WhatsAppWebhookView(APIView):
                     .get(id_mensaje=original_sid)
                 )
 
+                print("MENSAJE:", mensaje)
+
                 turno = mensaje.id_turno
+
+                print("TURNO:", turno)
 
                 if turno.id_estado_paciente == 4:
 
@@ -93,16 +97,14 @@ class WhatsAppWebhookView(APIView):
                         "fecha_hora_paciente",
                     ])
 
-                    sendMessage(
+                    men = sendMessage(
                         "Gracias por su respuesta",
                         from_number
                     )
 
-            except (Mensaje.DoesNotExist, ValueError):
-                pass
+                    print("RESPUESTA TWILIO:", men)
 
-        return HttpResponse(
-            "<Response></Response>",
-            content_type="text/xml",
-            status=200
-        )
+            except Exception:
+                import traceback
+                traceback.print_exc()
+                raise
