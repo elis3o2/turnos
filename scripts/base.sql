@@ -109,8 +109,6 @@ CREATE TABLE IF NOT EXISTS mensaje (
 );
 
 
-
-
 CREATE TABLE IF NOT EXISTS efe_ser_esp_plantilla(
     id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
     id_efe_ser_esp  INT NOT NULL,
@@ -131,7 +129,6 @@ CREATE TABLE IF NOT EXISTS efe_ser_esp_plantilla(
 );
 
 
-
 CREATE TABLE IF NOT EXISTS last_mod(
     id INT  AUTO_INCREMENT NOT NULL PRIMARY KEY ,
     fecha DATETIME NOT NULL
@@ -144,12 +141,10 @@ CREATE TABLE IF NOT EXISTS estado_turno_espera(
 );
 
 
-
 CREATE TABLE IF NOT EXISTS estudio_requerido(
     id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
     nombre VARCHAR(32) NOT NULL
 );
-
 
 
 CREATE TABLE IF NOT EXISTS tipo_nodo (

@@ -9,9 +9,9 @@ import emoji
 import re
 import json
 from django.conf import settings
-from decouple import config
 from twilio.rest import Client
 from django.utils.timezone import make_aware
+
 
 def create_Mensaje(
     id: str | None = None,
@@ -199,3 +199,36 @@ def update_msg_state_twilio(mensaje: Mensaje) -> Mensaje:
     except Exception as e:
         print("SAVE ERROR:", e)
         return mensaje
+
+
+def sendMessage(body: str, to: str):
+    """
+    Envía un mensaje de WhatsApp mediante Twilio.
+
+    Parámetros
+    ----------
+    body : str
+        Texto del mensaje.
+    to : str
+        Número destino. Acepta:
+            - "5493416717398"
+            - "+5493416717398"
+            - "whatsapp:+5493416717398"
+    """
+
+    account_sid = config("TWILIO_ACCOUNT_SID")
+    auth_token = config("TWILIO_AUTH_TOKEN")
+    from_number = config("TWILIO_WHATSAPP_FROM")  # ej. whatsapp:+14155238886
+
+    if not to.startswith("whatsapp:"):
+        if not to.startswith("+"):
+            to = "+" + to
+        to = f"whatsapp:{to}"
+
+    client = Client(account_sid, auth_token)
+
+    return client.messages.create(
+        body=body,
+        from_=from_number,
+        to=to,
+    )
