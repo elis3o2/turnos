@@ -15,7 +15,8 @@ from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje
 from django.utils import timezone
 from src.apps.mensaje.services import sendMessage 
-
+from src.apps.mensaje.services import lista_espera_look
+from src.apps.informix.services import liberar_turno
 
 def frontend(request):
     return render(request, "index.html")
@@ -104,6 +105,10 @@ class WhatsAppWebhookView(APIView):
                     )
 
                     print("RESPUESTA TWILIO:", men)
+                    
+                    if int(button_payload) == 2:
+                        lista_espera_look(turno)
+                        liberar_turno(turno.id_sisr)
 
             except Exception:
                 import traceback
