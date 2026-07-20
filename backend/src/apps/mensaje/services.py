@@ -226,17 +226,30 @@ def sendMessage(body: str, to: str):
 
 
 
+from django.db import transaction
+from django.utils.timezone import now
+import traceback
+
+
 @transaction.atomic
 def procesar_estado_mensaje(data):
     """
     Procesa un webhook de cambio de estado enviado por Twilio.
     """
 
+    print("========== WEBHOOK ESTADO TWILIO ==========")
+    print("DATA:", dict(data))
+
     sid = data.get("SmsSid")
     estado = data.get("SmsStatus")
     error_code = data.get("ErrorCode")
 
+    print(f"SmsSid      : {sid}")
+    print(f"SmsStatus   : {estado}")
+    print(f"ErrorCode   : {error_code}")
+
     if not sid or not estado:
+        print("Falta SmsSid o SmsStatus")
         return
 
     estados = {
@@ -258,22 +271,60 @@ def procesar_estado_mensaje(data):
 
     nuevo_estado = estados.get(estado)
 
+    print(f"Estado mapeado inicialmente: {nuevo_estado}")
+
     if error_code:
         try:
-            nuevo_estado = errors.get(int(error_code), nuevo_estado)
-        except ValueError:
-            pass
+            error_code = int(error_code)
+            print(f"ErrorCode convertido: {error_code}")
+
+            if error_code in errors:
+                nuevo_estado = errors[error_code]
+                print(f"Estado reemplazado por ErrorCode: {nuevo_estado}")
+            else:
+                print("ErrorCode no está mapeado")
+
+        except Exception:
+            print("No pude convertir ErrorCode a int")
+            traceback.print_exc()
 
     if nuevo_estado is None:
+        print(f"Estado '{estado}' no reconocido")
         return
 
     try:
-        msg = Mensaje.objects.select_for_update().get(id_mensaje=sid)
+        print(f"Buscando mensaje con SID: {sid}")
+
+        msg = (
+            Mensaje.objects
+            .select_for_update()
+            .get(id_mensaje=sid)
+        )
+
+        print(f"Mensaje encontrado. Estado actual: {msg.estado}")
 
         if msg.estado != nuevo_estado:
+
+            print(f"Actualizando estado {msg.estado} -> {nuevo_estado}")
+
             msg.estado = nuevo_estado
             msg.fecha_last_ack = now()
-            msg.save(update_fields=["estado", "fecha_last_ack"])
+
+            msg.save(update_fields=[
+                "estado",
+                "fecha_last_ack",
+            ])
+
+            print("Mensaje actualizado correctamente")
+
+        else:
+            print("El mensaje ya tenía ese estado")
 
     except Mensaje.DoesNotExist:
         print(f"No existe mensaje con SID {sid}")
+
+    except Exception:
+        print("Error inesperado actualizando el mensaje")
+        traceback.print_exc()
+
+    print("========== FIN WEBHOOK ==========")
