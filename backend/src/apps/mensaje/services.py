@@ -226,7 +226,7 @@ def sendMessage(body: str, to: str):
 
 
 
-transaction.atomic
+@transaction.atomic
 def procesar_estado_mensaje(data):
     """
     Procesa un webhook de cambio de estado enviado por Twilio.
