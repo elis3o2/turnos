@@ -11,7 +11,7 @@ import json
 from django.conf import settings
 from twilio.rest import Client
 from django.utils.timezone import make_aware
-
+from django.db import transaction
 
 def create_Mensaje(
     id: str | None = None,
@@ -223,3 +223,59 @@ def sendMessage(body: str, to: str):
         from_=from_number,
         to=to,
     )
+
+
+
+@transaction.atomic
+def procesar_estado_mensaje(data):
+    """
+    Procesa un webhook de cambio de estado enviado por Twilio.
+
+    Estados:
+        delivered -> 1
+        received  -> 2
+        read      -> 3
+    """
+
+    sid = data.get("SmsSid")
+    estado = data.get("SmsStatus")
+    error_code = request.POST.get("ErrorCode")  
+    if not sid or not estado:
+        return
+
+    estados = {
+        "undelivered": -5,
+        "failed":  -1,
+        "sent":    1,
+        "delivered": 2,
+        "read": 3,
+    }
+
+    errors = {
+        63024: -2,
+        21211: -3,
+        63018: -5,
+        21654: -5,
+        21619: -5,
+        21656: -5,
+    }
+
+    nuevo_estado = estados.get(estado)
+
+    if error_code:
+        nuevo_estado = estados.get(error_code)
+
+    if nuevo_estado is None:
+        # Ignorar estados que no nos interesan
+        return
+
+    try:
+        msg = Mensaje.objects.select_for_update().get(id_mensaje=sid)
+
+        if msg.estado != nuevo_estado:
+            msg.estado = nuevo_estado
+            msg.fecha_last_ack = twilio_msg.date_updated.replace(tzinfo=None)
+            msg.save(update_fields=["estado", "fecha_last_ack"])
+
+    except Mensaje.DoesNotExist:
+        print(f"No existe mensaje con SID {sid}")

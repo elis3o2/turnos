@@ -1,22 +1,23 @@
 import requests
+from decouple import config
 from rest_framework import viewsets
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.http import HttpResponse
-from .serializers import CustomTokenObtainPairSerializer
 from django.shortcuts import render
 from django.conf import settings
 from django.db import transaction
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.utils import timezone
+from .serializers import CustomTokenObtainPairSerializer
 from src.apps.turno.models import Turno
 from src.apps.mensaje.models import Mensaje
-from django.utils import timezone
-from src.apps.mensaje.services import sendMessage 
+from src.apps.mensaje.services import sendMessage, procesar_estado_mensaje
 from src.apps.turno_espera.services import lista_espera_look
 from src.apps.informix.services import liberar_turno
+from twilio.request_validator import RequestValidator
+
 
 def frontend(request):
     return render(request, "index.html")
@@ -42,16 +43,32 @@ class SendWSP(APIView):
         return enviar_whatsapp(numero, msj)
 
 
+
 class WhatsAppWebhookView(APIView):
     authentication_classes = []
     permission_classes = []
 
     FORWARD_URL = "http://127.0.0.1:2880/webhook"
 
+    validator = RequestValidator(config("TWILIO_AUTH_TOKEN"))
+    webhook_url = config("TWILIO_WEBHOOK")
+
     @transaction.atomic
     def post(self, request):
 
-        # Reenviar el webhook al servicio del puerto 2880
+        # ------------------------------------------------------------
+        # Validar que el webhook realmente provenga de Twilio
+        # ------------------------------------------------------------
+        signature = request.headers.get("X-Twilio-Signature", "")
+
+        if not self.validator.validate(
+            self.webhook_url,
+            request.POST,
+            signature,
+        ):
+            print("Webhook con firma inválida")
+            return HttpResponseForbidden("Invalid Twilio Signature")
+
         try:
             session = requests.Session()
             session.trust_env = False
@@ -60,9 +77,12 @@ class WhatsAppWebhookView(APIView):
                 self.FORWARD_URL,
                 data=request.body,
                 headers={
-                    "Content-Type": request.headers.get("Content-Type", "application/x-www-form-urlencoded")
+                    "Content-Type": request.headers.get(
+                        "Content-Type",
+                        "application/x-www-form-urlencoded"
+                    )
                 },
-                timeout=5
+                timeout=5,
             )
 
         except Exception as e:
@@ -70,7 +90,16 @@ class WhatsAppWebhookView(APIView):
 
         data = request.POST
 
-        if data.get("MessageType") == "button":
+        # ============================================================
+        # CAMBIO DE ESTADO DE UN MENSAJE
+        # ============================================================
+        if data.get("MessageStatus"):
+            procesar_estado_mensaje(data)
+
+        # ============================================================
+        # RESPUESTA A BOTÓN
+        # ============================================================
+        elif data.get("MessageType") == "button":
 
             original_sid = data.get("OriginalRepliedMessageSid")
             button_payload = data.get("ButtonPayload")
@@ -84,33 +113,44 @@ class WhatsAppWebhookView(APIView):
                     .get(id_mensaje=original_sid)
                 )
 
-                print("MENSAJE:", mensaje)
-
                 turno = mensaje.turno
-
-                print("TURNO:", turno)
 
                 if turno.estado_paciente_id == 4:
 
                     turno.estado_paciente_id = int(button_payload)
                     turno.fecha_estado_paciente = timezone.now()
+
                     turno.save(update_fields=[
                         "estado_paciente_id",
                         "fecha_estado_paciente",
                     ])
 
-                    men = sendMessage(
+                    sendMessage(
                         "Gracias por su respuesta",
-                        from_number
+                        from_number,
                     )
 
-                    print("RESPUESTA TWILIO:", men)
-                    
                     if int(button_payload) == 2:
                         lista_espera_look(turno)
                         liberar_turno(turno.id_sisr)
+
+            except Mensaje.DoesNotExist:
+                print(f"No existe mensaje con SID {original_sid}")
 
             except Exception:
                 import traceback
                 traceback.print_exc()
                 raise
+
+        # ============================================================
+        # MENSAJE ENTRANTE NORMAL
+        # ============================================================
+        else:
+            from_number = data.get("From")
+            body = data.get("Body")
+
+            print(f"Mensaje recibido de {from_number}: {body}")
+
+
+        # Twilio únicamente necesita recibir un HTTP 200.
+        return HttpResponse(status=200)
