@@ -303,15 +303,15 @@ def procesar_estado_mensaje(data):
 
         print(f"Mensaje encontrado. Estado actual: {msg.estado}")
 
-        if msg.estado != nuevo_estado:
+        if msg.estado_id != nuevo_estado:
 
             print(f"Actualizando estado {msg.estado} -> {nuevo_estado}")
 
-            msg.estado = nuevo_estado
+            msg.estado_id = nuevo_estado
             msg.fecha_last_ack = now()
 
             msg.save(update_fields=[
-                "estado",
+                "estado_id",
                 "fecha_last_ack",
             ])
 
