@@ -7,7 +7,8 @@ from src.apps.mensaje.services import update_msg_state_twilio  # ajustá import
 fecha_desde = datetime(2026, 5, 24, 0, 0, 0)
     
 mensajes = Mensaje.objects.filter(
-    sesion="twi"
+    sesion="twi",
+    estado_id__gt=0
 ).order_by("fecha_envio")
 total = mensajes.count()
 print(f"Se encontraron {total} mensajes")
