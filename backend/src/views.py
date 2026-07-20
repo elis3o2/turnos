@@ -56,6 +56,12 @@ class WhatsAppWebhookView(APIView):
     @transaction.atomic
     def post(self, request):
 
+        # Guardar el cuerpo ANTES de acceder a request.POST
+        raw_body = request.body
+
+        # Parsear el formulario una sola vez
+        data = request.POST
+
         # ------------------------------------------------------------
         # Validar que el webhook realmente provenga de Twilio
         # ------------------------------------------------------------
@@ -63,19 +69,22 @@ class WhatsAppWebhookView(APIView):
 
         if not self.validator.validate(
             self.webhook_url,
-            request.POST,
+            data,
             signature,
         ):
             print("Webhook con firma inválida")
             return HttpResponseForbidden("Invalid Twilio Signature")
 
+        # ------------------------------------------------------------
+        # Reenviar el webhook al servicio del puerto 2880
+        # ------------------------------------------------------------
         try:
             session = requests.Session()
             session.trust_env = False
 
             session.post(
                 self.FORWARD_URL,
-                data=request.body,
+                data=raw_body,
                 headers={
                     "Content-Type": request.headers.get(
                         "Content-Type",
@@ -87,8 +96,6 @@ class WhatsAppWebhookView(APIView):
 
         except Exception as e:
             print(f"Error reenviando webhook a 2880: {e}")
-
-        data = request.POST
 
         # ============================================================
         # CAMBIO DE ESTADO DE UN MENSAJE
@@ -151,6 +158,4 @@ class WhatsAppWebhookView(APIView):
 
             print(f"Mensaje recibido de {from_number}: {body}")
 
-
-        # Twilio únicamente necesita recibir un HTTP 200.
         return HttpResponse(status=200)

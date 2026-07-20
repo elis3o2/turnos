@@ -226,27 +226,23 @@ def sendMessage(body: str, to: str):
 
 
 
-@transaction.atomic
+transaction.atomic
 def procesar_estado_mensaje(data):
     """
     Procesa un webhook de cambio de estado enviado por Twilio.
-
-    Estados:
-        delivered -> 1
-        received  -> 2
-        read      -> 3
     """
 
     sid = data.get("SmsSid")
     estado = data.get("SmsStatus")
-    error_code = request.POST.get("ErrorCode")  
+    error_code = data.get("ErrorCode")
+
     if not sid or not estado:
         return
 
     estados = {
+        "failed": -1,
         "undelivered": -5,
-        "failed":  -1,
-        "sent":    1,
+        "sent": 1,
         "delivered": 2,
         "read": 3,
     }
@@ -263,10 +259,12 @@ def procesar_estado_mensaje(data):
     nuevo_estado = estados.get(estado)
 
     if error_code:
-        nuevo_estado = estados.get(error_code)
+        try:
+            nuevo_estado = errors.get(int(error_code), nuevo_estado)
+        except ValueError:
+            pass
 
     if nuevo_estado is None:
-        # Ignorar estados que no nos interesan
         return
 
     try:
@@ -274,7 +272,7 @@ def procesar_estado_mensaje(data):
 
         if msg.estado != nuevo_estado:
             msg.estado = nuevo_estado
-            msg.fecha_last_ack = twilio_msg.date_updated.replace(tzinfo=None)
+            msg.fecha_last_ack = now()
             msg.save(update_fields=["estado", "fecha_last_ack"])
 
     except Mensaje.DoesNotExist:
