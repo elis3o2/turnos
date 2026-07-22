@@ -11,8 +11,7 @@ import AddEspera from '../pages/AddEsperaPage/AddEsperaPage';
 import PlantillasPage from '../pages/PlantillasPage/PlantillasPage';
 import ConfirmPage from '../pages/ConfirmPage/ConfirmPage';
 import EsperaHistorico from '../pages/EsperaHistoricoPage/EsperaHistoricoPage';
-import Eliseo from '../pages/EiseoPage';
-import { PoliticaPrivacidad } from '../pages/PoliticaComponent';
+import SecretariaSaludApp from '../pages/SaludPage';
 
 const AppRoutes = () => {
   return (
@@ -20,8 +19,7 @@ const AppRoutes = () => {
       {/* Ruta pública */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/confirma" element={<ConfirmPage />} />
-      <Route path="/Feuli-Eliseo" element={<Eliseo />} />
-       <Route path="/policy" element={<PoliticaPrivacidad/>} />
+      <Route path='/salud' element={<SecretariaSaludApp />} />
       {/* Rutas privadas con Layout */}
       <Route
         element={
