@@ -116,10 +116,9 @@ def _enviar_mensaje(t, idturno, estado, datos):
             "calle_nom":     datos.get("calle_nom", ""),
         }
 
-        #parameters = format_message_twilio(plantilla, datos_plantilla)
-        #res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
+        parameters = format_message_twilio(plantilla, datos_plantilla)
+        res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
         try:
-            res = {"error": "APAGADO"}
             (envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
             create_Mensaje(
                 id=envio_id, turno=t, numero=telefono,
