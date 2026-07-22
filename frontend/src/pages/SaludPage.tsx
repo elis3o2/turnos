@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 /**
  * Secretaría de Salud — Turnos de Salud Pública
@@ -67,7 +67,7 @@ function Logo({ size = 40 }) {
   );
 }
 
-function SecretariaSaludHome({ onIrAPrivacidad }) {
+function SecretariaSaludHome({ onIrAPrivacidad }: any) {
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   const navLinks = [
@@ -519,7 +519,7 @@ const styles = {
     fontSize: 12.5,
     color: "#93B3AC",
   },
-};
+} as const;
 
 /* ══════════════════════════════════════════════════════════════
    POLÍTICA DE PRIVACIDAD
@@ -571,7 +571,7 @@ function ShieldIcon() {
   );
 }
 
-function PoliticaPrivacidad({ onVolver }) {
+function PoliticaPrivacidad({ onVolver }: any) {
   const [activo, setActivo] = useState("intro");
 
   return (
@@ -824,7 +824,7 @@ function PoliticaPrivacidad({ onVolver }) {
   );
 }
 
-function SectionHeader({ num, title }) {
+function SectionHeader({ num, title }: any) {
   return (
     <div style={pStyles.sectionHeader}>
       <div style={pStyles.sectionNum}>{num}</div>
@@ -1111,7 +1111,7 @@ const pStyles = {
     letterSpacing: "0.04em",
   },
   footerAccent: { color: "#8ba3c7" },
-};
+} as const;
 
 /* ══════════════════════════════════════════════════════════════
    APP — alterna entre el sitio institucional y la política
