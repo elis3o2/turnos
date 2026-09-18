@@ -328,9 +328,11 @@ def send_reminder_task(
 
             # --- Intento de envío ---
             try:
-                parameters = format_message_twilio(plantilla, datos_plantilla)
-                res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
-                (envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
+                res = enviar_whatsapp(telefono, mensaje)
+                envio_id, ack, fecha_msj, ins = decode_res(res)
+                #parameters = format_message_twilio(plantilla, datos_plantilla)
+                #res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
+                #(envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
             except Exception as send_ex:
                 # Error de red/API: reintentar si hay tiempo, sino abandonar
                 print(f"[WARN] Error al enviar turno={id_turno}: {send_ex}")

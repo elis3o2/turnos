@@ -116,10 +116,13 @@ def _enviar_mensaje(t, idturno, estado, datos):
             "calle_nom":     datos.get("calle_nom", ""),
         }
 
-        parameters = format_message_twilio(plantilla, datos_plantilla)
-        res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
+        mensaje = format_plantilla(plantilla.contenido, datos_plantilla)
+        res     = enviar_whatsapp(telefono, mensaje)
+        #parameters = format_message_twilio(plantilla, datos_plantilla)
+        #res        = send_message_twilio(telefono, plantilla.content_sid, parameters)
         try:
-            (envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
+            (envio_id, ack, fecha_msj, ins) = decode_res(res)
+            #(envio_id, ack, fecha_msj, ins) = decode_res_twilio(res)
             create_Mensaje(
                 id=envio_id, turno=t, numero=telefono,
                 plantilla=plantilla, estado=ack, fecha=fecha_msj, sesion=ins,
