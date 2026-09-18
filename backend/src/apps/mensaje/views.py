@@ -52,7 +52,7 @@ class MensajeViewSet(viewsets.ModelViewSet):
 
         if ids_especialidades:
             qs = qs.filter(
-                turno__efe_ser_esp__ser_esp_especialidad_id__in=ids_especialidades
+                turno__efe_ser_esp__ser_esp__especialidad_id__in=ids_especialidades
             )
 
         if fecha_desde:
