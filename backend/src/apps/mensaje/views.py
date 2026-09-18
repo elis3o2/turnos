@@ -41,7 +41,8 @@ class MensajeViewSet(viewsets.ModelViewSet):
             )
 
         qs = Mensaje.objects.filter(
-            turno__efe_ser_esp__efector_id__in=ids_efectores
+            turno__efe_ser_esp__efector_id__in=ids_efectores,
+            estado__id_gte=0
         )
 
         if ids_servicios:
