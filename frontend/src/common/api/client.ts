@@ -90,7 +90,7 @@ axiosClient.interceptors.response.use(
         return axiosClient(orig);
       } catch (refreshError) {
         localStorage.removeItem('tokens');
-        window.location.href = '/login/';
+        window.location.href = '/turnos/login/';
         queue.forEach((p) => p.rej(refreshError));
         queue = [];
         return Promise.reject(refreshError);
